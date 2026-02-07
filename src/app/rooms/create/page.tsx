@@ -1,0 +1,217 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+
+export default function CreateRoomPage() {
+  const router = useRouter();
+  const [roomNumber, setRoomNumber] = useState("");
+  const [playerCount, setPlayerCount] = useState<3 | 4>(4);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleCreate = async () => {
+    setError("");
+
+    if (!/^\d{4}$/.test(roomNumber)) {
+      setError("4桁の数字を入力してください");
+      return;
+    }
+
+    setLoading(true);
+
+    const supabase = createClient();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session) {
+      setError("ログインが必要です。ホームに戻ってログインしてください。");
+      setLoading(false);
+      return;
+    }
+
+    const user = session.user;
+
+    const { data: existing } = await supabase
+      .from("rooms")
+      .select("id")
+      .eq("room_number", roomNumber)
+      .in("status", ["waiting", "active"])
+      .maybeSingle();
+
+    if (existing) {
+      setError("このルーム番号は既に使われています");
+      setLoading(false);
+      return;
+    }
+
+    const { data: room, error: insertError } = await supabase
+      .from("rooms")
+      .insert({
+        room_number: roomNumber,
+        player_count: playerCount,
+        created_by: user.id,
+      })
+      .select()
+      .single();
+
+    if (insertError || !room) {
+      setError(`ルームの作成に失敗しました: ${insertError?.message ?? ""}`);
+      setLoading(false);
+      return;
+    }
+
+    const displayName =
+      user.user_metadata?.full_name ||
+      user.user_metadata?.name ||
+      user.email ||
+      "プレイヤー";
+
+    await supabase.from("room_members").insert({
+      room_id: room.id,
+      user_id: user.id,
+      display_name: displayName,
+    });
+
+    router.push(`/rooms/${roomNumber}`);
+  };
+
+  return (
+    <div style={{ background: "var(--color-bg-2)", minHeight: "100vh" }}>
+      <header
+        style={{
+          background: "var(--color-bg-1)",
+          borderBottom: "1px solid var(--color-border)",
+          padding: "12px 24px",
+        }}
+      >
+        <button
+          onClick={() => router.push("/")}
+          style={{ color: "var(--color-text-3)", fontSize: "14px" }}
+        >
+          ← 戻る
+        </button>
+      </header>
+
+      <main style={{ maxWidth: "448px", margin: "0 auto", padding: "32px 24px" }}>
+        <h1
+          style={{
+            fontSize: "18px",
+            fontWeight: 600,
+            color: "var(--color-text-1)",
+            marginBottom: "24px",
+          }}
+        >
+          ルームを作成
+        </h1>
+
+        <div
+          style={{
+            background: "var(--color-bg-1)",
+            border: "1px solid var(--color-border)",
+            borderRadius: "8px",
+            padding: "24px",
+            boxShadow: "var(--shadow-card)",
+          }}
+        >
+          <div style={{ marginBottom: "20px" }}>
+            <label
+              style={{
+                display: "block",
+                fontSize: "14px",
+                fontWeight: 500,
+                color: "var(--color-text-1)",
+                marginBottom: "6px",
+              }}
+            >
+              ルーム番号（4桁）
+            </label>
+            <input
+              type="text"
+              maxLength={4}
+              value={roomNumber}
+              onChange={(e) => {
+                setRoomNumber(e.target.value.replace(/\D/g, ""));
+              }}
+              placeholder="例: 1234"
+              autoComplete="off"
+              style={{
+                width: "100%",
+                padding: "10px 16px",
+                fontSize: "14px",
+                borderRadius: "8px",
+                border: "1px solid var(--color-border)",
+                background: "var(--color-bg-2)",
+                color: "var(--color-text-1)",
+                outline: "none",
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
+
+          <div style={{ marginBottom: "20px" }}>
+            <label
+              style={{
+                display: "block",
+                fontSize: "14px",
+                fontWeight: 500,
+                color: "var(--color-text-1)",
+                marginBottom: "6px",
+              }}
+            >
+              プレイ人数
+            </label>
+            <div style={{ display: "flex", gap: "12px" }}>
+              {([3, 4] as const).map((count) => (
+                <button
+                  key={count}
+                  onClick={() => setPlayerCount(count)}
+                  style={{
+                    flex: 1,
+                    padding: "10px 16px",
+                    fontSize: "14px",
+                    fontWeight: 500,
+                    borderRadius: "8px",
+                    border: `1px solid ${playerCount === count ? "var(--arcoblue-6)" : "var(--color-border)"}`,
+                    background: playerCount === count ? "var(--arcoblue-1)" : "var(--color-bg-2)",
+                    color: playerCount === count ? "var(--arcoblue-6)" : "var(--color-text-2)",
+                    cursor: "pointer",
+                  }}
+                >
+                  {count}人麻雀
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {error && (
+            <p style={{ fontSize: "14px", color: "var(--red-6)", marginBottom: "16px" }}>
+              {error}
+            </p>
+          )}
+
+          <button
+            onClick={handleCreate}
+            disabled={loading}
+            style={{
+              width: "100%",
+              padding: "10px 16px",
+              fontSize: "14px",
+              fontWeight: 500,
+              borderRadius: "8px",
+              border: "none",
+              background: "var(--arcoblue-6)",
+              color: "#fff",
+              cursor: loading ? "not-allowed" : "pointer",
+              opacity: loading ? 0.5 : 1,
+            }}
+          >
+            {loading ? "作成中..." : "ルームを作成"}
+          </button>
+        </div>
+      </main>
+    </div>
+  );
+}

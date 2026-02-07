@@ -1,8 +1,43 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Arco Design Color Tokens */
+  --arcoblue-1: #e8f3ff;
+  --arcoblue-2: #bedaff;
+  --arcoblue-3: #94bfff;
+  --arcoblue-5: #4080ff;
+  --arcoblue-6: #165dff;
+  --arcoblue-7: #0e42d2;
+
+  --green-1: #e8ffea;
+  --green-6: #00b42a;
+
+  --orange-1: #fff7e8;
+  --orange-6: #ff7d00;
+
+  --red-1: #ffece8;
+  --red-6: #f53f3f;
+
+  --gray-1: #f7f8fa;
+  --gray-2: #f2f3f5;
+  --gray-3: #e5e6eb;
+  --gray-4: #c9cdd4;
+  --gray-6: #86909c;
+  --gray-8: #4e5969;
+  --gray-10: #1d2129;
+
+  --color-bg-1: #ffffff;
+  --color-bg-2: #f7f8fa;
+  --color-text-1: #1d2129;
+  --color-text-2: #4e5969;
+  --color-text-3: #86909c;
+  --color-border: #e5e6eb;
+
+  --shadow-card: 0 4px 10px rgba(0, 0, 0, 0.05);
+  --shadow-popup: 0 4px 10px rgba(0, 0, 0, 0.1);
+
+  --background: var(--color-bg-2);
+  --foreground: var(--color-text-1);
 }
 
 @theme inline {
@@ -14,13 +49,25 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --color-bg-1: #17171a;
+    --color-bg-2: #232324;
+    --color-text-1: rgba(255, 255, 255, 0.9);
+    --color-text-2: rgba(255, 255, 255, 0.7);
+    --color-text-3: rgba(255, 255, 255, 0.5);
+    --color-border: #3a3a3c;
+
+    --shadow-card: 0 4px 10px rgba(0, 0, 0, 0.3);
+
+    --background: var(--color-bg-2);
+    --foreground: var(--color-text-1);
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "PingFang SC",
+    "Hiragino Sans GB", "Noto Sans CJK JP", "Microsoft YaHei", sans-serif;
+  font-size: 14px;
+  line-height: 1.5715;
 }
