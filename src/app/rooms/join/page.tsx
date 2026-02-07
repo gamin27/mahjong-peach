@@ -35,7 +35,7 @@ export default function JoinRoomPage() {
     setError("");
 
     if (!user) {
-      setError("ログインが必要です");
+      router.replace("/login");
       return;
     }
 
@@ -64,17 +64,18 @@ export default function JoinRoomPage() {
     );
 
     if (!alreadyJoined) {
-      if (room.room_members.length >= room.player_count) {
+      if (room.room_members.length >= room.player_count + 3) {
         setError("ルームが満員です");
         setLoading(false);
         return;
       }
 
-      const displayName =
-        user.user_metadata?.full_name ||
-        user.user_metadata?.name ||
-        user.email ||
-        "プレイヤー";
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("username")
+        .eq("id", user.id)
+        .single();
+      const displayName = profile?.username ?? "プレイヤー";
 
       const { error: joinError } = await supabase
         .from("room_members")
@@ -169,7 +170,7 @@ export default function JoinRoomPage() {
 
           <button
             onClick={handleJoin}
-            disabled={loading || !user}
+            disabled={loading}
             className="rounded-lg px-4 py-2.5 text-sm font-medium text-white transition-opacity disabled:opacity-50"
             style={{ background: "var(--arcoblue-6)" }}
           >

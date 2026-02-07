@@ -16,6 +16,9 @@ export default function RoomDetailPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // フロントで管理: 対局メンバーの user_id セット
+  const [playerIds, setPlayerIds] = useState<Set<string>>(new Set());
+
   const fetchRoom = useCallback(async () => {
     const { data } = await supabase
       .from("rooms")
@@ -27,18 +30,13 @@ export default function RoomDetailPage() {
     if (data) {
       const { room_members, ...roomData } = data;
       setRoom(roomData as Room);
-      setMembers(room_members as RoomMember[]);
+      const membersList = room_members as RoomMember[];
+      setMembers(membersList);
 
-      if (
-        roomData.status === "waiting" &&
-        room_members.length >= roomData.player_count
-      ) {
-        await supabase
-          .from("rooms")
-          .update({ status: "active" })
-          .eq("id", roomData.id);
-        setRoom((prev) => (prev ? { ...prev, status: "active" } : prev));
-      }
+      // 初期値: 先着 player_count 人を対局メンバーにする
+      setPlayerIds(
+        new Set(membersList.slice(0, roomData.player_count).map((m) => m.user_id))
+      );
     }
     setLoading(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -46,11 +44,9 @@ export default function RoomDetailPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        router.replace("/login");
-        return;
+      if (session) {
+        setCurrentUserId(session.user.id);
       }
-      setCurrentUserId(session.user.id);
     });
 
     fetchRoom();
@@ -76,27 +72,29 @@ export default function RoomDetailPage() {
             const newMember = payload.new as RoomMember;
             setMembers((prev) => {
               if (prev.some((m) => m.id === newMember.id)) return prev;
-              const updated = [...prev, newMember];
-
-              if (
-                room.status === "waiting" &&
-                updated.length >= room.player_count
-              ) {
-                supabase
-                  .from("rooms")
-                  .update({ status: "active" })
-                  .eq("id", room.id);
-                setRoom((prev) =>
-                  prev ? { ...prev, status: "active" } : prev
-                );
+              return [...prev, newMember];
+            });
+            // 対局枠に空きがあれば自動で対局に入れる
+            setPlayerIds((prev) => {
+              if (prev.size < room.player_count) {
+                return new Set([...prev, newMember.user_id]);
               }
-
-              return updated;
+              return prev;
             });
           }
           if (payload.eventType === "DELETE") {
-            const oldMember = payload.old as { id: string };
-            setMembers((prev) => prev.filter((m) => m.id !== oldMember.id));
+            const oldMember = payload.old as { id: string; user_id?: string };
+            setMembers((prev) => {
+              const removed = prev.find((m) => m.id === oldMember.id);
+              if (removed) {
+                setPlayerIds((ids) => {
+                  const next = new Set(ids);
+                  next.delete(removed.user_id);
+                  return next;
+                });
+              }
+              return prev.filter((m) => m.id !== oldMember.id);
+            });
           }
         }
       )
@@ -106,7 +104,19 @@ export default function RoomDetailPage() {
       supabase.removeChannel(channel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [room?.id, room?.status, room?.player_count]);
+  }, [room?.id, room?.player_count]);
+
+  const handleToggleRole = (member: RoomMember) => {
+    setPlayerIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(member.user_id)) {
+        next.delete(member.user_id);
+      } else {
+        next.add(member.user_id);
+      }
+      return next;
+    });
+  };
 
   const handleLeave = async () => {
     if (!room || !currentUserId) return;
@@ -145,8 +155,11 @@ export default function RoomDetailPage() {
   }
 
   const isCreator = currentUserId === room.created_by;
-  const isFull = members.length >= room.player_count;
-  const slots = Array.from({ length: room.player_count }, (_, i) => members[i] || null);
+  const maxMembers = room.player_count + 3;
+  const playerCount = members.filter((m) => playerIds.has(m.user_id)).length;
+  const waitingCount = members.length - playerCount;
+  const isReady = playerCount === room.player_count;
+  const isFull = members.length >= maxMembers;
 
   return (
     <div
@@ -190,86 +203,103 @@ export default function RoomDetailPage() {
               ルーム {room.room_number}
             </h1>
             <p className="mt-0.5 text-xs" style={{ color: "var(--color-text-3)" }}>
-              {room.player_count}人麻雀
+              {room.player_count}人麻雀 ＋ 控え最大3人
             </p>
           </div>
           <span
             className="rounded-full px-3 py-1 text-xs font-medium"
             style={{
-              background: isFull ? "var(--green-1)" : "var(--orange-1)",
-              color: isFull ? "var(--green-6)" : "var(--orange-6)",
+              background: isFull
+                ? "var(--red-1)"
+                : isReady
+                  ? "var(--green-1)"
+                  : "var(--orange-1)",
+              color: isFull
+                ? "var(--red-6)"
+                : isReady
+                  ? "var(--green-6)"
+                  : "var(--orange-6)",
             }}
           >
-            {isFull ? "対局準備OK" : "待機中"}
+            {isFull ? "満員" : isReady ? "対局準備OK" : "待機中"}
           </span>
         </div>
 
         {/* メンバー数 */}
         <p className="text-sm" style={{ color: "var(--color-text-2)" }}>
-          {members.length} / {room.player_count} 人参加中
+          {members.length} / {maxMembers} 人参加中
+          （対局 {playerCount}/{room.player_count}
+          ＋ 控え {waitingCount}/3）
         </p>
 
-        {/* プレイヤースロット */}
-        <div className="grid grid-cols-2 gap-4">
-          {slots.map((member, i) => (
-            <div
-              key={member?.id ?? `empty-${i}`}
-              className="flex items-center gap-3 rounded-lg p-4"
-              style={{
-                background: "var(--color-bg-1)",
-                border: member
-                  ? "1px solid var(--color-border)"
-                  : "2px dashed var(--color-border)",
-                boxShadow: member ? "var(--shadow-card)" : "none",
-              }}
-            >
-              {member ? (
-                <>
-                  <div
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white"
-                    style={{
-                      background:
-                        member.user_id === currentUserId
-                          ? "var(--arcoblue-6)"
-                          : "var(--gray-6)",
-                    }}
-                  >
-                    {member.display_name.charAt(0)}
-                  </div>
-                  <div className="min-w-0">
-                    <p
-                      className="truncate text-sm font-medium"
-                      style={{ color: "var(--color-text-1)" }}
-                    >
-                      {member.display_name}
-                    </p>
-                    {member.user_id === room.created_by && (
-                      <p
-                        className="text-xs"
-                        style={{ color: "var(--arcoblue-6)" }}
-                      >
-                        ホスト
-                      </p>
-                    )}
-                  </div>
-                </>
-              ) : (
-                <p
-                  className="w-full text-center text-sm"
-                  style={{ color: "var(--color-text-3)" }}
+        <p className="text-xs" style={{ color: "var(--color-text-3)" }}>
+          タップして対局 ↔ 控えを切り替え
+        </p>
+
+        {/* メンバー一覧 */}
+        <div className="flex flex-col gap-3">
+          {members.map((member) => {
+            const isPlayer = playerIds.has(member.user_id);
+            return (
+              <div
+                key={member.id}
+                onClick={() => handleToggleRole(member)}
+                className="flex items-center gap-3 rounded-lg p-4"
+                style={{
+                  background: "var(--color-bg-1)",
+                  border: "1px solid var(--color-border)",
+                  boxShadow: "var(--shadow-card)",
+                  cursor: "pointer",
+                }}
+              >
+                <div
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white"
+                  style={{
+                    background:
+                      member.user_id === currentUserId
+                        ? "var(--arcoblue-6)"
+                        : "var(--gray-6)",
+                  }}
                 >
-                  空席
-                </p>
-              )}
-            </div>
-          ))}
+                  {member.display_name.charAt(0)}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p
+                    className="truncate text-sm font-medium"
+                    style={{ color: "var(--color-text-1)" }}
+                  >
+                    {member.display_name}
+                  </p>
+                  {member.user_id === room.created_by && (
+                    <p className="text-xs" style={{ color: "var(--arcoblue-6)" }}>
+                      ホスト
+                    </p>
+                  )}
+                </div>
+                <span
+                  className="shrink-0 rounded-full px-2.5 py-1 text-xs font-medium"
+                  style={{
+                    background: isPlayer ? "var(--green-1)" : "var(--orange-1)",
+                    color: isPlayer ? "var(--green-6)" : "var(--orange-6)",
+                  }}
+                >
+                  {isPlayer ? "対局" : "控え"}
+                </span>
+              </div>
+            );
+          })}
         </div>
 
         {/* 対局開始ボタン */}
-        {isFull && isCreator && (
+        {isCreator && (
           <button
+            disabled={!isReady}
             className="mt-2 rounded-lg px-4 py-3 text-sm font-semibold text-white"
-            style={{ background: "var(--green-6)" }}
+            style={{
+              background: "var(--green-6)",
+              opacity: isReady ? 1 : 0.4,
+              cursor: isReady ? "pointer" : "not-allowed",
+            }}
           >
             対局を開始
           </button>

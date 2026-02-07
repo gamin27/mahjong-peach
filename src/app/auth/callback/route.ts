@@ -5,14 +5,14 @@ import { NextResponse } from "next/server";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const redirectUrl = new URL("/", origin);
 
   if (!code) {
-    redirectUrl.searchParams.set("auth_error", "no_code");
-    return NextResponse.redirect(redirectUrl);
+    return NextResponse.redirect(new URL("/login", origin));
   }
 
   const cookieStore = await cookies();
+  // デフォルトのリダイレクト先（後で変更する可能性あり）
+  let redirectUrl = new URL("/", origin);
   const response = NextResponse.redirect(redirectUrl);
 
   const supabase = createServerClient(
@@ -32,11 +32,27 @@ export async function GET(request: Request) {
     }
   );
 
-  const { error } = await supabase.auth.exchangeCodeForSession(code);
+  const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
   if (error) {
-    redirectUrl.searchParams.set("auth_error", error.message);
-    return NextResponse.redirect(redirectUrl);
+    return NextResponse.redirect(new URL("/login", origin));
+  }
+
+  // プロフィールが未登録なら /setup へ
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("id", data.user.id)
+    .maybeSingle();
+
+  if (!profile) {
+    redirectUrl = new URL("/setup", origin);
+    // Cookie を新しいリダイレクト先のレスポンスにコピー
+    const setupResponse = NextResponse.redirect(redirectUrl);
+    response.cookies.getAll().forEach((cookie) => {
+      setupResponse.cookies.set(cookie.name, cookie.value);
+    });
+    return setupResponse;
   }
 
   return response;

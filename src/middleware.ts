@@ -21,8 +21,15 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // セッション更新だけ（ガードしない）
-  await supabase.auth.getSession();
+  const { data: { session } } = await supabase.auth.getSession();
+
+  const { pathname } = request.nextUrl;
+  const isPublic = pathname === "/login" || pathname === "/setup";
+
+  if (!session && !isPublic) {
+    const loginUrl = new URL("/login", request.url);
+    return NextResponse.redirect(loginUrl);
+  }
 
   return response;
 }

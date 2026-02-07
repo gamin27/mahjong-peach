@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 
 export default function CreateRoomPage() {
   const router = useRouter();
+  const supabase = createClient();
   const [roomNumber, setRoomNumber] = useState("");
   const [playerCount, setPlayerCount] = useState<3 | 4>(4);
   const [error, setError] = useState("");
@@ -21,16 +22,11 @@ export default function CreateRoomPage() {
 
     setLoading(true);
 
-    const supabase = createClient();
     const {
       data: { session },
     } = await supabase.auth.getSession();
 
-    if (!session) {
-      setError("ログインが必要です。ホームに戻ってログインしてください。");
-      setLoading(false);
-      return;
-    }
+    if (!session) return;
 
     const user = session.user;
 
@@ -63,11 +59,12 @@ export default function CreateRoomPage() {
       return;
     }
 
-    const displayName =
-      user.user_metadata?.full_name ||
-      user.user_metadata?.name ||
-      user.email ||
-      "プレイヤー";
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("username")
+      .eq("id", user.id)
+      .single();
+    const displayName = profile?.username ?? "プレイヤー";
 
     await supabase.from("room_members").insert({
       room_id: room.id,
