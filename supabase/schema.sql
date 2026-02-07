@@ -26,6 +26,7 @@ create table public.rooms (
   id uuid primary key default gen_random_uuid(),
   room_number text not null,
   player_count int not null check (player_count in (3, 4)),
+  pt_rate int not null default 50,
   status text not null default 'waiting' check (status in ('waiting', 'active', 'closed')),
   created_by uuid not null references auth.users(id),
   created_at timestamptz not null default now()
@@ -70,5 +71,43 @@ create policy "room_members_insert" on public.room_members
 create policy "room_members_delete" on public.room_members
   for delete to authenticated using (auth.uid() = user_id);
 
--- 4. Realtime 有効化
+-- 4. games テーブル（各半荘の記録）
+create table public.games (
+  id uuid primary key default gen_random_uuid(),
+  room_id uuid not null references public.rooms(id) on delete cascade,
+  round_number int not null,
+  created_at timestamptz not null default now()
+);
+
+alter table public.games enable row level security;
+
+create policy "games_select" on public.games
+  for select to authenticated using (true);
+
+create policy "games_insert" on public.games
+  for insert to authenticated with check (true);
+
+-- 5. game_scores テーブル（各半荘の各プレイヤーの点数）
+create table public.game_scores (
+  id uuid primary key default gen_random_uuid(),
+  game_id uuid not null references public.games(id) on delete cascade,
+  user_id uuid not null references auth.users(id),
+  display_name text not null,
+  score int not null,
+  created_at timestamptz not null default now()
+);
+
+alter table public.game_scores enable row level security;
+
+create policy "game_scores_select" on public.game_scores
+  for select to authenticated using (true);
+
+create policy "game_scores_insert" on public.game_scores
+  for insert to authenticated with check (true);
+
+create policy "game_scores_update" on public.game_scores
+  for update to authenticated using (true) with check (true);
+
+-- 6. Realtime 有効化
 alter publication supabase_realtime add table public.room_members;
+alter publication supabase_realtime add table public.game_scores;

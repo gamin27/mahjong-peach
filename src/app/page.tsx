@@ -1,52 +1,91 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+
+interface Stats {
+  totalGames: number;
+  totalScore: number;
+  avgRank: number | null;
+  topRate: number | null;
+}
 
 export default function Home() {
   const router = useRouter();
   const supabase = createClient();
+  const [stats, setStats] = useState<Stats>({
+    totalGames: 0,
+    totalScore: 0,
+    avgRank: null,
+    topRate: null,
+  });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const userId = session.user.id;
+
+      // このユーザーが参加した全game_idを取得
+      const { data: myScores } = await supabase
+        .from("game_scores")
+        .select("game_id, score")
+        .eq("user_id", userId);
+
+      if (!myScores || myScores.length === 0) return;
+
+      const gameIds = myScores.map((s) => s.game_id);
+      const totalGames = gameIds.length;
+      const totalScore = myScores.reduce((acc, s) => acc + s.score, 0);
+
+      // 参加した全ゲームの全スコアを取得して順位計算
+      const { data: allScores } = await supabase
+        .from("game_scores")
+        .select("game_id, user_id, score")
+        .in("game_id", gameIds);
+
+      if (!allScores) return;
+
+      // ゲームごとにグループ化
+      const gameMap: Record<string, { user_id: string; score: number }[]> = {};
+      for (const s of allScores) {
+        if (!gameMap[s.game_id]) gameMap[s.game_id] = [];
+        gameMap[s.game_id].push(s);
+      }
+
+      let rankSum = 0;
+      let topCount = 0;
+      for (const gameId of gameIds) {
+        const scores = gameMap[gameId];
+        if (!scores) continue;
+        const sorted = [...scores].sort((a, b) => b.score - a.score);
+        const rank = sorted.findIndex((s) => s.user_id === userId) + 1;
+        rankSum += rank;
+        if (rank === 1) topCount++;
+      }
+
+      setStats({
+        totalGames,
+        totalScore,
+        avgRank: rankSum / totalGames,
+        topRate: (topCount / totalGames) * 100,
+      });
+    };
+
+    fetchStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.replace("/login");
   };
 
+  const formatScore = (v: number) => (v > 0 ? `+${v.toLocaleString()}` : v.toLocaleString());
+
   return (
     <div className="flex min-h-screen flex-col" style={{ background: "var(--color-bg-2)" }}>
-      {/* ヘッダー */}
-      <header
-        className="flex items-center justify-between px-6 py-3"
-        style={{
-          background: "var(--color-bg-1)",
-          borderBottom: "1px solid var(--color-border)",
-        }}
-      >
-        <div className="flex items-center gap-2">
-          <span className="text-xl">🀄</span>
-          <span
-            className="text-base font-semibold"
-            style={{ color: "var(--color-text-1)" }}
-          >
-            麻雀ピーチ
-          </span>
-        </div>
-        <nav className="flex items-center gap-5 text-sm" style={{ color: "var(--color-text-2)" }}>
-          <span className="cursor-pointer font-medium" style={{ color: "var(--arcoblue-6)" }}>
-            ホーム
-          </span>
-          <span className="cursor-pointer hover:opacity-80">成績一覧</span>
-          <span className="cursor-pointer hover:opacity-80">ランキング</span>
-          <button
-            onClick={handleLogout}
-            className="cursor-pointer rounded px-3 py-1 text-xs hover:opacity-80"
-            style={{ border: "1px solid var(--color-border)", color: "var(--color-text-2)" }}
-          >
-            ログアウト
-          </button>
-        </nav>
-      </header>
-
       {/* メインコンテンツ */}
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-6 py-6">
         {/* ウェルカムカード */}
@@ -66,10 +105,10 @@ export default function Home() {
         {/* 統計サマリー */}
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {[
-            { label: "総対局数", value: "0", suffix: "回" },
-            { label: "通算スコア", value: "±0", suffix: "" },
-            { label: "平均順位", value: "-", suffix: "" },
-            { label: "トップ率", value: "-", suffix: "" },
+            { label: "総対局数", value: String(stats.totalGames), suffix: "回" },
+            { label: "通算スコア", value: stats.totalGames > 0 ? formatScore(stats.totalScore) : "±0", suffix: "" },
+            { label: "平均順位", value: stats.avgRank !== null ? stats.avgRank.toFixed(1) : "-", suffix: stats.avgRank !== null ? "位" : "" },
+            { label: "トップ率", value: stats.topRate !== null ? stats.topRate.toFixed(0) : "-", suffix: stats.topRate !== null ? "%" : "" },
           ].map((stat) => (
             <div
               key={stat.label}
@@ -178,6 +217,30 @@ export default function Home() {
           </div>
         </div>
       </main>
+
+      {/* フッターナビ */}
+      <nav
+        style={{
+          position: "fixed",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          display: "flex",
+          justifyContent: "space-around",
+          alignItems: "center",
+          padding: "8px 16px",
+          paddingBottom: "calc(8px + env(safe-area-inset-bottom))",
+          background: "var(--color-bg-1)",
+          borderTop: "1px solid var(--color-border)",
+        }}
+      >
+        <button style={{ fontSize: "24px", lineHeight: 1, opacity: 1 }}>🀄</button>
+        <button onClick={() => router.push("/history")} style={{ fontSize: "24px", lineHeight: 1 }}>🗒️</button>
+        <button onClick={() => router.push("/ranking")} style={{ fontSize: "24px", lineHeight: 1 }}>👑</button>
+        <button onClick={handleLogout} style={{ fontSize: "24px", lineHeight: 1 }}>🚪</button>
+      </nav>
+      {/* フッター分の余白 */}
+      <div style={{ height: "70px" }} />
     </div>
   );
 }

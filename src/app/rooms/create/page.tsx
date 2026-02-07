@@ -9,6 +9,7 @@ export default function CreateRoomPage() {
   const supabase = createClient();
   const [roomNumber, setRoomNumber] = useState("");
   const [playerCount, setPlayerCount] = useState<3 | 4>(4);
+  const [ptRate, setPtRate] = useState("50");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -48,6 +49,7 @@ export default function CreateRoomPage() {
       .insert({
         room_number: roomNumber,
         player_count: playerCount,
+        pt_rate: parseInt(ptRate, 10) || 50,
         created_by: user.id,
       })
       .select()
@@ -181,6 +183,42 @@ export default function CreateRoomPage() {
                 </button>
               ))}
             </div>
+          </div>
+
+          <div style={{ marginBottom: "20px" }}>
+            <label
+              style={{
+                display: "block",
+                fontSize: "14px",
+                fontWeight: 500,
+                color: "var(--color-text-1)",
+                marginBottom: "6px",
+              }}
+            >
+              ptレート
+            </label>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={ptRate}
+              onChange={(e) => setPtRate(e.target.value.replace(/\D/g, ""))}
+              placeholder="50"
+              autoComplete="off"
+              style={{
+                width: "100%",
+                padding: "10px 16px",
+                fontSize: "14px",
+                borderRadius: "8px",
+                border: "1px solid var(--color-border)",
+                background: "var(--color-bg-2)",
+                color: "var(--color-text-1)",
+                outline: "none",
+                boxSizing: "border-box",
+              }}
+            />
+            <p style={{ fontSize: "12px", color: "var(--color-text-3)", marginTop: "4px" }}>
+              1点あたりのpt（デフォルト: 50pt）
+            </p>
           </div>
 
           {error && (

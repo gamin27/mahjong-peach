@@ -4,6 +4,7 @@ export interface Room {
   id: string;
   room_number: string;
   player_count: 3 | 4;
+  pt_rate: number;
   status: RoomStatus;
   created_by: string;
   created_at: string;
