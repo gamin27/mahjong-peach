@@ -567,46 +567,43 @@ export default function HistoryPage() {
                     >
                       役満一覧
                     </p>
-                    <div className="flex flex-col gap-2">
+                    <div
+                      className="rounded-lg"
+                      style={{
+                        background: "var(--color-bg-1)",
+                        border: "1px solid var(--color-border)",
+                      }}
+                    >
                       {currentYakumans.map((y, i) => (
                         <div
                           key={i}
-                          className="flex items-center gap-3 rounded-lg p-3"
+                          className="flex items-center gap-3 px-4 py-3"
                           style={{
-                            background: "var(--orange-1)",
-                            border: "1px solid var(--orange-6)",
+                            borderBottom:
+                              i < currentYakumans.length - 1
+                                ? "1px solid var(--color-border)"
+                                : "none",
                           }}
                         >
-                          <Avatar
-                            src={y.avatarUrl}
-                            name={y.displayName}
-                            size={28}
-                          />
                           <div className="min-w-0 flex-1">
                             <p
-                              className="text-xs font-medium"
+                              className="text-sm font-medium"
                               style={{ color: "var(--color-text-1)" }}
                             >
-                              {y.displayName}
+                              {y.displayName} — {y.yakumanType}
                             </p>
                             <p
                               className="text-xs"
-                              style={{ color: "var(--orange-6)" }}
+                              style={{ color: "var(--color-text-3)" }}
                             >
-                              {y.yakumanType} /{" "}
-                              {TILE_LABELS[y.winningTile] || y.winningTile}
+                              {TILE_LABELS[y.winningTile] || y.winningTile} ・{" "}
+                              {new Date(y.date).toLocaleDateString("ja-JP", {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                              })}
                             </p>
                           </div>
-                          <p
-                            className="shrink-0 text-xs"
-                            style={{ color: "var(--color-text-3)" }}
-                          >
-                            {new Date(y.date).toLocaleDateString("ja-JP", {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            })}
-                          </p>
                         </div>
                       ))}
                     </div>
