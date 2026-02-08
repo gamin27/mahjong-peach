@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, Fragment } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Room, RoomMember } from "@/lib/types/room";
@@ -8,8 +8,7 @@ import type { CompletedGame, YakumanEntry } from "@/lib/types/game";
 import PlayerSelection from "@/components/PlayerSelection";
 import ScoreEntry from "@/components/ScoreEntry";
 import GameResult from "@/components/GameResult";
-import Avatar from "@/components/Avatar";
-import { TILE_LABELS } from "@/components/YakumanModal";
+import GameScoreTable from "@/components/GameScoreTable";
 
 type Phase = "selecting" | "scoring" | "result";
 
@@ -74,15 +73,32 @@ export default function RoomDetailPage() {
 
     if (data) {
       const { room_members, ...roomData } = data;
-      setRoom(roomData as Room);
       const membersList = room_members as RoomMember[];
+
+      // メンバーでなければ入室不可
+      const { data: { session: authSession } } = await supabase.auth.getSession();
+      if (!authSession || !membersList.some((m) => m.user_id === authSession.user.id)) {
+        setLoading(false);
+        return;
+      }
+
+      setRoom(roomData as Room);
       setMembers(membersList);
 
-      setPlayerIds(
-        new Set(membersList.slice(0, roomData.player_count).map((m) => m.user_id))
-      );
+      const pIds = new Set(membersList.slice(0, roomData.player_count).map((m) => m.user_id));
+      setPlayerIds(pIds);
 
       await fetchCompletedGames(roomData.id);
+
+      // 控えがいなければ自動的にscoringフェーズへ（ホストのみ）
+      if (
+        authSession.user.id === roomData.created_by &&
+        membersList.length <= roomData.player_count &&
+        pIds.size === roomData.player_count
+      ) {
+        setCurrentGamePlayers(membersList.filter((m) => pIds.has(m.user_id)));
+        setPhase("scoring");
+      }
     }
     setLoading(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -149,6 +165,35 @@ export default function RoomDetailPage() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [room?.id, room?.player_count]);
+
+  // rooms の status 変更を監視（解散検知）
+  useEffect(() => {
+    if (!room) return;
+
+    const channel = supabase
+      .channel(`room-status-${room.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "rooms",
+          filter: `id=eq.${room.id}`,
+        },
+        (payload) => {
+          const updated = payload.new as { status: string };
+          if (updated.status === "closed") {
+            router.push("/");
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [room?.id]);
 
   // game_scores の変更を監視（ゲスト用）
   useEffect(() => {
@@ -257,7 +302,12 @@ export default function RoomDetailPage() {
       },
     ]);
 
-    setPhase("selecting");
+    // 控えがいなければ選択フェーズをスキップ
+    if (members.length <= room.player_count) {
+      setPhase("scoring");
+    } else {
+      setPhase("selecting");
+    }
   };
 
   const handleUpdateScores = async (
@@ -363,7 +413,7 @@ export default function RoomDetailPage() {
               color: "var(--red-6)",
             }}
           >
-            退出
+            今日の麻雀を終える
           </button>
         )}
       </header>
@@ -471,19 +521,6 @@ export default function RoomDetailPage() {
               </button>
             )}
 
-            {isCreator && completedGames.length > 0 && (
-              <button
-                onClick={() => setPhase("result")}
-                className="rounded-lg px-4 py-3 text-sm font-medium"
-                style={{
-                  border: "1px solid var(--color-border)",
-                  color: "var(--color-text-2)",
-                  background: "var(--color-bg-1)",
-                }}
-              >
-                今日の麻雀を終える
-              </button>
-            )}
           </>
         )}
 
@@ -492,6 +529,7 @@ export default function RoomDetailPage() {
           <>
             {isCreator ? (
               <ScoreEntry
+                key={completedGames.length}
                 players={currentGamePlayers}
                 playerCount={room.player_count}
                 onConfirm={handleScoreConfirm}
@@ -616,14 +654,6 @@ export default function RoomDetailPage() {
             </div>
           );
         }
-        const mid: Record<string, { displayName: string; avatarUrl: string | null; total: number }> = {};
-        for (const g of completedGames) {
-          for (const s of g.scores) {
-            if (!mid[s.user_id]) mid[s.user_id] = { displayName: s.display_name, avatarUrl: s.avatar_url, total: 0 };
-            mid[s.user_id].total += s.score;
-          }
-        }
-        const midSorted = Object.entries(mid).sort((a, b) => b[1].total - a[1].total);
         return (
           <div
             style={{
@@ -658,134 +688,8 @@ export default function RoomDetailPage() {
                 途中結果（{completedGames.length}半荘）
               </p>
 
-              {/* テーブル（累計 + 半荘別を統合） */}
-              <div
-                className="mt-4 rounded-lg"
-                style={{
-                  border: "1px solid var(--color-border)",
-                  background: "var(--color-bg-2)",
-                  maxHeight: "50vh",
-                  overflow: "auto",
-                  position: "relative",
-                }}
-              >
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                  <thead
-                    style={{
-                      position: "sticky",
-                      top: 0,
-                      zIndex: 1,
-                      background: "var(--color-bg-2)",
-                    }}
-                  >
-                    <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
-                      <th
-                        className="px-3 py-2 text-left text-xs font-medium"
-                        style={{ color: "var(--color-text-3)", background: "var(--color-bg-2)" }}
-                      />
-                      {midSorted.map(([userId, data]) => (
-                        <th key={userId} className="px-2 py-2" style={{ background: "var(--color-bg-2)" }}>
-                          <div className="mx-auto flex justify-center" title={data.displayName}>
-                            <Avatar
-                              src={data.avatarUrl}
-                              name={data.displayName}
-                              size={28}
-                            />
-                          </div>
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {/* 累計行 */}
-                    <tr style={{ borderBottom: "2px solid var(--color-border)" }}>
-                      <td
-                        className="px-3 py-2.5 text-xs font-semibold"
-                        style={{ color: "var(--color-text-1)", whiteSpace: "nowrap" }}
-                      >
-                        累計
-                      </td>
-                      {midSorted.map(([userId, data]) => (
-                        <td
-                          key={userId}
-                          className="px-2 py-2.5 text-right text-xs font-semibold"
-                          style={{
-                            color:
-                              data.total > 0
-                                ? "var(--green-6)"
-                                : data.total < 0
-                                  ? "var(--red-6)"
-                                  : "var(--color-text-1)",
-                          }}
-                        >
-                          {data.total > 0 ? "+" : ""}
-                          {data.total.toLocaleString()}
-                        </td>
-                      ))}
-                    </tr>
-                    {/* 半荘別行 */}
-                    {completedGames.map((g, gi) => (
-                      <Fragment key={g.game.id}>
-                        <tr
-                          style={{ borderBottom: "1px solid var(--color-border)" }}
-                        >
-                          <td
-                            className="px-3 py-2 text-xs font-medium"
-                            style={{ color: "var(--color-text-3)", whiteSpace: "nowrap" }}
-                          >
-                            {gi + 1}半荘
-                          </td>
-                          {midSorted.map(([userId]) => {
-                            const score = g.scores.find((s) => s.user_id === userId)?.score;
-                            return (
-                              <td
-                                key={userId}
-                                className="px-2 py-2 text-right text-xs"
-                                style={{
-                                  color:
-                                    score !== undefined && score > 0
-                                      ? "var(--green-6)"
-                                      : score !== undefined && score < 0
-                                        ? "var(--red-6)"
-                                        : "var(--color-text-2)",
-                                }}
-                              >
-                                {score !== undefined
-                                  ? `${score > 0 ? "+" : ""}${score.toLocaleString()}`
-                                  : "-"}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                        {g.yakumans && g.yakumans.length > 0 && (
-                          <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
-                            <td
-                              colSpan={midSorted.length + 1}
-                              className="px-3 py-1.5"
-                            >
-                              <div className="flex flex-wrap gap-1">
-                                {g.yakumans.map((y, yi) => (
-                                  <span
-                                    key={yi}
-                                    className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
-                                    style={{
-                                      background: "var(--orange-1)",
-                                      color: "var(--orange-6)",
-                                      border: "1px solid var(--orange-6)",
-                                      fontSize: "10px",
-                                    }}
-                                  >
-                                    {y.display_name}: {y.yakuman_type}({TILE_LABELS[y.winning_tile] || y.winning_tile})
-                                  </span>
-                                ))}
-                              </div>
-                            </td>
-                          </tr>
-                        )}
-                      </Fragment>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="mt-4">
+                <GameScoreTable games={completedGames} />
               </div>
 
               <button
@@ -834,13 +738,13 @@ export default function RoomDetailPage() {
               className="text-sm font-semibold"
               style={{ color: "var(--color-text-1)" }}
             >
-              ルームを解散しますか？
+              今日の麻雀を終えますか？
             </p>
             <p
               className="mt-2 text-xs"
               style={{ color: "var(--color-text-3)" }}
             >
-              ホストが退出するとルームが解散され、全員が退出されます。結果も破棄されます。
+              ルームが解散され、全員が退出されます。対局結果は記録に残ります。
             </p>
             <div className="mt-5 flex gap-3">
               <button

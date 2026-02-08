@@ -142,6 +142,7 @@ export default function JoinRoomPage() {
             </label>
             <input
               type="text"
+              inputMode="numeric"
               maxLength={4}
               value={roomNumber}
               onChange={(e) => {
@@ -153,7 +154,7 @@ export default function JoinRoomPage() {
               style={{
                 width: "100%",
                 padding: "10px 16px",
-                fontSize: "14px",
+                fontSize: "16px",
                 borderRadius: "8px",
                 border: "1px solid var(--color-border)",
                 background: "var(--color-bg-2)",

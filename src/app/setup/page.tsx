@@ -70,8 +70,8 @@ export default function SetupPage() {
     setError("");
     const trimmed = username.trim();
 
-    if (trimmed.length < 1 || trimmed.length > 20) {
-      setError("1〜20文字で入力してください");
+    if (trimmed.length < 1 || trimmed.length > 5) {
+      setError("1〜5文字で入力してください");
       return;
     }
 
@@ -247,7 +247,7 @@ export default function SetupPage() {
             </label>
             <input
               type="text"
-              maxLength={20}
+              maxLength={5}
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="例: たろう"
@@ -256,7 +256,7 @@ export default function SetupPage() {
               style={{
                 width: "100%",
                 padding: "10px 16px",
-                fontSize: "14px",
+                fontSize: "16px",
                 borderRadius: "8px",
                 border: "1px solid var(--color-border)",
                 background: "var(--color-bg-2)",
@@ -272,7 +272,7 @@ export default function SetupPage() {
                 marginTop: "4px",
               }}
             >
-              {username.trim().length}/20文字
+              {username.trim().length}/5文字
             </p>
           </div>
 

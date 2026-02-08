@@ -242,7 +242,7 @@ export default function GameResult({
                               style={{
                                 width: "70px",
                                 padding: "4px 6px",
-                                fontSize: "13px",
+                                fontSize: "16px",
                                 textAlign: "right",
                                 borderRadius: "4px",
                                 border: "1px solid var(--color-border)",

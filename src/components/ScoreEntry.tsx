@@ -112,7 +112,7 @@ export default function ScoreEntry({
                 style={{
                   width: "100px",
                   padding: "6px 10px",
-                  fontSize: "14px",
+                  fontSize: "16px",
                   textAlign: "right",
                   borderRadius: "6px",
                   border: "1px solid var(--color-border)",

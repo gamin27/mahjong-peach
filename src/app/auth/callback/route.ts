@@ -11,8 +11,10 @@ export async function GET(request: Request) {
   }
 
   const cookieStore = await cookies();
-  // デフォルトのリダイレクト先（後で変更する可能性あり）
+
+  // 最初は仮で /
   let redirectUrl = new URL("/", origin);
+
   const response = NextResponse.redirect(redirectUrl);
 
   const supabase = createServerClient(
@@ -34,11 +36,11 @@ export async function GET(request: Request) {
 
   const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
-  if (error) {
+  if (error || !data.user) {
     return NextResponse.redirect(new URL("/login", origin));
   }
 
-  // プロフィールが未登録なら /setup へ
+  // profile確認
   const { data: profile } = await supabase
     .from("profiles")
     .select("id")
@@ -47,12 +49,7 @@ export async function GET(request: Request) {
 
   if (!profile) {
     redirectUrl = new URL("/setup", origin);
-    // Cookie を新しいリダイレクト先のレスポンスにコピー
-    const setupResponse = NextResponse.redirect(redirectUrl);
-    response.cookies.getAll().forEach((cookie) => {
-      setupResponse.cookies.set(cookie.name, cookie.value);
-    });
-    return setupResponse;
+    response.headers.set("Location", redirectUrl.toString());
   }
 
   return response;

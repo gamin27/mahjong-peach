@@ -21,6 +21,11 @@ export default function CreateRoomPage() {
       return;
     }
 
+    if (!ptRate || parseInt(ptRate, 10) <= 0) {
+      setError("ptレートを入力してください");
+      return;
+    }
+
     setLoading(true);
 
     const {
@@ -49,7 +54,7 @@ export default function CreateRoomPage() {
       .insert({
         room_number: roomNumber,
         player_count: playerCount,
-        pt_rate: parseInt(ptRate, 10) || 50,
+        pt_rate: parseInt(ptRate, 10),
         created_by: user.id,
       })
       .select()
@@ -130,6 +135,7 @@ export default function CreateRoomPage() {
             </label>
             <input
               type="text"
+              inputMode="numeric"
               maxLength={4}
               value={roomNumber}
               onChange={(e) => {
@@ -140,7 +146,7 @@ export default function CreateRoomPage() {
               style={{
                 width: "100%",
                 padding: "10px 16px",
-                fontSize: "14px",
+                fontSize: "16px",
                 borderRadius: "8px",
                 border: "1px solid var(--color-border)",
                 background: "var(--color-bg-2)",
@@ -208,7 +214,7 @@ export default function CreateRoomPage() {
               style={{
                 width: "100%",
                 padding: "10px 16px",
-                fontSize: "14px",
+                fontSize: "16px",
                 borderRadius: "8px",
                 border: "1px solid var(--color-border)",
                 background: "var(--color-bg-2)",
@@ -218,7 +224,7 @@ export default function CreateRoomPage() {
               }}
             />
             <p style={{ fontSize: "12px", color: "var(--color-text-3)", marginTop: "4px" }}>
-              1点あたりのpt（デフォルト: 50pt）
+              1点あたりのpt（必須）
             </p>
           </div>
 

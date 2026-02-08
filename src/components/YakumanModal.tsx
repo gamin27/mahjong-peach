@@ -188,7 +188,7 @@ export default function YakumanModal({
             style={{
               width: "100%",
               padding: "10px 12px",
-              fontSize: "14px",
+              fontSize: "16px",
               borderRadius: "8px",
               border: "1px solid var(--color-border)",
               background: "var(--color-bg-2)",
