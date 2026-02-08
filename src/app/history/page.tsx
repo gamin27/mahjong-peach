@@ -8,6 +8,7 @@ import Avatar from "@/components/Avatar";
 import Main from "@/components/Main";
 import GameScoreTable from "@/components/GameScoreTable";
 import Button from "@/components/Button";
+import Tabs from "@/components/Tabs";
 import { TILE_LABELS } from "@/components/YakumanModal";
 
 interface PlayerStats {
@@ -398,37 +399,7 @@ export default function HistoryPage() {
           <>
             {/* 3人/4人タブ */}
             {tabs.length > 1 && (
-              <div
-                className="rounded-lg"
-                style={{
-                  display: "flex",
-                  background: "var(--color-bg-1)",
-                  border: "1px solid var(--color-border)",
-                  overflow: "hidden",
-                }}
-              >
-                {tabs.map((tab) => (
-                  <button
-                    key={tab.key}
-                    onClick={() => setActiveTab(tab.key)}
-                    className="flex-1 py-2.5 text-sm font-medium"
-                    style={{
-                      color:
-                        currentTab === tab.key
-                          ? "var(--arcoblue-6)"
-                          : "var(--color-text-3)",
-                      borderBottom:
-                        currentTab === tab.key
-                          ? "2px solid var(--arcoblue-6)"
-                          : "2px solid transparent",
-                      background: "none",
-                      cursor: "pointer",
-                    }}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
+              <Tabs tabs={tabs} activeKey={currentTab} onChange={setActiveTab} contained />
             )}
 
             {tabs.length === 1 && (
@@ -441,24 +412,15 @@ export default function HistoryPage() {
             )}
 
             {/* サマリー/戦績 サブタブ */}
-            <div style={{ display: "flex", gap: "8px" }}>
-              {(["summary", "games"] as const).map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setSubTab(t)}
-                  className="rounded-full px-4 py-1.5 text-sm font-medium"
-                  style={{
-                    background:
-                      subTab === t ? "var(--arcoblue-6)" : "var(--color-bg-1)",
-                    color: subTab === t ? "#fff" : "var(--color-text-3)",
-                    border: `1px solid ${subTab === t ? "var(--arcoblue-6)" : "var(--color-border)"}`,
-                    cursor: "pointer",
-                  }}
-                >
-                  {t === "summary" ? "サマリー" : "戦績"}
-                </button>
-              ))}
-            </div>
+            <Tabs
+              tabs={[
+                { key: "summary" as const, label: "サマリー" },
+                { key: "games" as const, label: "戦績" },
+              ]}
+              activeKey={subTab}
+              onChange={setSubTab}
+              variant="pill"
+            />
 
             {/* サマリータブ */}
             {subTab === "summary" && (

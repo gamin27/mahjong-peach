@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Avatar from "@/components/Avatar";
 import Main from "@/components/Main";
+import Tabs from "@/components/Tabs";
 
 interface ModeStats {
   totalGames: number;
@@ -245,28 +246,7 @@ export default function Home() {
             >
               {/* タブ */}
               {tabs.length > 1 && (
-                <div
-                  style={{
-                    display: "flex",
-                    borderBottom: "1px solid var(--color-border)",
-                  }}
-                >
-                  {tabs.map((tab) => (
-                    <button
-                      key={tab.key}
-                      onClick={() => setActiveTab(tab.key)}
-                      className="flex-1 py-2.5 text-sm font-medium"
-                      style={{
-                        color: currentTab === tab.key ? "var(--arcoblue-6)" : "var(--color-text-3)",
-                        borderBottom: currentTab === tab.key ? "2px solid var(--arcoblue-6)" : "2px solid transparent",
-                        background: "none",
-                        cursor: "pointer",
-                      }}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
-                </div>
+                <Tabs tabs={tabs} activeKey={currentTab} onChange={setActiveTab} />
               )}
 
               <div className="p-4">
