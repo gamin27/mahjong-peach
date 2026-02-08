@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { CompletedGame } from "@/lib/types/game";
@@ -9,6 +9,8 @@ import Main from "@/components/Main";
 import GameScoreTable from "@/components/GameScoreTable";
 import Button from "@/components/Button";
 import Tabs from "@/components/Tabs";
+import FooterNav from "@/components/FooterNav";
+import Tooltip from "@/components/Tooltip";
 import { TILE_LABELS } from "@/components/YakumanModal";
 
 interface PlayerStats {
@@ -37,6 +39,23 @@ interface SessionData {
   ptRate: number;
 }
 
+interface AchievementData {
+  userId: string;
+  displayName: string;
+  avatarUrl: string | null;
+  tobashiCount: number;
+  flowCount: number;
+  fugouCount: number;
+  yakumanCount: number;
+}
+
+const ACHIEVEMENTS = [
+  { key: "tobashi", icon: "💥", label: "飛ばし", desc: "対局中に相手を飛ばした回数" },
+  { key: "flow", icon: "🔥", label: "雀士フロー", desc: "3連続1位を達成した回数" },
+  { key: "fugou", icon: "💰", label: "富豪", desc: "スコア100以上を記録した回数" },
+  { key: "yakuman", icon: "🀄", label: "役満", desc: "役満を上がった回数" },
+] as const;
+
 const PAGE_SIZE = 30;
 
 export default function HistoryPage() {
@@ -48,20 +67,17 @@ export default function HistoryPage() {
   const [yakumans4, setYakumans4] = useState<YakumanItem[]>([]);
   const [sessions3, setSessions3] = useState<SessionData[]>([]);
   const [sessions4, setSessions4] = useState<SessionData[]>([]);
+  const [achievements3, setAchievements3] = useState<AchievementData[]>([]);
+  const [achievements4, setAchievements4] = useState<AchievementData[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<3 | 4>(3);
-  const [subTab, setSubTab] = useState<"summary" | "games">("summary");
+  const [subTab, setSubTab] = useState<"summary" | "games" | "achievements">(
+    "summary",
+  );
+  const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [username, setUsername] = useState("");
-  const [showMenu, setShowMenu] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.replace("/login");
-  };
-
   useEffect(() => {
     const fetchHistory = async () => {
       const {
@@ -164,6 +180,13 @@ export default function HistoryPage() {
           tobiSet.add(`${t.game_id}:${t.user_id}`);
         }
       }
+
+      // 飛ばしデータを取得
+      const { data: tobashiData } = await supabase
+        .from("tobashi_records")
+        .select("game_id, user_id")
+        .in("game_id", gameIds)
+        .eq("type", "tobashi");
 
       // プレイヤーごとの成績集計
       const buildStats = (playerCount: number): PlayerStats[] => {
@@ -280,7 +303,7 @@ export default function HistoryPage() {
       const { data: yakumanData } = await supabase
         .from("yakuman_records")
         .select(
-          "game_id, display_name, avatar_url, yakuman_type, winning_tile, created_at"
+          "game_id, user_id, display_name, avatar_url, yakuman_type, winning_tile, created_at"
         )
         .in("game_id", gameIds);
 
@@ -338,6 +361,114 @@ export default function HistoryPage() {
         setYakumans4(y4);
       }
 
+      // 実績集計
+      const currentYear = new Date().getFullYear();
+      const buildAchievements = (playerCount: number): AchievementData[] => {
+        const yearGames = (gamesData || [])
+          .filter(
+            (g) =>
+              gamePlayerCount[g.id] === playerCount &&
+              new Date(g.created_at).getFullYear() === currentYear,
+          )
+          .sort(
+            (a, b) =>
+              new Date(a.created_at).getTime() -
+              new Date(b.created_at).getTime(),
+          );
+
+        const yearGameIdSet = new Set(yearGames.map((g) => g.id));
+        const pd: Record<
+          string,
+          {
+            displayName: string;
+            avatarUrl: string | null;
+            tobashiCount: number;
+            ranks: number[];
+            fugouCount: number;
+            yakumanCount: number;
+          }
+        > = {};
+
+        for (const g of yearGames) {
+          const scores = gameMap[g.id];
+          if (!scores) continue;
+          const sorted = [...scores].sort((a, b) => b.score - a.score);
+          sorted.forEach((s, idx) => {
+            if (!pd[s.user_id]) {
+              pd[s.user_id] = {
+                displayName: s.display_name,
+                avatarUrl: s.avatar_url,
+                tobashiCount: 0,
+                ranks: [],
+                fugouCount: 0,
+                yakumanCount: 0,
+              };
+            }
+            pd[s.user_id].ranks.push(idx + 1);
+            if (s.score >= 100) pd[s.user_id].fugouCount++;
+          });
+        }
+
+        if (tobashiData) {
+          for (const t of tobashiData) {
+            if (yearGameIdSet.has(t.game_id) && pd[t.user_id]) {
+              pd[t.user_id].tobashiCount++;
+            }
+          }
+        }
+
+        if (yakumanData) {
+          for (const y of yakumanData) {
+            if (yearGameIdSet.has(y.game_id) && pd[y.user_id]) {
+              pd[y.user_id].yakumanCount++;
+            }
+          }
+        }
+
+        return Object.entries(pd)
+          .map(([uid, d]) => {
+            let consecutive = 0;
+            let flowCount = 0;
+            for (const rank of d.ranks) {
+              if (rank === 1) {
+                consecutive++;
+                if (consecutive === 3) {
+                  flowCount++;
+                  consecutive = 0;
+                }
+              } else {
+                consecutive = 0;
+              }
+            }
+            return {
+              userId: uid,
+              displayName: d.displayName,
+              avatarUrl: d.avatarUrl,
+              tobashiCount: d.tobashiCount,
+              flowCount,
+              fugouCount: d.fugouCount,
+              yakumanCount: d.yakumanCount,
+            };
+          })
+          .filter(
+            (a) =>
+              a.tobashiCount > 0 ||
+              a.flowCount > 0 ||
+              a.fugouCount > 0 ||
+              a.yakumanCount > 0,
+          )
+          .sort((a, b) => {
+            const totalA =
+              a.tobashiCount + a.flowCount + a.fugouCount + a.yakumanCount;
+            const totalB =
+              b.tobashiCount + b.flowCount + b.fugouCount + b.yakumanCount;
+            return totalB - totalA;
+          });
+      };
+
+      setAchievements3(buildAchievements(3));
+      setAchievements4(buildAchievements(4));
+
       setLoading(false);
     };
 
@@ -345,17 +476,18 @@ export default function HistoryPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // ツールチップ外クリックで閉じる
   useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setShowMenu(false);
+    if (!activeTooltip) return;
+    const handler = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest("[data-achievement-badge]")) {
+        setActiveTooltip(null);
       }
     };
-    if (showMenu) {
-      document.addEventListener("mousedown", handleClick);
-    }
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [showMenu]);
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [activeTooltip]);
 
   // サブタブ切り替え時にページネーションリセット
   useEffect(() => {
@@ -375,6 +507,7 @@ export default function HistoryPage() {
   const currentPlayers = currentTab === 3 ? players3 : players4;
   const currentYakumans = currentTab === 3 ? yakumans3 : yakumans4;
   const currentSessions = currentTab === 3 ? sessions3 : sessions4;
+  const currentAchievements = currentTab === 3 ? achievements3 : achievements4;
   const lastLabel = currentTab === 3 ? "3位率" : "4位率";
 
   const visibleSessions = currentSessions.slice(0, visibleCount);
@@ -430,6 +563,7 @@ export default function HistoryPage() {
               tabs={[
                 { key: "summary" as const, label: "サマリー" },
                 { key: "games" as const, label: "戦績" },
+                { key: "achievements" as const, label: "実績" },
               ]}
               activeKey={subTab}
               onChange={setSubTab}
@@ -635,113 +769,135 @@ export default function HistoryPage() {
                 )}
               </>
             )}
+
+            {/* 実績タブ */}
+            {subTab === "achievements" && (
+              <>
+                <p
+                  className="text-center text-xs"
+                  style={{ color: "var(--color-text-4)" }}
+                >
+                  {new Date().getFullYear()}年
+                </p>
+                {currentAchievements.length === 0 ? (
+                  <div
+                    className="flex flex-col items-center justify-center rounded-lg py-12"
+                    style={{
+                      background: "var(--color-bg-1)",
+                      border: "1px solid var(--color-border)",
+                    }}
+                  >
+                    <p
+                      className="text-sm"
+                      style={{ color: "var(--color-text-3)" }}
+                    >
+                      まだ実績はありません
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-3">
+                    {currentAchievements.map((a) => (
+                      <div
+                        key={a.userId}
+                        className="rounded-lg p-4"
+                        style={{
+                          background: "var(--color-bg-1)",
+                          border: "1px solid var(--color-border)",
+                          boxShadow: "var(--shadow-card)",
+                        }}
+                      >
+                        <div className="mb-3 flex items-center gap-3">
+                          <Avatar
+                            src={a.avatarUrl}
+                            name={a.displayName}
+                            size={36}
+                          />
+                          <p
+                            className="truncate text-sm font-medium"
+                            style={{ color: "var(--color-text-1)" }}
+                          >
+                            {a.displayName}
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {ACHIEVEMENTS.map((ach) => {
+                            const count =
+                              ach.key === "tobashi"
+                                ? a.tobashiCount
+                                : ach.key === "flow"
+                                  ? a.flowCount
+                                  : ach.key === "fugou"
+                                    ? a.fugouCount
+                                    : a.yakumanCount;
+                            if (count === 0) return null;
+                            const tooltipId = `${a.userId}:${ach.key}`;
+                            const isOpen = activeTooltip === tooltipId;
+                            return (
+                              <Tooltip
+                                key={ach.key}
+                                open={isOpen}
+                                content={
+                                  <>
+                                    <p
+                                      className="text-xs font-medium"
+                                      style={{
+                                        color: "var(--color-text-1)",
+                                      }}
+                                    >
+                                      {ach.label}
+                                    </p>
+                                    <p
+                                      className="text-xs"
+                                      style={{
+                                        color: "var(--color-text-3)",
+                                      }}
+                                    >
+                                      {ach.desc}
+                                    </p>
+                                  </>
+                                }
+                              >
+                                <button
+                                  onClick={() =>
+                                    setActiveTooltip(
+                                      isOpen ? null : tooltipId,
+                                    )
+                                  }
+                                  data-achievement-badge
+                                  className="flex items-center gap-1 rounded-full px-3 py-1.5"
+                                  style={{
+                                    background: "var(--color-fill-2)",
+                                    color: "var(--color-text-1)",
+                                    border: `1px solid ${isOpen ? "var(--arcoblue-6)" : "var(--color-border)"}`,
+                                    cursor: "pointer",
+                                    fontSize: "13px",
+                                  }}
+                                >
+                                  <span>{ach.icon}</span>
+                                  <span
+                                    className="font-semibold"
+                                    style={{
+                                      color: "var(--color-text-1)",
+                                    }}
+                                  >
+                                    ×{count}
+                                  </span>
+                                </button>
+                              </Tooltip>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
           </>
         )}
       </Main>
 
-      {/* フッターナビ */}
-      <nav
-        style={{
-          position: "fixed",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          display: "flex",
-          justifyContent: "space-around",
-          alignItems: "center",
-          padding: "8px 16px",
-          paddingBottom: "calc(8px + env(safe-area-inset-bottom))",
-          background: "var(--color-bg-1)",
-          borderTop: "1px solid var(--color-border)",
-        }}
-      >
-        <button
-          onClick={() => router.push("/")}
-          style={{ fontSize: "24px", lineHeight: 1 }}
-        >
-          🀄
-        </button>
-        <button style={{ fontSize: "24px", lineHeight: 1, opacity: 1 }}>
-          🗒️
-        </button>
-        <button
-          onClick={() => router.push("/ranking")}
-          style={{ fontSize: "24px", lineHeight: 1 }}
-        >
-          👑
-        </button>
-        <div ref={menuRef} style={{ position: "relative" }}>
-          <button
-            onClick={() => setShowMenu((v) => !v)}
-            style={{
-              lineHeight: 1,
-              padding: 0,
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-            }}
-          >
-            <Avatar src={avatarUrl} name={username || "?"} size={28} />
-          </button>
-          {showMenu && (
-            <div
-              style={{
-                position: "absolute",
-                bottom: "calc(100% + 8px)",
-                right: 0,
-                background: "var(--color-bg-1)",
-                border: "1px solid var(--color-border)",
-                borderRadius: "8px",
-                boxShadow: "var(--shadow-popup)",
-                minWidth: "160px",
-                overflow: "hidden",
-                zIndex: 100,
-              }}
-            >
-              <button
-                onClick={() => {
-                  setShowMenu(false);
-                  router.push("/account/edit");
-                }}
-                style={{
-                  display: "block",
-                  width: "100%",
-                  padding: "12px 16px",
-                  fontSize: "14px",
-                  color: "var(--color-text-1)",
-                  background: "none",
-                  border: "none",
-                  borderBottom: "1px solid var(--color-border)",
-                  textAlign: "left",
-                  cursor: "pointer",
-                }}
-              >
-                アカウント編集
-              </button>
-              <button
-                onClick={() => {
-                  setShowMenu(false);
-                  handleLogout();
-                }}
-                style={{
-                  display: "block",
-                  width: "100%",
-                  padding: "12px 16px",
-                  fontSize: "14px",
-                  color: "var(--red-6)",
-                  background: "none",
-                  border: "none",
-                  textAlign: "left",
-                  cursor: "pointer",
-                }}
-              >
-                ログアウト
-              </button>
-            </div>
-          )}
-        </div>
-      </nav>
-      <div style={{ height: "70px" }} />
+      <FooterNav active="history" avatarUrl={avatarUrl} username={username} />
     </div>
   );
 }

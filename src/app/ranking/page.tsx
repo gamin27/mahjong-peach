@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Avatar from "@/components/Avatar";
 import Main from "@/components/Main";
 import Tabs from "@/components/Tabs";
+import FooterNav from "@/components/FooterNav";
 
 interface PlayerData {
   userId: string;
@@ -241,14 +242,6 @@ export default function RankingPage() {
   const [activeTab, setActiveTab] = useState<3 | 4>(3);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [username, setUsername] = useState("");
-  const [showMenu, setShowMenu] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.replace("/login");
-  };
-
   useEffect(() => {
     const fetchRanking = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -334,18 +327,6 @@ export default function RankingPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setShowMenu(false);
-      }
-    };
-    if (showMenu) {
-      document.addEventListener("mousedown", handleClick);
-    }
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [showMenu]);
-
   if (loading) return null;
 
   const has3 = players3.length > 0;
@@ -398,91 +379,7 @@ export default function RankingPage() {
         )}
       </Main>
 
-      {/* フッターナビ */}
-      <nav
-        style={{
-          position: "fixed",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          display: "flex",
-          justifyContent: "space-around",
-          alignItems: "center",
-          padding: "8px 16px",
-          paddingBottom: "calc(8px + env(safe-area-inset-bottom))",
-          background: "var(--color-bg-1)",
-          borderTop: "1px solid var(--color-border)",
-        }}
-      >
-        <button onClick={() => router.push("/")} style={{ fontSize: "24px", lineHeight: 1 }}>🀄</button>
-        <button onClick={() => router.push("/history")} style={{ fontSize: "24px", lineHeight: 1 }}>🗒️</button>
-        <button style={{ fontSize: "24px", lineHeight: 1, opacity: 1 }}>👑</button>
-        <div ref={menuRef} style={{ position: "relative" }}>
-          <button
-            onClick={() => setShowMenu((v) => !v)}
-            style={{ lineHeight: 1, padding: 0, background: "none", border: "none", cursor: "pointer" }}
-          >
-            <Avatar src={avatarUrl} name={username || "?"} size={28} />
-          </button>
-          {showMenu && (
-            <div
-              style={{
-                position: "absolute",
-                bottom: "calc(100% + 8px)",
-                right: 0,
-                background: "var(--color-bg-1)",
-                border: "1px solid var(--color-border)",
-                borderRadius: "8px",
-                boxShadow: "var(--shadow-popup)",
-                minWidth: "160px",
-                overflow: "hidden",
-                zIndex: 100,
-              }}
-            >
-              <button
-                onClick={() => {
-                  setShowMenu(false);
-                  router.push("/account/edit");
-                }}
-                style={{
-                  display: "block",
-                  width: "100%",
-                  padding: "12px 16px",
-                  fontSize: "14px",
-                  color: "var(--color-text-1)",
-                  background: "none",
-                  border: "none",
-                  borderBottom: "1px solid var(--color-border)",
-                  textAlign: "left",
-                  cursor: "pointer",
-                }}
-              >
-                アカウント編集
-              </button>
-              <button
-                onClick={() => {
-                  setShowMenu(false);
-                  handleLogout();
-                }}
-                style={{
-                  display: "block",
-                  width: "100%",
-                  padding: "12px 16px",
-                  fontSize: "14px",
-                  color: "var(--red-6)",
-                  background: "none",
-                  border: "none",
-                  textAlign: "left",
-                  cursor: "pointer",
-                }}
-              >
-                ログアウト
-              </button>
-            </div>
-          )}
-        </div>
-      </nav>
-      <div style={{ height: "70px" }} />
+      <FooterNav active="ranking" avatarUrl={avatarUrl} username={username} />
     </div>
   );
 }
