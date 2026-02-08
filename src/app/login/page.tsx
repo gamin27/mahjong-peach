@@ -38,6 +38,9 @@ export default function LoginPage() {
           <p className="text-sm" style={{ color: "var(--color-text-3)" }}>
             ログインして成績を管理しよう
           </p>
+          <p className="text-sm" style={{ color: "var(--color-text-3)" }}>
+            Safari. Chrome, Edge で立ち上げてね
+          </p>
         </div>
 
         <button

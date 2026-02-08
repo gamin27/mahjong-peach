@@ -471,8 +471,6 @@ export default function RoomDetailPage() {
           <>
             <p className="text-sm" style={{ color: "var(--color-text-2)" }}>
               {members.length} / {maxMembers} 人参加中
-              （対局 {playerCount}/{room.player_count}
-              ＋ 控え {waitingCount}/3）
             </p>
 
             {isCreator && (

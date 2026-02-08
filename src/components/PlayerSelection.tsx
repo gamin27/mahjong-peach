@@ -62,7 +62,7 @@ export default function PlayerSelection({
                 color: isPlayer ? "var(--green-6)" : "var(--orange-6)",
               }}
             >
-              {isPlayer ? "対局" : "控え"}
+              {isPlayer ? "✅ 対局" : "⬜️ 控え"}
             </span>
           </div>
         );
