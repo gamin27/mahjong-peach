@@ -6,6 +6,7 @@ import type { YakumanEntry } from "@/lib/types/game";
 import Avatar from "@/components/Avatar";
 import YakumanModal, { TILE_LABELS } from "@/components/YakumanModal";
 import Input from "@/components/Input";
+import Button from "@/components/Button";
 
 interface ScoreEntryProps {
   players: RoomMember[];
@@ -163,30 +164,17 @@ export default function ScoreEntry({
       )}
 
       {/* 役満記録ボタン */}
-      <button
+      <Button
+        variant="secondary"
+        color="orange"
         onClick={() => setShowYakumanModal(true)}
-        className="rounded-lg px-4 py-3 text-sm font-medium"
-        style={{
-          border: "1px solid var(--orange-6)",
-          color: "var(--orange-6)",
-          background: "var(--color-bg-1)",
-        }}
       >
         役満を記録
-      </button>
+      </Button>
 
-      <button
-        onClick={handleConfirm}
-        disabled={!allFilled}
-        className="rounded-lg px-4 py-3 text-sm font-semibold text-white"
-        style={{
-          background: "var(--arcoblue-6)",
-          opacity: allFilled ? 1 : 0.4,
-          cursor: allFilled ? "pointer" : "not-allowed",
-        }}
-      >
+      <Button onClick={handleConfirm} disabled={!allFilled}>
         確定
-      </button>
+      </Button>
 
       {showYakumanModal && (
         <YakumanModal

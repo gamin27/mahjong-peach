@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { RoomMember } from "@/lib/types/room";
 import type { YakumanEntry } from "@/lib/types/game";
 import Avatar from "@/components/Avatar";
+import Button from "@/components/Button";
 
 const YAKUMAN_TYPES = [
   "天和",
@@ -251,25 +252,15 @@ export default function YakumanModal({
         </div>
 
         {/* 追加ボタン */}
-        <button
+        <Button
+          variant="tertiary"
+          fullWidth
           onClick={handleAdd}
           disabled={!canAdd}
-          style={{
-            width: "100%",
-            padding: "10px",
-            fontSize: "14px",
-            fontWeight: 500,
-            borderRadius: "8px",
-            border: "none",
-            background: "var(--arcoblue-6)",
-            color: "#fff",
-            cursor: canAdd ? "pointer" : "not-allowed",
-            opacity: canAdd ? 1 : 0.4,
-            marginBottom: "16px",
-          }}
+          style={{ marginBottom: "16px" }}
         >
           追加
-        </button>
+        </Button>
 
         {/* 追加済みリスト */}
         {yakumans.length > 0 && (
@@ -319,22 +310,9 @@ export default function YakumanModal({
         )}
 
         {/* 完了 */}
-        <button
-          onClick={onClose}
-          style={{
-            width: "100%",
-            padding: "10px",
-            fontSize: "14px",
-            fontWeight: 500,
-            borderRadius: "8px",
-            border: "1px solid var(--color-border)",
-            background: "var(--color-bg-1)",
-            color: "var(--color-text-2)",
-            cursor: "pointer",
-          }}
-        >
+        <Button fullWidth onClick={onClose}>
           完了
-        </button>
+        </Button>
       </div>
     </div>
   );

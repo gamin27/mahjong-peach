@@ -10,6 +10,7 @@ import ScoreEntry from "@/components/ScoreEntry";
 import GameResult from "@/components/GameResult";
 import GameScoreTable from "@/components/GameScoreTable";
 import Main from "@/components/Main";
+import Button from "@/components/Button";
 
 type Phase = "selecting" | "scoring" | "result";
 
@@ -373,13 +374,9 @@ export default function RoomDetailPage() {
           <p style={{ color: "var(--color-text-2)" }}>
             ルームが見つかりません
           </p>
-          <button
-            onClick={() => router.push("/")}
-            className="rounded-lg px-4 py-2 text-sm font-medium text-white"
-            style={{ background: "var(--arcoblue-6)" }}
-          >
+          <Button onClick={() => router.push("/")}>
             ホームに戻る
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -412,16 +409,12 @@ export default function RoomDetailPage() {
           ← ホーム
         </button>
         {isCreator && phase !== "result" && (
-          <button
+          <Button
+            size="sm"
             onClick={() => setShowLeaveModal(true)}
-            className="rounded px-3 py-1 text-xs font-medium"
-            style={{
-              border: "1px solid var(--red-6)",
-              color: "var(--red-6)",
-            }}
           >
             今日の麻雀を終える
-          </button>
+          </Button>
         )}
       </header>
 
@@ -495,35 +488,25 @@ export default function RoomDetailPage() {
             />
 
             {isCreator && (
-              <button
+              <Button
+                color="green"
                 disabled={!isReady}
                 onClick={handleStartGame}
-                className="rounded-lg px-4 py-3 text-sm font-semibold text-white"
-                style={{
-                  background: "var(--green-6)",
-                  opacity: isReady ? 1 : 0.4,
-                  cursor: isReady ? "pointer" : "not-allowed",
-                }}
               >
                 対局を開始
-              </button>
+              </Button>
             )}
 
             {(completedGames.length > 0 || !isCreator) && (
-              <button
+              <Button
+                variant="secondary"
                 onClick={async () => {
                   if (room) await fetchCompletedGames(room.id);
                   setShowResultModal(true);
                 }}
-                className="rounded-lg px-4 py-3 text-sm font-medium"
-                style={{
-                  border: "1px solid var(--arcoblue-6)",
-                  color: "var(--arcoblue-6)",
-                  background: "var(--color-bg-1)",
-                }}
               >
                 途中結果を見る
-              </button>
+              </Button>
             )}
 
           </>
@@ -551,34 +534,25 @@ export default function RoomDetailPage() {
                 <p className="text-sm" style={{ color: "var(--color-text-3)" }}>
                   ホストが点数を入力中です...
                 </p>
-                <button
+                <Button
+                  variant="secondary"
                   onClick={() => router.push("/")}
-                  className="mt-2 rounded-lg px-4 py-2 text-sm font-medium"
-                  style={{
-                    border: "1px solid var(--arcoblue-6)",
-                    color: "var(--arcoblue-6)",
-                    background: "var(--color-bg-1)",
-                  }}
+                  style={{ marginTop: "8px" }}
                 >
                   ホームに戻る
-                </button>
+                </Button>
               </div>
             )}
             {(completedGames.length > 0 || !isCreator) && (
-              <button
+              <Button
+                variant="secondary"
                 onClick={async () => {
                   if (room) await fetchCompletedGames(room.id);
                   setShowResultModal(true);
                 }}
-                className="rounded-lg px-4 py-3 text-sm font-medium"
-                style={{
-                  border: "1px solid var(--arcoblue-6)",
-                  color: "var(--arcoblue-6)",
-                  background: "var(--color-bg-1)",
-                }}
               >
                 途中結果を見る
-              </button>
+              </Button>
             )}
           </>
         )}
@@ -636,17 +610,14 @@ export default function RoomDetailPage() {
                   <p className="text-2xl">🀄</p>
                   <p className="text-sm">まだ対局結果がありません</p>
                 </div>
-                <button
+                <Button
+                  variant="tertiary"
+                  fullWidth
                   onClick={() => setShowResultModal(false)}
-                  className="mt-2 w-full rounded-lg px-4 py-2.5 text-sm font-medium"
-                  style={{
-                    border: "1px solid var(--color-border)",
-                    color: "var(--color-text-2)",
-                    background: "var(--color-bg-1)",
-                  }}
+                  style={{ marginTop: "8px" }}
                 >
                   閉じる
-                </button>
+                </Button>
               </div>
             </div>
           );
@@ -689,17 +660,14 @@ export default function RoomDetailPage() {
                 <GameScoreTable games={completedGames} ptRate={room.pt_rate} />
               </div>
 
-              <button
+              <Button
+                variant="tertiary"
+                fullWidth
                 onClick={() => setShowResultModal(false)}
-                className="mt-4 w-full rounded-lg px-4 py-2.5 text-sm font-medium"
-                style={{
-                  border: "1px solid var(--color-border)",
-                  color: "var(--color-text-2)",
-                  background: "var(--color-bg-1)",
-                }}
+                style={{ marginTop: "16px" }}
               >
                 閉じる
-              </button>
+              </Button>
             </div>
           </div>
         );
@@ -744,27 +712,22 @@ export default function RoomDetailPage() {
               ルームを解散し、全員退出します。
             </p>
             <div className="mt-5 flex gap-3">
-              <button
+              <Button
+                variant="tertiary"
                 onClick={() => setShowLeaveModal(false)}
-                className="flex-1 rounded-lg px-4 py-2.5 text-sm font-medium"
-                style={{
-                  border: "1px solid var(--color-border)",
-                  color: "var(--color-text-2)",
-                  background: "var(--color-bg-1)",
-                }}
+                style={{ flex: 1 }}
               >
                 キャンセル
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => {
                   setShowLeaveModal(false);
                   handleLeave();
                 }}
-                className="flex-1 rounded-lg px-4 py-2.5 text-sm font-medium text-white"
-                style={{ background: "var(--arcoblue-6)" }}
+                style={{ flex: 1 }}
               >
                 終える
-              </button>
+              </Button>
             </div>
           </div>
         </div>

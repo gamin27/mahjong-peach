@@ -8,6 +8,7 @@ import type { RoomMember } from "@/lib/types/room";
 import Input from "@/components/Input";
 import Label from "@/components/Label";
 import Main from "@/components/Main";
+import Button from "@/components/Button";
 
 export default function JoinRoomPage() {
   const router = useRouter();
@@ -158,14 +159,9 @@ export default function JoinRoomPage() {
             </p>
           )}
 
-          <button
-            onClick={handleJoin}
-            disabled={loading}
-            className="rounded-lg px-4 py-2.5 text-sm font-medium text-white transition-opacity disabled:opacity-50"
-            style={{ background: "var(--arcoblue-6)" }}
-          >
+          <Button onClick={handleJoin} disabled={loading}>
             {loading ? "参加中..." : "ルームに参加"}
-          </button>
+          </Button>
         </div>
       </Main>
     </div>

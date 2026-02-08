@@ -8,6 +8,7 @@ import Avatar from "@/components/Avatar";
 import Input from "@/components/Input";
 import Label from "@/components/Label";
 import Main from "@/components/Main";
+import Button from "@/components/Button";
 
 export default function AccountEditPage() {
   const router = useRouter();
@@ -257,25 +258,9 @@ export default function AccountEditPage() {
             </p>
           )}
 
-          <button
-            onClick={handleSave}
-            disabled={saving || !username.trim()}
-            style={{
-              width: "100%",
-              padding: "10px 16px",
-              fontSize: "14px",
-              fontWeight: 500,
-              borderRadius: "8px",
-              border: "none",
-              background: "var(--arcoblue-6)",
-              color: "#fff",
-              cursor:
-                saving || !username.trim() ? "not-allowed" : "pointer",
-              opacity: saving || !username.trim() ? 0.5 : 1,
-            }}
-          >
+          <Button onClick={handleSave} disabled={saving || !username.trim()} fullWidth>
             {saving ? "保存中..." : "保存する"}
-          </button>
+          </Button>
         </div>
       </Main>
     </div>

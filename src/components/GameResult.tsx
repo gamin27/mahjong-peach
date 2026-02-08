@@ -5,6 +5,7 @@ import type { CompletedGame } from "@/lib/types/game";
 import Avatar from "@/components/Avatar";
 import { TILE_LABELS } from "@/components/YakumanModal";
 import Input from "@/components/Input";
+import Button from "@/components/Button";
 
 interface GameResultProps {
   games: CompletedGame[];
@@ -314,32 +315,20 @@ export default function GameResult({
                             {editSum !== 0 && " (±0にしてください)"}
                           </p>
                           <div className="flex gap-2">
-                            <button
+                            <Button
+                              variant="tertiary"
+                              size="sm"
                               onClick={handleCancelEdit}
-                              className="rounded px-3 py-1.5 text-xs font-medium"
-                              style={{
-                                border: "1px solid var(--color-border)",
-                                color: "var(--color-text-2)",
-                                background: "var(--color-bg-1)",
-                              }}
                             >
                               キャンセル
-                            </button>
-                            <button
+                            </Button>
+                            <Button
+                              size="sm"
                               onClick={handleSaveEdit}
                               disabled={!canSave || saving}
-                              className="rounded px-3 py-1.5 text-xs font-medium text-white"
-                              style={{
-                                background: "var(--arcoblue-6)",
-                                opacity: canSave && !saving ? 1 : 0.4,
-                                cursor:
-                                  canSave && !saving
-                                    ? "pointer"
-                                    : "not-allowed",
-                              }}
                             >
                               {saving ? "保存中..." : "保存"}
-                            </button>
+                            </Button>
                           </div>
                         </div>
                       </td>
@@ -376,13 +365,9 @@ export default function GameResult({
         </table>
       </div>
 
-      <button
-        onClick={onGoHome}
-        className="rounded-lg px-4 py-3 text-sm font-semibold text-white"
-        style={{ background: "var(--arcoblue-6)" }}
-      >
+      <Button onClick={onGoHome}>
         ホームに戻る
-      </button>
+      </Button>
     </div>
   );
 }

@@ -7,6 +7,7 @@ import type { CompletedGame } from "@/lib/types/game";
 import Avatar from "@/components/Avatar";
 import Main from "@/components/Main";
 import GameScoreTable from "@/components/GameScoreTable";
+import Button from "@/components/Button";
 import { TILE_LABELS } from "@/components/YakumanModal";
 
 interface PlayerStats {
@@ -601,6 +602,7 @@ export default function HistoryPage() {
                             style={{ color: "var(--color-text-3)" }}
                           >
                             {new Date(y.date).toLocaleDateString("ja-JP", {
+                              year: "numeric",
                               month: "short",
                               day: "numeric",
                             })}
@@ -647,20 +649,14 @@ export default function HistoryPage() {
                       </div>
                     ))}
                     {hasMore && (
-                      <button
+                      <Button
+                        variant="tertiary"
                         onClick={() =>
                           setVisibleCount((v) => v + PAGE_SIZE)
                         }
-                        className="rounded-lg px-4 py-3 text-sm font-medium"
-                        style={{
-                          border: "1px solid var(--color-border)",
-                          color: "var(--color-text-2)",
-                          background: "var(--color-bg-1)",
-                          cursor: "pointer",
-                        }}
                       >
                         もっと見る（残り{currentSessions.length - visibleCount}件）
-                      </button>
+                      </Button>
                     )}
                   </div>
                 )}
