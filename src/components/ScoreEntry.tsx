@@ -222,7 +222,7 @@ export default function ScoreEntry({
 
       {/* 飛び / 飛ばし */}
       <div className="gap-4">
-        <div>
+        <div className="mb-4">
           <p
             className="mb-2 text-xs font-medium"
             style={{ color: "var(--color-text-3)" }}
