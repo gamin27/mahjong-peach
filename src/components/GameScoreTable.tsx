@@ -24,7 +24,11 @@ export default function GameScoreTable({ games, maxHeight = "50vh", ptRate }: Ga
       totals[s.user_id].total += s.score;
     }
   }
-  const sorted = Object.entries(totals).sort((a, b) => b[1].total - a[1].total);
+  // 最初のゲームのスコア順（部屋に入った順）を維持
+  const playerOrder = games[0].scores.map((s) => s.user_id);
+  const sorted = playerOrder
+    .filter((uid) => totals[uid])
+    .map((uid) => [uid, totals[uid]] as [string, (typeof totals)[string]]);
 
   return (
     <div
