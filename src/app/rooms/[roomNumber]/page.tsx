@@ -354,15 +354,9 @@ export default function RoomDetailPage() {
         >
           ← ホーム
         </button>
-        {phase !== "result" && (
+        {isCreator && phase !== "result" && (
           <button
-            onClick={() => {
-              if (isCreator) {
-                setShowLeaveModal(true);
-              } else {
-                handleLeave();
-              }
-            }}
+            onClick={() => setShowLeaveModal(true)}
             className="rounded px-3 py-1 text-xs font-medium"
             style={{
               border: "1px solid var(--red-6)",
@@ -460,7 +454,7 @@ export default function RoomDetailPage() {
               </button>
             )}
 
-            {completedGames.length > 0 && (
+            {(completedGames.length > 0 || !isCreator) && (
               <button
                 onClick={async () => {
                   if (room) await fetchCompletedGames(room.id);
@@ -514,9 +508,20 @@ export default function RoomDetailPage() {
                 <p className="text-sm" style={{ color: "var(--color-text-3)" }}>
                   ホストが点数を入力中です...
                 </p>
+                <button
+                  onClick={() => router.push("/")}
+                  className="mt-2 rounded-lg px-4 py-2 text-sm font-medium"
+                  style={{
+                    border: "1px solid var(--arcoblue-6)",
+                    color: "var(--arcoblue-6)",
+                    background: "var(--color-bg-1)",
+                  }}
+                >
+                  ホームに戻る
+                </button>
               </div>
             )}
-            {completedGames.length > 0 && (
+            {(completedGames.length > 0 || !isCreator) && (
               <button
                 onClick={async () => {
                   if (room) await fetchCompletedGames(room.id);
@@ -556,7 +561,61 @@ export default function RoomDetailPage() {
       </main>
 
       {/* 途中結果モーダル */}
-      {showResultModal && completedGames.length > 0 && (() => {
+      {showResultModal && (() => {
+        if (completedGames.length === 0) {
+          return (
+            <div
+              style={{
+                position: "fixed",
+                inset: 0,
+                background: "rgba(0,0,0,0.4)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                zIndex: 50,
+                padding: "0 24px",
+              }}
+              onClick={() => setShowResultModal(false)}
+            >
+              <div
+                style={{
+                  background: "var(--color-bg-1)",
+                  borderRadius: "12px",
+                  padding: "24px",
+                  maxWidth: "420px",
+                  width: "100%",
+                  boxShadow: "var(--shadow-card)",
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <p
+                  className="text-sm font-semibold"
+                  style={{ color: "var(--color-text-1)" }}
+                >
+                  途中結果
+                </p>
+                <div
+                  className="mt-4 flex flex-col items-center gap-2 py-8"
+                  style={{ color: "var(--color-text-3)" }}
+                >
+                  <p className="text-2xl">🀄</p>
+                  <p className="text-sm">まだ対局結果がありません</p>
+                </div>
+                <button
+                  onClick={() => setShowResultModal(false)}
+                  className="mt-2 w-full rounded-lg px-4 py-2.5 text-sm font-medium"
+                  style={{
+                    border: "1px solid var(--color-border)",
+                    color: "var(--color-text-2)",
+                    background: "var(--color-bg-1)",
+                  }}
+                >
+                  閉じる
+                </button>
+              </div>
+            </div>
+          );
+        }
         const mid: Record<string, { displayName: string; avatarUrl: string | null; total: number }> = {};
         for (const g of completedGames) {
           for (const s of g.scores) {

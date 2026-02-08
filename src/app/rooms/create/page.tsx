@@ -8,7 +8,7 @@ export default function CreateRoomPage() {
   const router = useRouter();
   const supabase = createClient();
   const [roomNumber, setRoomNumber] = useState("");
-  const [playerCount, setPlayerCount] = useState<3 | 4>(4);
+  const [playerCount, setPlayerCount] = useState<3 | 4>(3);
   const [ptRate, setPtRate] = useState("50");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
