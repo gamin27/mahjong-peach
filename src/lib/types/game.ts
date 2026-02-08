@@ -38,3 +38,10 @@ export interface YakumanEntry {
   yakumanType: string;
   winningTile: string;
 }
+
+/** ScoreEntry → RoomDetailPage へ渡す飛び/飛ばし入力データ */
+export interface TobashiEntry {
+  userId: string;
+  displayName: string;
+  type: "tobi" | "tobashi";
+}

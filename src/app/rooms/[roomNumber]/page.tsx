@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Room, RoomMember } from "@/lib/types/room";
-import type { CompletedGame, YakumanEntry } from "@/lib/types/game";
+import type { CompletedGame, YakumanEntry, TobashiEntry } from "@/lib/types/game";
 import PlayerSelection from "@/components/PlayerSelection";
 import ScoreEntry from "@/components/ScoreEntry";
 import GameResult from "@/components/GameResult";
@@ -254,7 +254,8 @@ export default function RoomDetailPage() {
 
   const handleScoreConfirm = async (
     scores: { userId: string; displayName: string; score: number }[],
-    yakumans: YakumanEntry[]
+    yakumans: YakumanEntry[],
+    tobashis: TobashiEntry[]
   ) => {
     if (!room) return;
 
@@ -293,6 +294,17 @@ export default function RoomDetailPage() {
         winning_tile: y.winningTile,
       }));
       await supabase.from("yakuman_records").insert(yakumanRows);
+    }
+
+    // 飛び・飛ばし記録を保存
+    if (tobashis.length > 0) {
+      const tobashiRows = tobashis.map((t) => ({
+        game_id: game.id,
+        user_id: t.userId,
+        display_name: t.displayName,
+        type: t.type,
+      }));
+      await supabase.from("tobashi_records").insert(tobashiRows);
     }
 
     setCompletedGames((prev) => [

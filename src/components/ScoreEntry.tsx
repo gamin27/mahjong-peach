@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import type { RoomMember } from "@/lib/types/room";
-import type { YakumanEntry } from "@/lib/types/game";
+import type { YakumanEntry, TobashiEntry } from "@/lib/types/game";
 import Avatar from "@/components/Avatar";
 import YakumanModal, { TILE_LABELS } from "@/components/YakumanModal";
 import Input from "@/components/Input";
@@ -13,7 +13,8 @@ interface ScoreEntryProps {
   playerCount: 3 | 4;
   onConfirm: (
     scores: { userId: string; displayName: string; score: number }[],
-    yakumans: YakumanEntry[]
+    yakumans: YakumanEntry[],
+    tobashis: TobashiEntry[],
   ) => void;
 }
 
@@ -25,6 +26,8 @@ export default function ScoreEntry({
   const [inputs, setInputs] = useState<Record<string, string>>({});
   const [yakumans, setYakumans] = useState<YakumanEntry[]>([]);
   const [showYakumanModal, setShowYakumanModal] = useState(false);
+  const [tobiIds, setTobiIds] = useState<Set<string>>(new Set()); // 飛んだ人
+  const [tobashiIds, setTobashiIds] = useState<Set<string>>(new Set()); // 飛ばした人
 
   const handleChange = (userId: string, value: string) => {
     const cleaned = value.replace(/[^0-9-]/g, "");
@@ -33,13 +36,13 @@ export default function ScoreEntry({
 
   const filledEntries = useMemo(() => {
     return players.filter(
-      (p) => inputs[p.user_id] !== undefined && inputs[p.user_id] !== ""
+      (p) => inputs[p.user_id] !== undefined && inputs[p.user_id] !== "",
     );
   }, [players, inputs]);
 
   const emptyEntries = useMemo(() => {
     return players.filter(
-      (p) => inputs[p.user_id] === undefined || inputs[p.user_id] === ""
+      (p) => inputs[p.user_id] === undefined || inputs[p.user_id] === "",
     );
   }, [players, inputs]);
 
@@ -48,12 +51,48 @@ export default function ScoreEntry({
     if (!autoCalcUser) return null;
     const sum = filledEntries.reduce(
       (acc, p) => acc + (parseInt(inputs[p.user_id], 10) || 0),
-      0
+      0,
     );
     return 0 - sum;
   }, [autoCalcUser, filledEntries, inputs]);
 
   const allFilled = filledEntries.length >= playerCount - 1 && autoCalcUser;
+
+  const toggleTobi = (userId: string) => {
+    setTobiIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(userId)) {
+        next.delete(userId);
+      } else {
+        next.add(userId);
+        // 飛ばしから除外
+        setTobashiIds((s) => {
+          const n = new Set(s);
+          n.delete(userId);
+          return n;
+        });
+      }
+      return next;
+    });
+  };
+
+  const toggleTobashi = (userId: string) => {
+    setTobashiIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(userId)) {
+        next.delete(userId);
+      } else {
+        next.add(userId);
+        // 飛びから除外
+        setTobiIds((s) => {
+          const n = new Set(s);
+          n.delete(userId);
+          return n;
+        });
+      }
+      return next;
+    });
+  };
 
   const handleConfirm = () => {
     if (!allFilled || autoCalcScore === null || !autoCalcUser) return;
@@ -67,7 +106,24 @@ export default function ScoreEntry({
           : parseInt(inputs[p.user_id], 10) || 0,
     }));
 
-    onConfirm(scores, yakumans);
+    const tobashis: TobashiEntry[] = [
+      ...players
+        .filter((p) => tobiIds.has(p.user_id))
+        .map((p) => ({
+          userId: p.user_id,
+          displayName: p.display_name,
+          type: "tobi" as const,
+        })),
+      ...players
+        .filter((p) => tobashiIds.has(p.user_id))
+        .map((p) => ({
+          userId: p.user_id,
+          displayName: p.display_name,
+          type: "tobashi" as const,
+        })),
+    ];
+
+    onConfirm(scores, yakumans, tobashis);
   };
 
   return (
@@ -124,11 +180,6 @@ export default function ScoreEntry({
         );
       })}
 
-      <p className="text-xs" style={{ color: "var(--color-text-3)" }}>
-        {playerCount - 1}人分の点数を入力すると残り1人は自動計算されます
-        （合計 ±0）
-      </p>
-
       {/* 役満記録済みリスト */}
       {yakumans.length > 0 && (
         <div className="flex flex-col gap-1.5">
@@ -142,11 +193,17 @@ export default function ScoreEntry({
               }}
             >
               <Avatar src={y.avatarUrl} name={y.displayName} size={20} />
-              <p className="flex-1 text-xs font-medium" style={{ color: "var(--orange-6)" }}>
-                {y.displayName} - {y.yakumanType} / {TILE_LABELS[y.winningTile] || y.winningTile}
+              <p
+                className="flex-1 text-xs font-medium"
+                style={{ color: "var(--orange-6)" }}
+              >
+                {y.displayName} - {y.yakumanType} /{" "}
+                {TILE_LABELS[y.winningTile] || y.winningTile}
               </p>
               <button
-                onClick={() => setYakumans((prev) => prev.filter((_, j) => j !== i))}
+                onClick={() =>
+                  setYakumans((prev) => prev.filter((_, j) => j !== i))
+                }
                 style={{
                   fontSize: "14px",
                   color: "var(--orange-6)",
@@ -162,6 +219,83 @@ export default function ScoreEntry({
           ))}
         </div>
       )}
+
+      {/* 飛び / 飛ばし */}
+      <div className="gap-4">
+        <div>
+          <p
+            className="mb-2 text-xs font-medium"
+            style={{ color: "var(--color-text-3)" }}
+          >
+            飛ばした人
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {players.map((p) => {
+              const selected = tobashiIds.has(p.user_id);
+              const disabled = tobiIds.has(p.user_id);
+              return (
+                <button
+                  key={p.user_id}
+                  onClick={() => toggleTobashi(p.user_id)}
+                  className="rounded-full px-3 py-1.5 text-xs font-medium"
+                  style={{
+                    background: selected
+                      ? "var(--arcoblue-1)"
+                      : "var(--color-bg-1)",
+                    color: selected
+                      ? "var(--arcoblue-6)"
+                      : disabled
+                        ? "var(--color-text-4)"
+                        : "var(--color-text-3)",
+                    border: `1px solid ${selected ? "var(--arcoblue-6)" : "var(--color-border)"}`,
+                    cursor: "pointer",
+                    opacity: disabled ? 0.4 : 1,
+                  }}
+                >
+                  {p.display_name}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div>
+          <p
+            className="mb-2 text-xs font-medium"
+            style={{ color: "var(--color-text-3)" }}
+          >
+            飛んだ人
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {players.map((p) => {
+              const selected = tobiIds.has(p.user_id);
+              const disabled = tobashiIds.has(p.user_id);
+              return (
+                <button
+                  key={p.user_id}
+                  onClick={() => toggleTobi(p.user_id)}
+                  className="rounded-full px-3 py-1.5 text-xs font-medium"
+                  style={{
+                    background: selected
+                      ? "var(--arcoblue-1)"
+                      : "var(--color-bg-1)",
+                    color: selected
+                      ? "var(--arcoblue-6)"
+                      : disabled
+                        ? "var(--color-text-4)"
+                        : "var(--color-text-3)",
+                    border: `1px solid ${selected ? "var(--arcoblue-6)" : "var(--color-border)"}`,
+                    cursor: "pointer",
+                    opacity: disabled ? 0.4 : 1,
+                  }}
+                >
+                  {p.display_name}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
 
       {/* 役満記録ボタン */}
       <Button
@@ -181,7 +315,9 @@ export default function ScoreEntry({
           players={players}
           yakumans={yakumans}
           onAdd={(entry) => setYakumans((prev) => [...prev, entry])}
-          onRemove={(index) => setYakumans((prev) => prev.filter((_, i) => i !== index))}
+          onRemove={(index) =>
+            setYakumans((prev) => prev.filter((_, i) => i !== index))
+          }
           onClose={() => setShowYakumanModal(false)}
         />
       )}

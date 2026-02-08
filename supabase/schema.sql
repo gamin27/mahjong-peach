@@ -137,7 +137,25 @@ create policy "yakuman_records_select" on public.yakuman_records
 create policy "yakuman_records_insert" on public.yakuman_records
   for insert to authenticated with check (true);
 
--- 9. マイグレーション: avatar_url カラム追加
+-- 9. tobashi_records テーブル（飛ばし記録）
+create table public.tobashi_records (
+  id uuid primary key default gen_random_uuid(),
+  game_id uuid not null references public.games(id) on delete cascade,
+  user_id uuid not null,
+  display_name text not null,
+  type text not null check (type in ('tobi', 'tobashi')),
+  created_at timestamptz not null default now()
+);
+
+alter table public.tobashi_records enable row level security;
+
+create policy "tobashi_records_select" on public.tobashi_records
+  for select to authenticated using (true);
+
+create policy "tobashi_records_insert" on public.tobashi_records
+  for insert to authenticated with check (true);
+
+-- 10. マイグレーション: avatar_url カラム追加
 -- 既存DBに対して実行:
 -- ALTER TABLE public.profiles ADD COLUMN avatar_url text;
 -- ALTER TABLE public.room_members ADD COLUMN avatar_url text;

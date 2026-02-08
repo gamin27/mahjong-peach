@@ -151,6 +151,20 @@ export default function HistoryPage() {
         gameMap[s.game_id].push(s);
       }
 
+      // 飛びデータを取得
+      const { data: tobiData } = await supabase
+        .from("tobashi_records")
+        .select("game_id, user_id")
+        .in("game_id", gameIds)
+        .eq("type", "tobi");
+
+      const tobiSet = new Set<string>();
+      if (tobiData) {
+        for (const t of tobiData) {
+          tobiSet.add(`${t.game_id}:${t.user_id}`);
+        }
+      }
+
       // プレイヤーごとの成績集計
       const buildStats = (playerCount: number): PlayerStats[] => {
         const stats: Record<
@@ -187,7 +201,7 @@ export default function HistoryPage() {
             st.rankSum += rank;
             if (rank === 1) st.topCount++;
             if (rank === playerCount) st.lastCount++;
-            if (s.score < 0) st.tobiCount++;
+            if (tobiSet.has(`${gameId}:${s.user_id}`)) st.tobiCount++;
           });
         }
 
