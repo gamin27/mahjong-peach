@@ -31,6 +31,7 @@ interface SessionData {
   roomId: string;
   date: string;
   games: CompletedGame[];
+  ptRate: number;
 }
 
 const PAGE_SIZE = 30;
@@ -99,6 +100,24 @@ export default function HistoryPage() {
       if (!allScores) {
         setLoading(false);
         return;
+      }
+
+      // 最新のプロフィール（username, avatar_url）を取得して上書き
+      const userIds = [...new Set(allScores.map((s) => s.user_id))];
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, username, avatar_url")
+        .in("id", userIds);
+      if (profiles) {
+        const profileMap: Record<string, { username: string; avatar_url: string | null }> = {};
+        for (const p of profiles) profileMap[p.id] = p;
+        for (const s of allScores) {
+          const prof = profileMap[s.user_id];
+          if (prof) {
+            s.display_name = prof.username;
+            s.avatar_url = prof.avatar_url;
+          }
+        }
       }
 
       // games テーブルからroom_id, round_numberを取得
@@ -186,14 +205,29 @@ export default function HistoryPage() {
       setPlayers3(buildStats(3));
       setPlayers4(buildStats(4));
 
+      // rooms テーブルから pt_rate を取得
+      const roomIds = gamesData ? [...new Set(gamesData.map((g) => g.room_id))] : [];
+      const roomPtRates: Record<string, number> = {};
+      if (roomIds.length > 0) {
+        const { data: roomsData } = await supabase
+          .from("rooms")
+          .select("id, pt_rate")
+          .in("id", roomIds);
+        if (roomsData) {
+          for (const r of roomsData) {
+            roomPtRates[r.id] = r.pt_rate;
+          }
+        }
+      }
+
       // セッション（ルーム）ごとにゲームをグループ化
       if (gamesData) {
         const buildSessions = (playerCount: number): SessionData[] => {
-          const roomGames: Record<string, { date: string; games: CompletedGame[] }> = {};
+          const roomGames: Record<string, { date: string; games: CompletedGame[]; ptRate: number }> = {};
           for (const g of gamesData) {
             if (gamePlayerCount[g.id] !== playerCount) continue;
             if (!roomGames[g.room_id]) {
-              roomGames[g.room_id] = { date: g.created_at, games: [] };
+              roomGames[g.room_id] = { date: g.created_at, games: [], ptRate: roomPtRates[g.room_id] ?? 50 };
             }
             const scores = (allScores
               .filter((s) => s.game_id === g.id)
@@ -216,6 +250,7 @@ export default function HistoryPage() {
               roomId,
               date: data.date,
               games: data.games.sort((a, b) => a.game.round_number - b.game.round_number),
+              ptRate: data.ptRate,
             }))
             .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         };
@@ -607,7 +642,7 @@ export default function HistoryPage() {
                           })}
                           ・{session.games.length}半荘
                         </p>
-                        <GameScoreTable games={session.games} maxHeight="none" />
+                        <GameScoreTable games={session.games} maxHeight="none" ptRate={session.ptRate} />
                       </div>
                     ))}
                     {hasMore && (

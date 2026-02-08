@@ -29,114 +29,62 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<3 | 4>(3);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [username, setUsername] = useState("");
+  const [loading, setLoading] = useState(true);
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      if (!session) {
+        setLoading(false);
+        return;
+      }
       const userId = session.user.id;
 
-      // プロフィール取得
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("username, avatar_url")
-        .eq("id", userId)
-        .single();
-      if (profile) {
-        setAvatarUrl(profile.avatar_url);
-        setUsername(profile.username);
+      // プロフィールとサマリーを並列取得
+      const [profileRes, rpcRes] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("username, avatar_url")
+          .eq("id", userId)
+          .single(),
+        supabase.rpc("get_home_stats", { p_user_id: userId }),
+      ]);
+
+      if (profileRes.data) {
+        setAvatarUrl(profileRes.data.avatar_url);
+        setUsername(profileRes.data.username);
       }
 
-      // このユーザーが参加した全game_idを取得
-      const { data: myScores } = await supabase
-        .from("game_scores")
-        .select("game_id, score")
-        .eq("user_id", userId);
+      if (rpcRes.data) {
+        const result = rpcRes.data as {
+          stats: { player_count: number; total_games: number; total_score: number; avg_rank: number; rank1: number; rank2: number; rank3: number; rank4: number }[];
+          history: Record<string, RankPoint[]>;
+        };
 
-      if (!myScores || myScores.length === 0) return;
-
-      const gameIds = myScores.map((s) => s.game_id);
-      const totalGames = gameIds.length;
-      const totalScore = myScores.reduce((acc, s) => acc + s.score, 0);
-
-      // 参加した全ゲームの全スコアを取得して順位計算
-      const { data: allScores } = await supabase
-        .from("game_scores")
-        .select("game_id, user_id, score, created_at")
-        .in("game_id", gameIds);
-
-      if (!allScores) return;
-
-      // ゲームごとにグループ化
-      const gameMap: Record<string, { user_id: string; score: number }[]> = {};
-      const gameTimes: Record<string, string> = {};
-      for (const s of allScores) {
-        if (!gameMap[s.game_id]) gameMap[s.game_id] = [];
-        gameMap[s.game_id].push(s);
-        if (!gameTimes[s.game_id] || s.created_at < gameTimes[s.game_id]) {
-          gameTimes[s.game_id] = s.created_at;
+        for (const s of result.stats) {
+          const total = s.total_games;
+          const rankCounts = s.player_count === 3
+            ? [s.rank1, s.rank2, s.rank3]
+            : [s.rank1, s.rank2, s.rank3, s.rank4];
+          const modeStats: ModeStats = {
+            totalGames: total,
+            totalScore: s.total_score,
+            avgRank: s.avg_rank,
+            rankDist: rankCounts.map((c) => (c / total) * 100),
+          };
+          if (s.player_count === 3) setStats3(modeStats);
+          else setStats4(modeStats);
         }
+
+        const h3 = result.history["3"];
+        const h4 = result.history["4"];
+        if (h3) setRankHistory3(h3.slice(-30));
+        if (h4) setRankHistory4(h4.slice(-30));
       }
 
-      // 役満記録を取得
-      const { data: yakumanData } = await supabase
-        .from("yakuman_records")
-        .select("game_id")
-        .in("game_id", gameIds);
-
-      const yakumanGameIds = new Set(yakumanData?.map((y) => y.game_id) ?? []);
-
-      // 時系列順にソート
-      const sortedGameIds = [...new Set(gameIds)].sort(
-        (a, b) => (gameTimes[a] || "").localeCompare(gameTimes[b] || "")
-      );
-
-      const ranks3: RankPoint[] = [];
-      const ranks4: RankPoint[] = [];
-      let rankSum3 = 0, rankSum4 = 0;
-      let score3 = 0, score4 = 0;
-      const rankCount3 = [0, 0, 0]; // 1位,2位,3位
-      const rankCount4 = [0, 0, 0, 0]; // 1位,2位,3位,4位
-
-      for (const gameId of sortedGameIds) {
-        const scores = gameMap[gameId];
-        if (!scores) continue;
-        const sorted = [...scores].sort((a, b) => b.score - a.score);
-        const rank = sorted.findIndex((s) => s.user_id === userId) + 1;
-        const myScore = scores.find((s) => s.user_id === userId)?.score ?? 0;
-        const point: RankPoint = { rank, hasYakuman: yakumanGameIds.has(gameId) };
-        if (scores.length === 3) {
-          ranks3.push(point);
-          rankSum3 += rank;
-          score3 += myScore;
-          rankCount3[rank - 1]++;
-        } else {
-          ranks4.push(point);
-          rankSum4 += rank;
-          score4 += myScore;
-          rankCount4[rank - 1]++;
-        }
-      }
-
-      setRankHistory3(ranks3.slice(-30));
-      setRankHistory4(ranks4.slice(-30));
-
-      const total3 = ranks3.length;
-      const total4 = ranks4.length;
-      setStats3(total3 > 0 ? {
-        totalGames: total3,
-        totalScore: score3,
-        avgRank: rankSum3 / total3,
-        rankDist: rankCount3.map((c) => (c / total3) * 100),
-      } : emptyModeStats);
-      setStats4(total4 > 0 ? {
-        totalGames: total4,
-        totalScore: score4,
-        avgRank: rankSum4 / total4,
-        rankDist: rankCount4.map((c) => (c / total4) * 100),
-      } : emptyModeStats);
+      setLoading(false);
     };
 
     fetchData();
@@ -234,8 +182,34 @@ export default function Home() {
           </button>
         </div>
 
+        {/* ローディング */}
+        {loading && (
+          <div
+            className="flex flex-col items-center justify-center rounded-lg py-12"
+            style={{
+              background: "var(--color-bg-1)",
+              border: "1px solid var(--color-border)",
+              boxShadow: "var(--shadow-card)",
+            }}
+          >
+            <div
+              style={{
+                width: "32px",
+                height: "32px",
+                border: "3px solid var(--color-border)",
+                borderTop: "3px solid var(--arcoblue-6)",
+                borderRadius: "50%",
+                animation: "spin 0.8s linear infinite",
+              }}
+            />
+            <p className="mt-3 text-sm" style={{ color: "var(--color-text-3)" }}>
+              読み込み中...
+            </p>
+          </div>
+        )}
+
         {/* 成績（タブ切り替え） */}
-        {(stats3.totalGames > 0 || stats4.totalGames > 0) && (() => {
+        {!loading && (stats3.totalGames > 0 || stats4.totalGames > 0) && (() => {
           const tabs: { key: 3 | 4; label: string }[] = [];
           if (stats3.totalGames > 0) tabs.push({ key: 3, label: "3人麻雀" });
           if (stats4.totalGames > 0) tabs.push({ key: 4, label: "4人麻雀" });

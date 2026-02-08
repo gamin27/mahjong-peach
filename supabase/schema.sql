@@ -142,3 +142,72 @@ create policy "yakuman_records_insert" on public.yakuman_records
 -- ALTER TABLE public.profiles ADD COLUMN avatar_url text;
 -- ALTER TABLE public.room_members ADD COLUMN avatar_url text;
 -- ALTER TABLE public.game_scores ADD COLUMN avatar_url text;
+
+-- 10. Realtime: rooms テーブル追加（解散通知用）
+alter publication supabase_realtime add table public.rooms;
+
+-- 11. RPC: ホーム画面サマリー取得（パフォーマンス改善）
+-- Supabase SQL Editor で実行してください
+CREATE OR REPLACE FUNCTION get_home_stats(p_user_id uuid)
+RETURNS json
+LANGUAGE sql
+STABLE
+AS $$
+  WITH my_game_ids AS (
+    SELECT DISTINCT game_id FROM game_scores WHERE user_id = p_user_id
+  ),
+  scored AS (
+    SELECT
+      gs.game_id,
+      gs.user_id,
+      gs.score,
+      gs.created_at,
+      COUNT(*) OVER (PARTITION BY gs.game_id) AS player_count,
+      RANK() OVER (PARTITION BY gs.game_id ORDER BY gs.score DESC) AS rank
+    FROM game_scores gs
+    JOIN my_game_ids mg ON gs.game_id = mg.game_id
+  ),
+  my_ranks AS (
+    SELECT game_id, score, created_at, player_count, rank
+    FROM scored
+    WHERE user_id = p_user_id
+  ),
+  yakuman_set AS (
+    SELECT DISTINCT yr.game_id
+    FROM yakuman_records yr
+    JOIN my_game_ids mg ON yr.game_id = mg.game_id
+  ),
+  ranked_with_yakuman AS (
+    SELECT
+      mr.*,
+      EXISTS(SELECT 1 FROM yakuman_set ys WHERE ys.game_id = mr.game_id) AS has_yakuman
+    FROM my_ranks mr
+  ),
+  stats AS (
+    SELECT
+      player_count,
+      COUNT(*)::int AS total_games,
+      SUM(score)::int AS total_score,
+      ROUND(AVG(rank), 2) AS avg_rank,
+      COUNT(*) FILTER (WHERE rank = 1)::int AS rank1,
+      COUNT(*) FILTER (WHERE rank = 2)::int AS rank2,
+      COUNT(*) FILTER (WHERE rank = 3)::int AS rank3,
+      COUNT(*) FILTER (WHERE rank = 4)::int AS rank4
+    FROM ranked_with_yakuman
+    GROUP BY player_count
+  ),
+  history AS (
+    SELECT
+      player_count,
+      json_agg(
+        json_build_object('rank', rank, 'hasYakuman', has_yakuman)
+        ORDER BY created_at
+      ) AS rank_history
+    FROM ranked_with_yakuman
+    GROUP BY player_count
+  )
+  SELECT json_build_object(
+    'stats', COALESCE((SELECT json_agg(row_to_json(s)) FROM stats s), '[]'::json),
+    'history', COALESCE((SELECT json_object_agg(h.player_count, h.rank_history) FROM history h), '{}'::json)
+  );
+$$;

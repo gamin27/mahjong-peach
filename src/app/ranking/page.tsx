@@ -188,22 +188,15 @@ function RankingList({ players }: { players: PlayerData[] }) {
           className="flex items-center gap-3 rounded-lg p-4"
           style={{
             background: "var(--color-bg-1)",
-            border: `1px solid ${i === 0 ? "var(--green-6)" : "var(--color-border)"}`,
+            border: `1px solid var(--color-border)`,
             boxShadow: "var(--shadow-card)",
           }}
         >
           <span
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
-            style={{
-              background:
-                i === 0
-                  ? "var(--green-6)"
-                  : i === players.length - 1
-                    ? "var(--red-6)"
-                    : "var(--gray-6)",
-            }}
+            className="flex h-8 w-8 shrink-0 items-center justify-center text-sm font-bold"
+            style={{ color: "var(--color-text-2)" }}
           >
-            {i + 1}
+            {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : i + 1}
           </span>
           <Avatar
             src={p.avatarUrl}
@@ -291,6 +284,24 @@ export default function RankingPage() {
       if (!allScores) {
         setLoading(false);
         return;
+      }
+
+      // 最新のプロフィール（username, avatar_url）を取得して上書き
+      const userIds = [...new Set(allScores.map((s) => s.user_id))];
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, username, avatar_url")
+        .in("id", userIds);
+      if (profiles) {
+        const profileMap: Record<string, { username: string; avatar_url: string | null }> = {};
+        for (const p of profiles) profileMap[p.id] = p;
+        for (const s of allScores) {
+          const prof = profileMap[s.user_id];
+          if (prof) {
+            s.display_name = prof.username;
+            s.avatar_url = prof.avatar_url;
+          }
+        }
       }
 
       // ゲームごとのプレイヤー数を計算

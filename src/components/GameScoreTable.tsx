@@ -8,9 +8,10 @@ import { TILE_LABELS } from "@/components/YakumanModal";
 interface GameScoreTableProps {
   games: CompletedGame[];
   maxHeight?: string;
+  ptRate?: number;
 }
 
-export default function GameScoreTable({ games, maxHeight = "50vh" }: GameScoreTableProps) {
+export default function GameScoreTable({ games, maxHeight = "50vh", ptRate }: GameScoreTableProps) {
   if (games.length === 0) return null;
 
   // 累計スコアを計算
@@ -75,7 +76,7 @@ export default function GameScoreTable({ games, maxHeight = "50vh" }: GameScoreT
             {sorted.map(([userId, data]) => (
               <td
                 key={userId}
-                className="px-2 py-2.5 text-right text-xs font-semibold"
+                className="px-2 py-2.5 text-right"
                 style={{
                   color:
                     data.total > 0
@@ -85,8 +86,16 @@ export default function GameScoreTable({ games, maxHeight = "50vh" }: GameScoreT
                         : "var(--color-text-1)",
                 }}
               >
-                {data.total > 0 ? "+" : ""}
-                {data.total.toLocaleString()}
+                <span className="text-xs font-semibold">
+                  {data.total > 0 ? "+" : ""}
+                  {data.total.toLocaleString()}
+                </span>
+                {ptRate != null && (
+                  <p className="text-xs" style={{ color: "var(--color-text-3)", fontWeight: 400 }}>
+                    ({data.total > 0 ? "+" : ""}
+                    {(data.total * ptRate).toLocaleString()}pt)
+                  </p>
+                )}
               </td>
             ))}
           </tr>

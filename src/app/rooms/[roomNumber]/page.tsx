@@ -344,14 +344,20 @@ export default function RoomDetailPage() {
         .from("rooms")
         .update({ status: "closed" })
         .eq("id", room.id);
+      // 対局結果があれば結果画面を表示
+      if (completedGames.length > 0) {
+        setPhase("result");
+      } else {
+        router.push("/");
+      }
     } else {
       await supabase
         .from("room_members")
         .delete()
         .eq("room_id", room.id)
         .eq("user_id", currentUserId);
+      router.push("/");
     }
-    router.push("/");
   };
 
   if (loading) return null;
@@ -582,15 +588,7 @@ export default function RoomDetailPage() {
             games={completedGames}
             date={room.created_at}
             ptRate={room.pt_rate}
-            onGoHome={async () => {
-              if (room) {
-                await supabase
-                  .from("rooms")
-                  .update({ status: "closed" })
-                  .eq("id", room.id);
-              }
-              router.push("/");
-            }}
+            onGoHome={() => router.push("/")}
             onUpdateScores={handleUpdateScores}
           />
         )}
@@ -687,7 +685,7 @@ export default function RoomDetailPage() {
               </p>
 
               <div className="mt-4">
-                <GameScoreTable games={completedGames} />
+                <GameScoreTable games={completedGames} ptRate={room.pt_rate} />
               </div>
 
               <button
@@ -742,7 +740,7 @@ export default function RoomDetailPage() {
               className="mt-2 text-xs"
               style={{ color: "var(--color-text-3)" }}
             >
-              ルームが解散され、全員が退出されます。対局結果は記録に残ります。
+              ルームを解散し、全員退出します。
             </p>
             <div className="mt-5 flex gap-3">
               <button
@@ -762,9 +760,9 @@ export default function RoomDetailPage() {
                   handleLeave();
                 }}
                 className="flex-1 rounded-lg px-4 py-2.5 text-sm font-medium text-white"
-                style={{ background: "var(--red-6)" }}
+                style={{ background: "var(--arcoblue-6)" }}
               >
-                解散する
+                終える
               </button>
             </div>
           </div>
