@@ -164,7 +164,8 @@ export default function ScoreEntry({
               <Input
                 compact
                 type="text"
-                inputMode="numeric"
+                inputMode="text"
+                pattern="-?[0-9]*"
                 value={inputs[player.user_id] ?? ""}
                 onChange={(e) => handleChange(player.user_id, e.target.value)}
                 placeholder="点数"
