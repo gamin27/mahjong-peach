@@ -4,6 +4,7 @@ import { useState, useMemo, Fragment } from "react";
 import type { CompletedGame } from "@/lib/types/game";
 import Avatar from "@/components/Avatar";
 import { TILE_LABELS } from "@/components/YakumanModal";
+import Input from "@/components/Input";
 
 interface GameResultProps {
   games: CompletedGame[];
@@ -232,7 +233,8 @@ export default function GameResult({
                             className="px-2 py-2"
                             style={{ textAlign: "right" }}
                           >
-                            <input
+                            <Input
+                              compact
                               type="text"
                               inputMode="numeric"
                               value={editInputs[userId] ?? ""}
@@ -241,14 +243,7 @@ export default function GameResult({
                               }
                               style={{
                                 width: "70px",
-                                padding: "4px 6px",
-                                fontSize: "16px",
                                 textAlign: "right",
-                                borderRadius: "4px",
-                                border: "1px solid var(--color-border)",
-                                background: "var(--color-bg-2)",
-                                color: "var(--color-text-1)",
-                                outline: "none",
                               }}
                             />
                           </td>

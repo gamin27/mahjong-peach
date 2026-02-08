@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { compressImage } from "@/lib/compressImage";
+import Input from "@/components/Input";
 
 export default function SetupPage() {
   const router = useRouter();
@@ -245,7 +246,7 @@ export default function SetupPage() {
             >
               ユーザー名
             </label>
-            <input
+            <Input
               type="text"
               maxLength={5}
               value={username}
@@ -253,17 +254,6 @@ export default function SetupPage() {
               placeholder="例: たろう"
               autoComplete="off"
               autoFocus
-              style={{
-                width: "100%",
-                padding: "10px 16px",
-                fontSize: "16px",
-                borderRadius: "8px",
-                border: "1px solid var(--color-border)",
-                background: "var(--color-bg-2)",
-                color: "var(--color-text-1)",
-                outline: "none",
-                boxSizing: "border-box",
-              }}
             />
             <p
               style={{

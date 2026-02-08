@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import type { RoomMember } from "@/lib/types/room";
+import Input from "@/components/Input";
 
 export default function JoinRoomPage() {
   const router = useRouter();
@@ -140,7 +141,7 @@ export default function JoinRoomPage() {
             >
               ルーム番号（4桁）
             </label>
-            <input
+            <Input
               type="text"
               inputMode="numeric"
               maxLength={4}
@@ -151,16 +152,6 @@ export default function JoinRoomPage() {
               }}
               placeholder="例: 1234"
               autoComplete="off"
-              style={{
-                width: "100%",
-                padding: "10px 16px",
-                fontSize: "16px",
-                borderRadius: "8px",
-                border: "1px solid var(--color-border)",
-                background: "var(--color-bg-2)",
-                color: "var(--color-text-1)",
-                outline: "none",
-              }}
             />
           </div>
 

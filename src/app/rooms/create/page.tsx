@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import Input from "@/components/Input";
 
 export default function CreateRoomPage() {
   const router = useRouter();
@@ -133,7 +134,7 @@ export default function CreateRoomPage() {
             >
               ルーム番号（4桁）
             </label>
-            <input
+            <Input
               type="text"
               inputMode="numeric"
               maxLength={4}
@@ -143,17 +144,6 @@ export default function CreateRoomPage() {
               }}
               placeholder="例: 1234"
               autoComplete="off"
-              style={{
-                width: "100%",
-                padding: "10px 16px",
-                fontSize: "16px",
-                borderRadius: "8px",
-                border: "1px solid var(--color-border)",
-                background: "var(--color-bg-2)",
-                color: "var(--color-text-1)",
-                outline: "none",
-                boxSizing: "border-box",
-              }}
             />
           </div>
 
@@ -204,24 +194,13 @@ export default function CreateRoomPage() {
             >
               ptレート
             </label>
-            <input
+            <Input
               type="text"
               inputMode="numeric"
               value={ptRate}
               onChange={(e) => setPtRate(e.target.value.replace(/\D/g, ""))}
               placeholder="50"
               autoComplete="off"
-              style={{
-                width: "100%",
-                padding: "10px 16px",
-                fontSize: "16px",
-                borderRadius: "8px",
-                border: "1px solid var(--color-border)",
-                background: "var(--color-bg-2)",
-                color: "var(--color-text-1)",
-                outline: "none",
-                boxSizing: "border-box",
-              }}
             />
             <p style={{ fontSize: "12px", color: "var(--color-text-3)", marginTop: "4px" }}>
               1点あたりのpt（必須）

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { compressImage } from "@/lib/compressImage";
 import Avatar from "@/components/Avatar";
+import Input from "@/components/Input";
 
 export default function AccountEditPage() {
   const router = useRouter();
@@ -249,24 +250,13 @@ export default function AccountEditPage() {
             >
               ユーザー名
             </label>
-            <input
+            <Input
               type="text"
               maxLength={5}
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="例: たろう"
               autoComplete="off"
-              style={{
-                width: "100%",
-                padding: "10px 16px",
-                fontSize: "16px",
-                borderRadius: "8px",
-                border: "1px solid var(--color-border)",
-                background: "var(--color-bg-2)",
-                color: "var(--color-text-1)",
-                outline: "none",
-                boxSizing: "border-box",
-              }}
             />
             <p
               style={{

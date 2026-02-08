@@ -5,6 +5,7 @@ import type { RoomMember } from "@/lib/types/room";
 import type { YakumanEntry } from "@/lib/types/game";
 import Avatar from "@/components/Avatar";
 import YakumanModal, { TILE_LABELS } from "@/components/YakumanModal";
+import Input from "@/components/Input";
 
 interface ScoreEntryProps {
   players: RoomMember[];
@@ -103,7 +104,8 @@ export default function ScoreEntry({
                 {autoCalcScore?.toLocaleString()}
               </span>
             ) : (
-              <input
+              <Input
+                compact
                 type="text"
                 inputMode="numeric"
                 value={inputs[player.user_id] ?? ""}
@@ -112,13 +114,8 @@ export default function ScoreEntry({
                 style={{
                   width: "100px",
                   padding: "6px 10px",
-                  fontSize: "16px",
                   textAlign: "right",
                   borderRadius: "6px",
-                  border: "1px solid var(--color-border)",
-                  background: "var(--color-bg-2)",
-                  color: "var(--color-text-1)",
-                  outline: "none",
                 }}
               />
             )}
