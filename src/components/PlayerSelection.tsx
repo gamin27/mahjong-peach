@@ -23,6 +23,7 @@ export default function PlayerSelection({
         return (
           <div
             key={member.id}
+            data-testid={`member-${member.user_id}`}
             onClick={() => onToggle?.(member)}
             className="flex items-center gap-3 rounded-lg p-4"
             style={{
@@ -30,6 +31,8 @@ export default function PlayerSelection({
               border: "1px solid var(--color-border)",
               boxShadow: "var(--shadow-card)",
               cursor: onToggle ? "pointer" : "default",
+              opacity: isPlayer ? 1 : 0.45,
+              transition: "opacity 0.2s",
             }}
           >
             <Avatar
