@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Avatar from "@/components/Avatar";
+import Main from "@/components/Main";
 
 interface ModeStats {
   totalGames: number;
@@ -114,7 +115,7 @@ export default function Home() {
   return (
     <div className="flex flex-col" style={{ background: "var(--color-bg-2)", minHeight: "100dvh" }}>
       {/* メインコンテンツ */}
-      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-6 py-6">
+      <Main maxWidth="5xl">
         {/* ウェルカムカード */}
         <div
           className="rounded-lg p-6"
@@ -404,7 +405,7 @@ export default function Home() {
           );
         })()}
 
-      </main>
+      </Main>
 
       {/* フッターナビ */}
       <nav

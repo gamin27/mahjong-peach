@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { compressImage } from "@/lib/compressImage";
 import Input from "@/components/Input";
+import Label from "@/components/Label";
+import Main from "@/components/Main";
 
 export default function SetupPage() {
   const router = useRouter();
@@ -125,13 +127,7 @@ export default function SetupPage() {
 
   return (
     <div style={{ background: "var(--color-bg-2)", minHeight: "100dvh" }}>
-      <main
-        style={{
-          maxWidth: "448px",
-          margin: "0 auto",
-          padding: "80px 24px 32px",
-        }}
-      >
+      <Main maxWidth="md" style={{ paddingTop: "80px", paddingBottom: "32px" }}>
         <div style={{ textAlign: "center", marginBottom: "32px" }}>
           <span style={{ fontSize: "48px" }}>🀄</span>
           <h1
@@ -166,18 +162,9 @@ export default function SetupPage() {
         >
           {/* アバター設定 */}
           <div style={{ marginBottom: "20px", textAlign: "center" }}>
-            <label
-              style={{
-                display: "block",
-                fontSize: "14px",
-                fontWeight: 500,
-                color: "var(--color-text-1)",
-                marginBottom: "12px",
-                textAlign: "left",
-              }}
-            >
+            <Label style={{ marginBottom: "12px", textAlign: "left" }}>
               アイコン（任意）
-            </label>
+            </Label>
             <div
               onClick={() => fileInputRef.current?.click()}
               style={{
@@ -235,17 +222,7 @@ export default function SetupPage() {
 
           {/* ユーザー名 */}
           <div style={{ marginBottom: "20px" }}>
-            <label
-              style={{
-                display: "block",
-                fontSize: "14px",
-                fontWeight: 500,
-                color: "var(--color-text-1)",
-                marginBottom: "6px",
-              }}
-            >
-              ユーザー名
-            </label>
+            <Label>ユーザー名</Label>
             <Input
               type="text"
               maxLength={5}
@@ -298,7 +275,7 @@ export default function SetupPage() {
             {loading ? "登録中..." : "はじめる"}
           </button>
         </div>
-      </main>
+      </Main>
     </div>
   );
 }

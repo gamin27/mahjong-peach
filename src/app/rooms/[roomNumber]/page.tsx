@@ -9,6 +9,7 @@ import PlayerSelection from "@/components/PlayerSelection";
 import ScoreEntry from "@/components/ScoreEntry";
 import GameResult from "@/components/GameResult";
 import GameScoreTable from "@/components/GameScoreTable";
+import Main from "@/components/Main";
 
 type Phase = "selecting" | "scoring" | "result";
 
@@ -424,7 +425,7 @@ export default function RoomDetailPage() {
         )}
       </header>
 
-      <main className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-6 px-6 py-8">
+      <Main className="py-8">
         {/* ルーム情報 */}
         <div className="flex items-center justify-between">
           <div>
@@ -592,7 +593,7 @@ export default function RoomDetailPage() {
             onUpdateScores={handleUpdateScores}
           />
         )}
-      </main>
+      </Main>
 
       {/* 途中結果モーダル */}
       {showResultModal && (() => {

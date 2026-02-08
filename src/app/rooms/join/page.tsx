@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import type { RoomMember } from "@/lib/types/room";
 import Input from "@/components/Input";
+import Label from "@/components/Label";
+import Main from "@/components/Main";
 
 export default function JoinRoomPage() {
   const router = useRouter();
@@ -118,7 +120,7 @@ export default function JoinRoomPage() {
         </button>
       </header>
 
-      <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-6 py-8">
+      <Main maxWidth="md" className="py-8">
         <h1
           className="text-lg font-semibold"
           style={{ color: "var(--color-text-1)" }}
@@ -135,12 +137,7 @@ export default function JoinRoomPage() {
           }}
         >
           <div className="flex flex-col gap-1.5">
-            <label
-              className="text-sm font-medium"
-              style={{ color: "var(--color-text-1)" }}
-            >
-              ルーム番号（4桁）
-            </label>
+            <Label>ルーム番号（4桁）</Label>
             <Input
               type="text"
               inputMode="numeric"
@@ -170,7 +167,7 @@ export default function JoinRoomPage() {
             {loading ? "参加中..." : "ルームに参加"}
           </button>
         </div>
-      </main>
+      </Main>
     </div>
   );
 }

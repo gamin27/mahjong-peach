@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase/client";
 import { compressImage } from "@/lib/compressImage";
 import Avatar from "@/components/Avatar";
 import Input from "@/components/Input";
+import Label from "@/components/Label";
+import Main from "@/components/Main";
 
 export default function AccountEditPage() {
   const router = useRouter();
@@ -151,14 +153,7 @@ export default function AccountEditPage() {
         </button>
       </header>
 
-      <main
-        style={{
-          maxWidth: "448px",
-          width: "100%",
-          margin: "0 auto",
-          padding: "32px 24px",
-        }}
-      >
+      <Main maxWidth="md" className="py-8">
         <h1
           style={{
             fontSize: "18px",
@@ -181,18 +176,9 @@ export default function AccountEditPage() {
         >
           {/* アバター変更 */}
           <div style={{ marginBottom: "24px", textAlign: "center" }}>
-            <label
-              style={{
-                display: "block",
-                fontSize: "14px",
-                fontWeight: 500,
-                color: "var(--color-text-1)",
-                marginBottom: "12px",
-                textAlign: "left",
-              }}
-            >
+            <Label style={{ marginBottom: "12px", textAlign: "left" }}>
               アイコン
-            </label>
+            </Label>
             <div
               onClick={() => fileInputRef.current?.click()}
               style={{
@@ -239,17 +225,7 @@ export default function AccountEditPage() {
 
           {/* ユーザー名 */}
           <div style={{ marginBottom: "20px" }}>
-            <label
-              style={{
-                display: "block",
-                fontSize: "14px",
-                fontWeight: 500,
-                color: "var(--color-text-1)",
-                marginBottom: "6px",
-              }}
-            >
-              ユーザー名
-            </label>
+            <Label>ユーザー名</Label>
             <Input
               type="text"
               maxLength={5}
@@ -301,7 +277,7 @@ export default function AccountEditPage() {
             {saving ? "保存中..." : "保存する"}
           </button>
         </div>
-      </main>
+      </Main>
     </div>
   );
 }

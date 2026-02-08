@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { CompletedGame } from "@/lib/types/game";
 import Avatar from "@/components/Avatar";
+import Main from "@/components/Main";
 import GameScoreTable from "@/components/GameScoreTable";
 import { TILE_LABELS } from "@/components/YakumanModal";
 
@@ -368,7 +369,7 @@ export default function HistoryPage() {
       className="flex flex-col"
       style={{ background: "var(--color-bg-2)", minHeight: "100dvh" }}
     >
-      <main className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-6 px-6 py-6">
+      <Main>
         <h1
           className="text-lg font-semibold"
           style={{ color: "var(--color-text-1)" }}
@@ -667,7 +668,7 @@ export default function HistoryPage() {
             )}
           </>
         )}
-      </main>
+      </Main>
 
       {/* フッターナビ */}
       <nav

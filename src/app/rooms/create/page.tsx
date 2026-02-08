@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Input from "@/components/Input";
+import Label from "@/components/Label";
+import Main from "@/components/Main";
 
 export default function CreateRoomPage() {
   const router = useRouter();
@@ -101,7 +103,7 @@ export default function CreateRoomPage() {
         </button>
       </header>
 
-      <main style={{ maxWidth: "448px", margin: "0 auto", padding: "32px 24px" }}>
+      <Main maxWidth="md" className="py-8">
         <h1
           style={{
             fontSize: "18px",
@@ -123,17 +125,7 @@ export default function CreateRoomPage() {
           }}
         >
           <div style={{ marginBottom: "20px" }}>
-            <label
-              style={{
-                display: "block",
-                fontSize: "14px",
-                fontWeight: 500,
-                color: "var(--color-text-1)",
-                marginBottom: "6px",
-              }}
-            >
-              ルーム番号（4桁）
-            </label>
+            <Label>ルーム番号（4桁）</Label>
             <Input
               type="text"
               inputMode="numeric"
@@ -148,17 +140,7 @@ export default function CreateRoomPage() {
           </div>
 
           <div style={{ marginBottom: "20px" }}>
-            <label
-              style={{
-                display: "block",
-                fontSize: "14px",
-                fontWeight: 500,
-                color: "var(--color-text-1)",
-                marginBottom: "6px",
-              }}
-            >
-              プレイ人数
-            </label>
+            <Label>プレイ人数</Label>
             <div style={{ display: "flex", gap: "12px" }}>
               {([3, 4] as const).map((count) => (
                 <button
@@ -183,17 +165,7 @@ export default function CreateRoomPage() {
           </div>
 
           <div style={{ marginBottom: "20px" }}>
-            <label
-              style={{
-                display: "block",
-                fontSize: "14px",
-                fontWeight: 500,
-                color: "var(--color-text-1)",
-                marginBottom: "6px",
-              }}
-            >
-              ptレート
-            </label>
+            <Label>ptレート</Label>
             <Input
               type="text"
               inputMode="numeric"
@@ -232,7 +204,7 @@ export default function CreateRoomPage() {
             {loading ? "作成中..." : "ルームを作成"}
           </button>
         </div>
-      </main>
+      </Main>
     </div>
   );
 }
