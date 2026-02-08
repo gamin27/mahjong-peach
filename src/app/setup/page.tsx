@@ -228,7 +228,7 @@ export default function SetupPage() {
                 marginTop: "8px",
               }}
             >
-              10MB以下の画像（自動圧縮されます）
+              10MB以下の画像
             </p>
           </div>
 

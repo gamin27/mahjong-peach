@@ -232,7 +232,7 @@ export default function AccountEditPage() {
                 marginTop: "8px",
               }}
             >
-              タップして変更（10MB以下・自動圧縮）
+              タップして変更（10MB以下）
             </p>
           </div>
 
