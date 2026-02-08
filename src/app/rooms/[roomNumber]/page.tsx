@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Room, RoomMember } from "@/lib/types/room";
@@ -32,6 +32,7 @@ export default function RoomDetailPage() {
   const [completedGames, setCompletedGames] = useState<CompletedGame[]>([]);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [showResultModal, setShowResultModal] = useState(false);
+  const closingRef = useRef(false);
 
   const fetchCompletedGames = useCallback(async (roomId: string) => {
     const { data: gamesData } = await supabase
@@ -184,7 +185,7 @@ export default function RoomDetailPage() {
         },
         (payload) => {
           const updated = payload.new as { status: string };
-          if (updated.status === "closed") {
+          if (updated.status === "closed" && !closingRef.current) {
             router.push("/");
           }
         }
@@ -354,6 +355,7 @@ export default function RoomDetailPage() {
     if (!room || !currentUserId) return;
     const isHost = currentUserId === room.created_by;
     if (isHost) {
+      closingRef.current = true;
       await supabase
         .from("rooms")
         .update({ status: "closed" })
