@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import Avatar from "@/components/Avatar";
 
 interface Stats {
   totalGames: number;
@@ -20,12 +21,27 @@ export default function Home() {
     avgRank: null,
     topRate: null,
   });
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [username, setUsername] = useState("");
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const fetchStats = async () => {
+    const fetchData = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
       const userId = session.user.id;
+
+      // プロフィール取得
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("username, avatar_url")
+        .eq("id", userId)
+        .single();
+      if (profile) {
+        setAvatarUrl(profile.avatar_url);
+        setUsername(profile.username);
+      }
 
       // このユーザーが参加した全game_idを取得
       const { data: myScores } = await supabase
@@ -73,9 +89,22 @@ export default function Home() {
       });
     };
 
-    fetchStats();
+    fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // 外側クリックでメニューを閉じる
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+    if (showMenu) {
+      document.addEventListener("mousedown", handleClick);
+    }
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [showMenu]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -85,7 +114,7 @@ export default function Home() {
   const formatScore = (v: number) => (v > 0 ? `+${v.toLocaleString()}` : v.toLocaleString());
 
   return (
-    <div className="flex min-h-screen flex-col" style={{ background: "var(--color-bg-2)" }}>
+    <div className="flex flex-col" style={{ background: "var(--color-bg-2)", minHeight: "100dvh" }}>
       {/* メインコンテンツ */}
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-6 py-6">
         {/* ウェルカムカード */}
@@ -188,34 +217,6 @@ export default function Home() {
           </button>
         </div>
 
-        {/* 最近の対局 */}
-        <div
-          className="rounded-lg p-5"
-          style={{
-            background: "var(--color-bg-1)",
-            border: "1px solid var(--color-border)",
-            boxShadow: "var(--shadow-card)",
-          }}
-        >
-          <h2 className="text-sm font-semibold" style={{ color: "var(--color-text-1)" }}>
-            最近の対局
-          </h2>
-          <div
-            className="mt-4 flex flex-col items-center justify-center rounded-md py-10"
-            style={{ background: "var(--color-bg-2)" }}
-          >
-            <p className="text-3xl">🀄</p>
-            <p className="mt-2 text-sm" style={{ color: "var(--color-text-3)" }}>
-              まだ対局記録がありません
-            </p>
-            <button
-              className="mt-3 rounded px-4 py-1.5 text-xs font-medium text-white"
-              style={{ background: "var(--arcoblue-6)" }}
-            >
-              最初の対局を記録する
-            </button>
-          </div>
-        </div>
       </main>
 
       {/* フッターナビ */}
@@ -237,7 +238,70 @@ export default function Home() {
         <button style={{ fontSize: "24px", lineHeight: 1, opacity: 1 }}>🀄</button>
         <button onClick={() => router.push("/history")} style={{ fontSize: "24px", lineHeight: 1 }}>🗒️</button>
         <button onClick={() => router.push("/ranking")} style={{ fontSize: "24px", lineHeight: 1 }}>👑</button>
-        <button onClick={handleLogout} style={{ fontSize: "24px", lineHeight: 1 }}>🚪</button>
+        <div ref={menuRef} style={{ position: "relative" }}>
+          <button
+            onClick={() => setShowMenu((v) => !v)}
+            style={{ lineHeight: 1, padding: 0, background: "none", border: "none", cursor: "pointer" }}
+          >
+            <Avatar src={avatarUrl} name={username || "?"} size={28} />
+          </button>
+          {showMenu && (
+            <div
+              style={{
+                position: "absolute",
+                bottom: "calc(100% + 8px)",
+                right: 0,
+                background: "var(--color-bg-1)",
+                border: "1px solid var(--color-border)",
+                borderRadius: "8px",
+                boxShadow: "var(--shadow-popup)",
+                minWidth: "160px",
+                overflow: "hidden",
+                zIndex: 100,
+              }}
+            >
+              <button
+                onClick={() => {
+                  setShowMenu(false);
+                  router.push("/account/edit");
+                }}
+                style={{
+                  display: "block",
+                  width: "100%",
+                  padding: "12px 16px",
+                  fontSize: "14px",
+                  color: "var(--color-text-1)",
+                  background: "none",
+                  border: "none",
+                  borderBottom: "1px solid var(--color-border)",
+                  textAlign: "left",
+                  cursor: "pointer",
+                }}
+              >
+                アカウント編集
+              </button>
+              <button
+                onClick={() => {
+                  setShowMenu(false);
+                  handleLogout();
+                }}
+                style={{
+                  display: "block",
+                  width: "100%",
+                  padding: "12px 16px",
+                  fontSize: "14px",
+                  color: "var(--red-6)",
+                  background: "none",
+                  border: "none",
+                  textAlign: "left",
+                  cursor: "pointer",
+                }}
+              >
+                ログアウト
+              </button>
+            </div>
+          )}
+        </div>
       </nav>
       {/* フッター分の余白 */}
       <div style={{ height: "70px" }} />

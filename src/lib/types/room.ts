@@ -15,5 +15,6 @@ export interface RoomMember {
   room_id: string;
   user_id: string;
   display_name: string;
+  avatar_url: string | null;
   joined_at: string;
 }

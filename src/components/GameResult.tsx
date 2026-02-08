@@ -2,6 +2,8 @@
 
 import { useState, useMemo, Fragment } from "react";
 import type { CompletedGame } from "@/lib/types/game";
+import Avatar from "@/components/Avatar";
+import { TILE_LABELS } from "@/components/YakumanModal";
 
 interface GameResultProps {
   games: CompletedGame[];
@@ -26,11 +28,11 @@ export default function GameResult({
   const [saving, setSaving] = useState(false);
 
   // 累計スコアを計算
-  const totals: Record<string, { displayName: string; total: number }> = {};
+  const totals: Record<string, { displayName: string; avatarUrl: string | null; total: number }> = {};
   for (const g of games) {
     for (const s of g.scores) {
       if (!totals[s.user_id]) {
-        totals[s.user_id] = { displayName: s.display_name, total: 0 };
+        totals[s.user_id] = { displayName: s.display_name, avatarUrl: s.avatar_url, total: 0 };
       }
       totals[s.user_id].total += s.score;
     }
@@ -145,12 +147,12 @@ export default function GameResult({
                     background: "var(--color-bg-1)",
                   }}
                 >
-                  <div
-                    className="ml-auto flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold text-white"
-                    style={{ background: "var(--gray-6)" }}
-                    title={data.displayName}
-                  >
-                    {data.displayName.charAt(0)}
+                  <div className="ml-auto flex justify-center">
+                    <Avatar
+                      src={data.avatarUrl}
+                      name={data.displayName}
+                      size={32}
+                    />
                   </div>
                 </th>
               ))}
@@ -344,6 +346,30 @@ export default function GameResult({
                               {saving ? "保存中..." : "保存"}
                             </button>
                           </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  {g.yakumans && g.yakumans.length > 0 && (
+                    <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
+                      <td
+                        colSpan={sorted.length + 2}
+                        className="px-4 py-2"
+                      >
+                        <div className="flex flex-wrap gap-1.5">
+                          {g.yakumans.map((y, yi) => (
+                            <span
+                              key={yi}
+                              className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
+                              style={{
+                                background: "var(--orange-1)",
+                                color: "var(--orange-6)",
+                                border: "1px solid var(--orange-6)",
+                              }}
+                            >
+                              {y.display_name}: {y.yakuman_type}({TILE_LABELS[y.winning_tile] || y.winning_tile})
+                            </span>
+                          ))}
                         </div>
                       </td>
                     </tr>

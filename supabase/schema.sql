@@ -108,6 +108,37 @@ create policy "game_scores_insert" on public.game_scores
 create policy "game_scores_update" on public.game_scores
   for update to authenticated using (true) with check (true);
 
--- 6. Realtime 有効化
+-- 6. Supabase Storage（avatars バケット）
+-- Supabase ダッシュボードで avatars バケットを public で作成してください
+-- または以下の SQL を実行:
+-- insert into storage.buckets (id, name, public) values ('avatars', 'avatars', true);
+
+-- 7. Realtime 有効化
 alter publication supabase_realtime add table public.room_members;
 alter publication supabase_realtime add table public.game_scores;
+
+-- 8. yakuman_records テーブル（役満記録）
+create table public.yakuman_records (
+  id uuid primary key default gen_random_uuid(),
+  game_id uuid not null references public.games(id) on delete cascade,
+  user_id uuid not null references auth.users(id),
+  display_name text not null,
+  avatar_url text,
+  yakuman_type text not null,
+  winning_tile text not null,
+  created_at timestamptz not null default now()
+);
+
+alter table public.yakuman_records enable row level security;
+
+create policy "yakuman_records_select" on public.yakuman_records
+  for select to authenticated using (true);
+
+create policy "yakuman_records_insert" on public.yakuman_records
+  for insert to authenticated with check (true);
+
+-- 9. マイグレーション: avatar_url カラム追加
+-- 既存DBに対して実行:
+-- ALTER TABLE public.profiles ADD COLUMN avatar_url text;
+-- ALTER TABLE public.room_members ADD COLUMN avatar_url text;
+-- ALTER TABLE public.game_scores ADD COLUMN avatar_url text;

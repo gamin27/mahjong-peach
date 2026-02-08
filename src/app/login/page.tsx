@@ -16,8 +16,8 @@ export default function LoginPage() {
 
   return (
     <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ background: "var(--color-bg-2)" }}
+      className="flex items-center justify-center"
+      style={{ background: "var(--color-bg-2)", minHeight: "100dvh" }}
     >
       <div
         className="w-full max-w-sm rounded-lg p-8"

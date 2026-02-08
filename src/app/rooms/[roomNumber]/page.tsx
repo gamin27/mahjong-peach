@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Fragment } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Room, RoomMember } from "@/lib/types/room";
-import type { CompletedGame } from "@/lib/types/game";
+import type { CompletedGame, YakumanEntry } from "@/lib/types/game";
 import PlayerSelection from "@/components/PlayerSelection";
 import ScoreEntry from "@/components/ScoreEntry";
 import GameResult from "@/components/GameResult";
+import Avatar from "@/components/Avatar";
+import { TILE_LABELS } from "@/components/YakumanModal";
 
 type Phase = "selecting" | "scoring" | "result";
 
@@ -47,9 +49,15 @@ export default function RoomDetailPage() {
 
     if (!scoresData) return;
 
+    const { data: yakumanData } = await supabase
+      .from("yakuman_records")
+      .select("*")
+      .in("game_id", gameIds);
+
     const completed: CompletedGame[] = gamesData.map((game) => ({
       game,
       scores: scoresData.filter((s) => s.game_id === game.id),
+      yakumans: yakumanData?.filter((y) => y.game_id === game.id) ?? [],
     }));
 
     setCompletedGames(completed);
@@ -198,7 +206,8 @@ export default function RoomDetailPage() {
   };
 
   const handleScoreConfirm = async (
-    scores: { userId: string; displayName: string; score: number }[]
+    scores: { userId: string; displayName: string; score: number }[],
+    yakumans: YakumanEntry[]
   ) => {
     if (!room) return;
 
@@ -212,20 +221,39 @@ export default function RoomDetailPage() {
 
     if (!game) return;
 
-    const scoreRows = scores.map((s) => ({
-      game_id: game.id,
-      user_id: s.userId,
-      display_name: s.displayName,
-      score: s.score,
-    }));
+    const scoreRows = scores.map((s) => {
+      const member = members.find((m) => m.user_id === s.userId);
+      return {
+        game_id: game.id,
+        user_id: s.userId,
+        display_name: s.displayName,
+        avatar_url: member?.avatar_url ?? null,
+        score: s.score,
+      };
+    });
 
     await supabase.from("game_scores").insert(scoreRows);
+
+    // 役満記録を保存
+    let yakumanRows: { game_id: string; user_id: string; display_name: string; avatar_url: string | null; yakuman_type: string; winning_tile: string }[] = [];
+    if (yakumans.length > 0) {
+      yakumanRows = yakumans.map((y) => ({
+        game_id: game.id,
+        user_id: y.userId,
+        display_name: y.displayName,
+        avatar_url: y.avatarUrl,
+        yakuman_type: y.yakumanType,
+        winning_tile: y.winningTile,
+      }));
+      await supabase.from("yakuman_records").insert(yakumanRows);
+    }
 
     setCompletedGames((prev) => [
       ...prev,
       {
         game,
         scores: scoreRows.map((r, i) => ({ ...r, id: `temp-${i}` })),
+        yakumans: yakumanRows.map((r, i) => ({ ...r, id: `temp-y-${i}` })),
       },
     ]);
 
@@ -281,8 +309,8 @@ export default function RoomDetailPage() {
   if (!room) {
     return (
       <div
-        className="flex min-h-screen items-center justify-center"
-        style={{ background: "var(--color-bg-2)" }}
+        className="flex items-center justify-center"
+        style={{ background: "var(--color-bg-2)", minHeight: "100dvh" }}
       >
         <div className="flex flex-col items-center gap-3">
           <p style={{ color: "var(--color-text-2)" }}>
@@ -309,8 +337,8 @@ export default function RoomDetailPage() {
 
   return (
     <div
-      className="flex min-h-screen flex-col"
-      style={{ background: "var(--color-bg-2)" }}
+      className="flex flex-col"
+      style={{ background: "var(--color-bg-2)", minHeight: "100dvh" }}
     >
       <header
         className="flex items-center justify-between px-6 py-3"
@@ -529,10 +557,10 @@ export default function RoomDetailPage() {
 
       {/* 途中結果モーダル */}
       {showResultModal && completedGames.length > 0 && (() => {
-        const mid: Record<string, { displayName: string; total: number }> = {};
+        const mid: Record<string, { displayName: string; avatarUrl: string | null; total: number }> = {};
         for (const g of completedGames) {
           for (const s of g.scores) {
-            if (!mid[s.user_id]) mid[s.user_id] = { displayName: s.display_name, total: 0 };
+            if (!mid[s.user_id]) mid[s.user_id] = { displayName: s.display_name, avatarUrl: s.avatar_url, total: 0 };
             mid[s.user_id].total += s.score;
           }
         }
@@ -598,12 +626,12 @@ export default function RoomDetailPage() {
                       />
                       {midSorted.map(([userId, data]) => (
                         <th key={userId} className="px-2 py-2" style={{ background: "var(--color-bg-2)" }}>
-                          <div
-                            className="mx-auto flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold text-white"
-                            style={{ background: "var(--gray-6)" }}
-                            title={data.displayName}
-                          >
-                            {data.displayName.charAt(0)}
+                          <div className="mx-auto flex justify-center" title={data.displayName}>
+                            <Avatar
+                              src={data.avatarUrl}
+                              name={data.displayName}
+                              size={28}
+                            />
                           </div>
                         </th>
                       ))}
@@ -638,38 +666,64 @@ export default function RoomDetailPage() {
                     </tr>
                     {/* 半荘別行 */}
                     {completedGames.map((g, gi) => (
-                      <tr
-                        key={g.game.id}
-                        style={{ borderBottom: "1px solid var(--color-border)" }}
-                      >
-                        <td
-                          className="px-3 py-2 text-xs font-medium"
-                          style={{ color: "var(--color-text-3)", whiteSpace: "nowrap" }}
+                      <Fragment key={g.game.id}>
+                        <tr
+                          style={{ borderBottom: "1px solid var(--color-border)" }}
                         >
-                          {gi + 1}半荘
-                        </td>
-                        {midSorted.map(([userId]) => {
-                          const score = g.scores.find((s) => s.user_id === userId)?.score;
-                          return (
+                          <td
+                            className="px-3 py-2 text-xs font-medium"
+                            style={{ color: "var(--color-text-3)", whiteSpace: "nowrap" }}
+                          >
+                            {gi + 1}半荘
+                          </td>
+                          {midSorted.map(([userId]) => {
+                            const score = g.scores.find((s) => s.user_id === userId)?.score;
+                            return (
+                              <td
+                                key={userId}
+                                className="px-2 py-2 text-right text-xs"
+                                style={{
+                                  color:
+                                    score !== undefined && score > 0
+                                      ? "var(--green-6)"
+                                      : score !== undefined && score < 0
+                                        ? "var(--red-6)"
+                                        : "var(--color-text-2)",
+                                }}
+                              >
+                                {score !== undefined
+                                  ? `${score > 0 ? "+" : ""}${score.toLocaleString()}`
+                                  : "-"}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                        {g.yakumans && g.yakumans.length > 0 && (
+                          <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
                             <td
-                              key={userId}
-                              className="px-2 py-2 text-right text-xs"
-                              style={{
-                                color:
-                                  score !== undefined && score > 0
-                                    ? "var(--green-6)"
-                                    : score !== undefined && score < 0
-                                      ? "var(--red-6)"
-                                      : "var(--color-text-2)",
-                              }}
+                              colSpan={midSorted.length + 1}
+                              className="px-3 py-1.5"
                             >
-                              {score !== undefined
-                                ? `${score > 0 ? "+" : ""}${score.toLocaleString()}`
-                                : "-"}
+                              <div className="flex flex-wrap gap-1">
+                                {g.yakumans.map((y, yi) => (
+                                  <span
+                                    key={yi}
+                                    className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
+                                    style={{
+                                      background: "var(--orange-1)",
+                                      color: "var(--orange-6)",
+                                      border: "1px solid var(--orange-6)",
+                                      fontSize: "10px",
+                                    }}
+                                  >
+                                    {y.display_name}: {y.yakuman_type}({TILE_LABELS[y.winning_tile] || y.winning_tile})
+                                  </span>
+                                ))}
+                              </div>
                             </td>
-                          );
-                        })}
-                      </tr>
+                          </tr>
+                        )}
+                      </Fragment>
                     ))}
                   </tbody>
                 </table>

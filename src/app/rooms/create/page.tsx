@@ -63,7 +63,7 @@ export default function CreateRoomPage() {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("username")
+      .select("username, avatar_url")
       .eq("id", user.id)
       .single();
     const displayName = profile?.username ?? "プレイヤー";
@@ -72,13 +72,14 @@ export default function CreateRoomPage() {
       room_id: room.id,
       user_id: user.id,
       display_name: displayName,
+      avatar_url: profile?.avatar_url ?? null,
     });
 
     router.push(`/rooms/${roomNumber}`);
   };
 
   return (
-    <div style={{ background: "var(--color-bg-2)", minHeight: "100vh" }}>
+    <div style={{ background: "var(--color-bg-2)", minHeight: "100dvh" }}>
       <header
         style={{
           background: "var(--color-bg-1)",

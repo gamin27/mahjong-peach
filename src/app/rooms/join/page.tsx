@@ -72,7 +72,7 @@ export default function JoinRoomPage() {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("username")
+        .select("username, avatar_url")
         .eq("id", user.id)
         .single();
       const displayName = profile?.username ?? "プレイヤー";
@@ -83,6 +83,7 @@ export default function JoinRoomPage() {
           room_id: room.id,
           user_id: user.id,
           display_name: displayName,
+          avatar_url: profile?.avatar_url ?? null,
         });
 
       if (joinError) {
@@ -97,8 +98,8 @@ export default function JoinRoomPage() {
 
   return (
     <div
-      className="flex min-h-screen flex-col"
-      style={{ background: "var(--color-bg-2)" }}
+      className="flex flex-col"
+      style={{ background: "var(--color-bg-2)", minHeight: "100dvh" }}
     >
       <header
         className="flex items-center gap-2 px-6 py-3"

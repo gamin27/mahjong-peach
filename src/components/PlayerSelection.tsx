@@ -1,4 +1,5 @@
 import type { RoomMember } from "@/lib/types/room";
+import Avatar from "@/components/Avatar";
 
 interface PlayerSelectionProps {
   members: RoomMember[];
@@ -31,17 +32,16 @@ export default function PlayerSelection({
               cursor: onToggle ? "pointer" : "default",
             }}
           >
-            <div
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white"
-              style={{
-                background:
-                  member.user_id === currentUserId
-                    ? "var(--arcoblue-6)"
-                    : "var(--gray-6)",
-              }}
-            >
-              {member.display_name.charAt(0)}
-            </div>
+            <Avatar
+              src={member.avatar_url}
+              name={member.display_name}
+              size={36}
+              bg={
+                member.user_id === currentUserId
+                  ? "var(--arcoblue-6)"
+                  : "var(--gray-6)"
+              }
+            />
             <div className="min-w-0 flex-1">
               <p
                 className="truncate text-sm font-medium"

@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import Avatar from "@/components/Avatar";
 
 interface PlayerData {
   userId: string;
   displayName: string;
+  avatarUrl: string | null;
   totalScore: number;
   // 各ゲーム後の累計スコア推移
   history: number[];
@@ -28,6 +30,10 @@ export default function RankingPage() {
   const supabase = createClient();
   const [players, setPlayers] = useState<PlayerData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [username, setUsername] = useState("");
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -39,6 +45,17 @@ export default function RankingPage() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
       const userId = session.user.id;
+
+      // プロフィール取得
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("username, avatar_url")
+        .eq("id", userId)
+        .single();
+      if (profile) {
+        setAvatarUrl(profile.avatar_url);
+        setUsername(profile.username);
+      }
 
       // 自分が参加したゲームIDを取得
       const { data: myScores } = await supabase
@@ -56,7 +73,7 @@ export default function RankingPage() {
       // そのゲームの全スコアを取得（ゲーム作成日順にソート）
       const { data: allScores } = await supabase
         .from("game_scores")
-        .select("game_id, user_id, display_name, score, created_at")
+        .select("game_id, user_id, display_name, avatar_url, score, created_at")
         .in("game_id", gameIds)
         .order("created_at", { ascending: true });
 
@@ -74,10 +91,10 @@ export default function RankingPage() {
       }
 
       // プレイヤーごとに集計
-      const playerMap: Record<string, { displayName: string; scores: Record<string, number> }> = {};
+      const playerMap: Record<string, { displayName: string; avatarUrl: string | null; scores: Record<string, number> }> = {};
       for (const s of allScores) {
         if (!playerMap[s.user_id]) {
-          playerMap[s.user_id] = { displayName: s.display_name, scores: {} };
+          playerMap[s.user_id] = { displayName: s.display_name, avatarUrl: s.avatar_url, scores: {} };
         }
         playerMap[s.user_id].scores[s.game_id] = s.score;
       }
@@ -95,6 +112,7 @@ export default function RankingPage() {
         return {
           userId: uid,
           displayName: data.displayName,
+          avatarUrl: data.avatarUrl,
           totalScore: cumulative,
           history,
         };
@@ -108,6 +126,19 @@ export default function RankingPage() {
     fetchRanking();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // 外側クリックでメニューを閉じる
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+    if (showMenu) {
+      document.addEventListener("mousedown", handleClick);
+    }
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [showMenu]);
 
   if (loading) return null;
 
@@ -144,7 +175,7 @@ export default function RankingPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col" style={{ background: "var(--color-bg-2)" }}>
+    <div className="flex flex-col" style={{ background: "var(--color-bg-2)", minHeight: "100dvh" }}>
       <main className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-6 px-6 py-6">
         <h1
           className="text-lg font-semibold"
@@ -285,12 +316,12 @@ export default function RankingPage() {
                   >
                     {i + 1}
                   </span>
-                  <div
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
-                    style={{ background: COLORS[i % COLORS.length] }}
-                  >
-                    {p.displayName.charAt(0)}
-                  </div>
+                  <Avatar
+                    src={p.avatarUrl}
+                    name={p.displayName}
+                    size={32}
+                    bg={COLORS[i % COLORS.length]}
+                  />
                   <p
                     className="flex-1 text-sm font-medium"
                     style={{ color: "var(--color-text-1)" }}
@@ -337,7 +368,70 @@ export default function RankingPage() {
         <button onClick={() => router.push("/")} style={{ fontSize: "24px", lineHeight: 1 }}>🀄</button>
         <button onClick={() => router.push("/history")} style={{ fontSize: "24px", lineHeight: 1 }}>🗒️</button>
         <button style={{ fontSize: "24px", lineHeight: 1, opacity: 1 }}>👑</button>
-        <button onClick={handleLogout} style={{ fontSize: "24px", lineHeight: 1 }}>🚪</button>
+        <div ref={menuRef} style={{ position: "relative" }}>
+          <button
+            onClick={() => setShowMenu((v) => !v)}
+            style={{ lineHeight: 1, padding: 0, background: "none", border: "none", cursor: "pointer" }}
+          >
+            <Avatar src={avatarUrl} name={username || "?"} size={28} />
+          </button>
+          {showMenu && (
+            <div
+              style={{
+                position: "absolute",
+                bottom: "calc(100% + 8px)",
+                right: 0,
+                background: "var(--color-bg-1)",
+                border: "1px solid var(--color-border)",
+                borderRadius: "8px",
+                boxShadow: "var(--shadow-popup)",
+                minWidth: "160px",
+                overflow: "hidden",
+                zIndex: 100,
+              }}
+            >
+              <button
+                onClick={() => {
+                  setShowMenu(false);
+                  router.push("/account/edit");
+                }}
+                style={{
+                  display: "block",
+                  width: "100%",
+                  padding: "12px 16px",
+                  fontSize: "14px",
+                  color: "var(--color-text-1)",
+                  background: "none",
+                  border: "none",
+                  borderBottom: "1px solid var(--color-border)",
+                  textAlign: "left",
+                  cursor: "pointer",
+                }}
+              >
+                アカウント編集
+              </button>
+              <button
+                onClick={() => {
+                  setShowMenu(false);
+                  handleLogout();
+                }}
+                style={{
+                  display: "block",
+                  width: "100%",
+                  padding: "12px 16px",
+                  fontSize: "14px",
+                  color: "var(--red-6)",
+                  background: "none",
+                  border: "none",
+                  textAlign: "left",
+                  cursor: "pointer",
+                }}
+              >
+                ログアウト
+              </button>
+            </div>
+          )}
+        </div>
       </nav>
       <div style={{ height: "70px" }} />
     </div>

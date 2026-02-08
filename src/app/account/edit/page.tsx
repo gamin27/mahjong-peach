@@ -4,36 +4,45 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { compressImage } from "@/lib/compressImage";
+import Avatar from "@/components/Avatar";
 
-export default function SetupPage() {
+export default function AccountEditPage() {
   const router = useRouter();
   const supabase = createClient();
   const [username, setUsername] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const load = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) {
         router.replace("/login");
         return;
       }
       setUserId(session.user.id);
 
-      // 既にプロフィールがあればホームへ
-      supabase
+      const { data: profile } = await supabase
         .from("profiles")
-        .select("id")
+        .select("username, avatar_url")
         .eq("id", session.user.id)
-        .maybeSingle()
-        .then(({ data }) => {
-          if (data) router.replace("/");
-        });
-    });
+        .single();
+
+      if (profile) {
+        setUsername(profile.username);
+        setAvatarUrl(profile.avatar_url);
+      }
+      setLoading(false);
+    };
+    load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -52,12 +61,10 @@ export default function SetupPage() {
 
     setError("");
 
-    // プレビュー表示
     const reader = new FileReader();
     reader.onload = (ev) => setAvatarPreview(ev.target?.result as string);
     reader.readAsDataURL(file);
 
-    // 500KBに圧縮
     try {
       const compressed = await compressImage(file);
       setAvatarFile(compressed);
@@ -66,7 +73,7 @@ export default function SetupPage() {
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSave = async () => {
     setError("");
     const trimmed = username.trim();
 
@@ -75,16 +82,12 @@ export default function SetupPage() {
       return;
     }
 
-    if (!userId) {
-      router.replace("/login");
-      return;
-    }
+    if (!userId) return;
 
-    setLoading(true);
+    setSaving(true);
 
-    let avatarUrl: string | null = null;
+    let newAvatarUrl = avatarUrl;
 
-    // アバター画像をアップロード
     if (avatarFile) {
       const path = `${userId}/avatar.jpg`;
       const { error: uploadError } = await supabase.storage
@@ -93,66 +96,78 @@ export default function SetupPage() {
 
       if (uploadError) {
         setError(`画像アップロードに失敗しました: ${uploadError.message}`);
-        setLoading(false);
+        setSaving(false);
         return;
       }
 
       const { data: publicUrl } = supabase.storage
         .from("avatars")
         .getPublicUrl(path);
-      avatarUrl = publicUrl.publicUrl;
+      // キャッシュ回避のためにタイムスタンプを付与
+      newAvatarUrl = `${publicUrl.publicUrl}?t=${Date.now()}`;
     }
 
-    const { error: insertError } = await supabase.from("profiles").insert({
-      id: userId,
-      username: trimmed,
-      avatar_url: avatarUrl,
-    });
+    const { error: updateError } = await supabase
+      .from("profiles")
+      .update({ username: trimmed, avatar_url: newAvatarUrl })
+      .eq("id", userId);
 
-    if (insertError) {
-      if (insertError.code === "23505") {
+    if (updateError) {
+      if (updateError.code === "23505") {
         setError("このユーザー名は既に使われています");
       } else {
-        setError(`登録に失敗しました: ${insertError.message}`);
+        setError(`保存に失敗しました: ${updateError.message}`);
       }
-      setLoading(false);
+      setSaving(false);
       return;
     }
 
-    router.replace("/");
+    router.push("/");
   };
 
+  if (loading) return null;
+
+  const displayPreview = avatarPreview || avatarUrl;
+
   return (
-    <div style={{ background: "var(--color-bg-2)", minHeight: "100dvh" }}>
+    <div
+      className="flex flex-col"
+      style={{ background: "var(--color-bg-2)", minHeight: "100dvh" }}
+    >
+      <header
+        className="flex items-center px-6 py-3"
+        style={{
+          background: "var(--color-bg-1)",
+          borderBottom: "1px solid var(--color-border)",
+        }}
+      >
+        <button
+          onClick={() => router.back()}
+          className="text-sm"
+          style={{ color: "var(--color-text-3)" }}
+        >
+          ← 戻る
+        </button>
+      </header>
+
       <main
         style={{
           maxWidth: "448px",
+          width: "100%",
           margin: "0 auto",
-          padding: "80px 24px 32px",
+          padding: "32px 24px",
         }}
       >
-        <div style={{ textAlign: "center", marginBottom: "32px" }}>
-          <span style={{ fontSize: "48px" }}>🀄</span>
-          <h1
-            style={{
-              fontSize: "20px",
-              fontWeight: 600,
-              color: "var(--color-text-1)",
-              marginTop: "12px",
-            }}
-          >
-            ようこそ！
-          </h1>
-          <p
-            style={{
-              fontSize: "14px",
-              color: "var(--color-text-3)",
-              marginTop: "4px",
-            }}
-          >
-            麻雀ピーチで使うプロフィールを設定してください
-          </p>
-        </div>
+        <h1
+          style={{
+            fontSize: "18px",
+            fontWeight: 600,
+            color: "var(--color-text-1)",
+            marginBottom: "24px",
+          }}
+        >
+          アカウント編集
+        </h1>
 
         <div
           style={{
@@ -163,8 +178,8 @@ export default function SetupPage() {
             boxShadow: "var(--shadow-card)",
           }}
         >
-          {/* アバター設定 */}
-          <div style={{ marginBottom: "20px", textAlign: "center" }}>
+          {/* アバター変更 */}
+          <div style={{ marginBottom: "24px", textAlign: "center" }}>
             <label
               style={{
                 display: "block",
@@ -175,7 +190,7 @@ export default function SetupPage() {
                 textAlign: "left",
               }}
             >
-              アイコン（任意）
+              アイコン
             </label>
             <div
               onClick={() => fileInputRef.current?.click()}
@@ -190,28 +205,17 @@ export default function SetupPage() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                background: avatarPreview ? "transparent" : "var(--color-bg-2)",
+                background: displayPreview ? "transparent" : "var(--color-bg-2)",
               }}
             >
-              {avatarPreview ? (
+              {displayPreview ? (
                 <img
-                  src={avatarPreview}
-                  alt="avatar preview"
+                  src={displayPreview}
+                  alt="avatar"
                   style={{ width: "100%", height: "100%", objectFit: "cover" }}
                 />
               ) : (
-                <span
-                  style={{
-                    fontSize: "12px",
-                    color: "var(--color-text-3)",
-                    textAlign: "center",
-                    lineHeight: 1.3,
-                  }}
-                >
-                  タップして
-                  <br />
-                  選択
-                </span>
+                <Avatar name={username || "?"} size={76} />
               )}
             </div>
             <input
@@ -228,7 +232,7 @@ export default function SetupPage() {
                 marginTop: "8px",
               }}
             >
-              10MB以下の画像（自動圧縮されます）
+              タップして変更（10MB以下・自動圧縮）
             </p>
           </div>
 
@@ -252,7 +256,6 @@ export default function SetupPage() {
               onChange={(e) => setUsername(e.target.value)}
               placeholder="例: たろう"
               autoComplete="off"
-              autoFocus
               style={{
                 width: "100%",
                 padding: "10px 16px",
@@ -289,8 +292,8 @@ export default function SetupPage() {
           )}
 
           <button
-            onClick={handleSubmit}
-            disabled={loading || !username.trim()}
+            onClick={handleSave}
+            disabled={saving || !username.trim()}
             style={{
               width: "100%",
               padding: "10px 16px",
@@ -301,11 +304,11 @@ export default function SetupPage() {
               background: "var(--arcoblue-6)",
               color: "#fff",
               cursor:
-                loading || !username.trim() ? "not-allowed" : "pointer",
-              opacity: loading || !username.trim() ? 0.5 : 1,
+                saving || !username.trim() ? "not-allowed" : "pointer",
+              opacity: saving || !username.trim() ? 0.5 : 1,
             }}
           >
-            {loading ? "登録中..." : "はじめる"}
+            {saving ? "保存中..." : "保存する"}
           </button>
         </div>
       </main>
