@@ -61,6 +61,7 @@ export default function FooterNav({
           paddingBottom: "calc(8px + env(safe-area-inset-bottom))",
           background: "var(--color-bg-1)",
           borderTop: "1px solid var(--color-border)",
+          zIndex: 10,
         }}
       >
         {NAV_ITEMS.map((item) => (
