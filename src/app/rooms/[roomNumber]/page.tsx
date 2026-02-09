@@ -440,7 +440,10 @@ export default function RoomDetailPage() {
         {isCreator && phase !== "result" && (
           <Button
             size="sm"
-            onClick={() => setShowLeaveModal(true)}
+            onClick={async () => {
+              if (room) await fetchCompletedGames(room.id);
+              setShowLeaveModal(true);
+            }}
           >
             今日の麻雀を終える
           </Button>
@@ -643,21 +646,31 @@ export default function RoomDetailPage() {
               className="text-sm font-semibold"
               style={{ color: "var(--color-text-1)" }}
             >
-              今日の麻雀を終えますか？
+              この内容で確定しますか？
             </p>
             <p
-              className="mt-2 text-xs"
+              className="mt-1 text-xs"
               style={{ color: "var(--color-text-3)" }}
             >
-              ルームを解散し、全員退出します。
+              確定後は変更できません
             </p>
+
+            {completedGames.length > 0 && (
+              <div className="mt-4">
+                <GameScoreTable
+                  games={completedGames}
+                  ptRate={room.pt_rate}
+                />
+              </div>
+            )}
+
             <div className="mt-5 flex gap-3">
               <Button
                 variant="tertiary"
                 onClick={() => setShowLeaveModal(false)}
                 style={{ flex: 1 }}
               >
-                キャンセル
+                戻る
               </Button>
               <Button
                 onClick={() => {
@@ -666,7 +679,7 @@ export default function RoomDetailPage() {
                 }}
                 style={{ flex: 1 }}
               >
-                終える
+                確定する
               </Button>
             </div>
         </Modal>
