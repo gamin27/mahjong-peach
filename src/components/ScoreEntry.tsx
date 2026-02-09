@@ -58,6 +58,11 @@ export default function ScoreEntry({
 
   const allFilled = filledEntries.length >= playerCount - 1 && autoCalcUser;
 
+  const hasTobashi = tobashiIds.size > 0;
+  const hasTobi = tobiIds.size > 0;
+  const tobashiIncomplete = (hasTobashi || hasTobi) && !(hasTobashi && hasTobi);
+  const canConfirm = allFilled && !tobashiIncomplete;
+
   const toggleTobi = (userId: string) => {
     setTobiIds((prev) => {
       const next = new Set(prev);
@@ -307,7 +312,13 @@ export default function ScoreEntry({
         役満を記録
       </Button>
 
-      <Button onClick={handleConfirm} disabled={!allFilled}>
+      {tobashiIncomplete && (
+        <p className="text-xs" style={{ color: "var(--red-6)" }}>
+          飛ばした人と飛んだ人の両方を選択してください
+        </p>
+      )}
+
+      <Button onClick={handleConfirm} disabled={!canConfirm}>
         確定
       </Button>
 
