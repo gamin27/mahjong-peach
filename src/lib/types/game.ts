@@ -21,7 +21,7 @@ export interface YakumanRecord {
   display_name: string;
   avatar_url: string | null;
   yakuman_type: string;
-  winning_tile: string;
+  winning_tile: string | null;
 }
 
 export interface CompletedGame {
@@ -36,7 +36,7 @@ export interface YakumanEntry {
   displayName: string;
   avatarUrl: string | null;
   yakumanType: string;
-  winningTile: string;
+  winningTile: string | null;
 }
 
 /** ScoreEntry → RoomDetailPage へ渡す飛び/飛ばし入力データ */

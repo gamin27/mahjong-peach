@@ -77,7 +77,7 @@ export default function YakumanModal({
   const [selectedType, setSelectedType] = useState("");
   const [selectedTile, setSelectedTile] = useState("");
 
-  const canAdd = selectedUserId && selectedType && selectedTile;
+  const canAdd = selectedUserId && selectedType;
 
   const handleAdd = () => {
     if (!canAdd) return;
@@ -89,7 +89,7 @@ export default function YakumanModal({
       displayName: player.display_name,
       avatarUrl: player.avatar_url,
       yakumanType: selectedType,
-      winningTile: selectedTile,
+      winningTile: selectedTile || null,
     });
 
     onClose();
@@ -274,7 +274,7 @@ export default function YakumanModal({
                       {y.displayName}
                     </p>
                     <p className="text-xs" style={{ color: "var(--color-text-3)" }}>
-                      {y.yakumanType} / {TILE_LABELS[y.winningTile] || y.winningTile}
+                      {y.yakumanType}{y.winningTile && ` / ${TILE_LABELS[y.winningTile] || y.winningTile}`}
                     </p>
                   </div>
                   <button

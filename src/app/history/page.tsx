@@ -777,6 +777,7 @@ export default function HistoryPage() {
                                 : "none",
                           }}
                         >
+                          <Avatar src={y.avatarUrl} name={y.displayName} size={32} />
                           <div className="min-w-0 flex-1">
                             <p
                               className="text-sm font-medium"
@@ -788,7 +789,7 @@ export default function HistoryPage() {
                               className="text-xs"
                               style={{ color: "var(--color-text-3)" }}
                             >
-                              {TILE_LABELS[y.winningTile] || y.winningTile} ・{" "}
+                              {y.winningTile ? `${TILE_LABELS[y.winningTile] || y.winningTile} ・ ` : ""}
                               {new Date(y.date).toLocaleDateString("ja-JP", {
                                 year: "numeric",
                                 month: "short",

@@ -1,17 +1,26 @@
 "use client";
 
-
+import { useState, useMemo, Fragment } from "react";
 import type { CompletedGame } from "@/lib/types/game";
 import Avatar from "@/components/Avatar";
-
+import Input from "@/components/Input";
+import Button from "@/components/Button";
 
 interface GameScoreTableProps {
   games: CompletedGame[];
   maxHeight?: string;
   ptRate?: number;
+  onUpdateScores?: (
+    gameIndex: number,
+    scores: { userId: string; score: number }[]
+  ) => Promise<void>;
 }
 
-export default function GameScoreTable({ games, maxHeight = "50vh", ptRate }: GameScoreTableProps) {
+export default function GameScoreTable({ games, maxHeight = "50vh", ptRate, onUpdateScores }: GameScoreTableProps) {
+  const [editingGameIndex, setEditingGameIndex] = useState<number | null>(null);
+  const [editInputs, setEditInputs] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+
   if (games.length === 0) return null;
 
   // 累計スコアを計算
@@ -29,6 +38,63 @@ export default function GameScoreTable({ games, maxHeight = "50vh", ptRate }: Ga
   const sorted = playerOrder
     .filter((uid) => totals[uid])
     .map((uid) => [uid, totals[uid]] as [string, (typeof totals)[string]]);
+
+  const editable = !!onUpdateScores;
+
+  const handleStartEdit = (gameIndex: number) => {
+    const game = games[gameIndex];
+    const inputs: Record<string, string> = {};
+    for (const s of game.scores) {
+      inputs[s.user_id] = String(s.score);
+    }
+    setEditInputs(inputs);
+    setEditingGameIndex(gameIndex);
+  };
+
+  const handleEditChange = (userId: string, value: string) => {
+    const cleaned = value.replace(/[^0-9-]/g, "");
+    setEditInputs((prev) => ({ ...prev, [userId]: cleaned }));
+  };
+
+  const handleCancelEdit = () => {
+    setEditingGameIndex(null);
+    setEditInputs({});
+  };
+
+  const handleSaveEdit = async () => {
+    if (editingGameIndex === null || !onUpdateScores) return;
+    setSaving(true);
+    const game = games[editingGameIndex];
+    const scores = game.scores.map((s) => ({
+      userId: s.user_id,
+      score: parseInt(editInputs[s.user_id], 10) || 0,
+    }));
+    await onUpdateScores(editingGameIndex, scores);
+    setEditingGameIndex(null);
+    setEditInputs({});
+    setSaving(false);
+  };
+
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const editSum = useMemo(() => {
+    if (editingGameIndex === null) return 0;
+    const game = games[editingGameIndex];
+    return game.scores.reduce(
+      (acc, s) => acc + (parseInt(editInputs[s.user_id], 10) || 0),
+      0
+    );
+  }, [editingGameIndex, games, editInputs]);
+
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const allEditFilled = useMemo(() => {
+    if (editingGameIndex === null) return false;
+    const game = games[editingGameIndex];
+    return game.scores.every(
+      (s) => editInputs[s.user_id] !== "" && editInputs[s.user_id] !== undefined
+    );
+  }, [editingGameIndex, games, editInputs]);
+
+  const canSave = allEditFilled && editSum === 0;
 
   return (
     <div
@@ -66,6 +132,9 @@ export default function GameScoreTable({ games, maxHeight = "50vh", ptRate }: Ga
                 </div>
               </th>
             ))}
+            {editable && (
+              <th style={{ width: "40px", background: "var(--color-bg-2)" }} />
+            )}
           </tr>
         </thead>
         <tbody>
@@ -102,42 +171,116 @@ export default function GameScoreTable({ games, maxHeight = "50vh", ptRate }: Ga
                 )}
               </td>
             ))}
+            {editable && <td />}
           </tr>
           {/* 半荘別行 */}
-          {games.map((g, gi) => (
-              <tr
-                key={g.game.id}
-                style={{ borderBottom: "1px solid var(--color-border)" }}
-              >
-                <td
-                  className="px-3 py-2 text-xs font-medium"
-                  style={{ color: "var(--color-text-3)", whiteSpace: "nowrap" }}
-                >
-                  {gi + 1}半荘
-                </td>
-                {sorted.map(([userId]) => {
-                  const score = g.scores.find((s) => s.user_id === userId)?.score;
-                  return (
-                    <td
-                      key={userId}
-                      className="px-2 py-2 text-right text-xs"
-                      style={{
-                        color:
-                          score !== undefined && score > 0
-                            ? "var(--green-6)"
-                            : score !== undefined && score < 0
-                              ? "var(--red-6)"
-                              : "var(--color-text-2)",
-                      }}
-                    >
-                      {score !== undefined
-                        ? `${score > 0 ? "+" : ""}${score.toLocaleString()}`
-                        : "-"}
+          {games.map((g, gi) => {
+            const isEditing = editingGameIndex === gi;
+            return (
+              <Fragment key={g.game.id}>
+                <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
+                  <td
+                    className="px-3 py-2 text-xs font-medium"
+                    style={{ color: "var(--color-text-3)", whiteSpace: "nowrap" }}
+                  >
+                    {gi + 1}半荘
+                  </td>
+                  {sorted.map(([userId]) => {
+                    const score = g.scores.find((s) => s.user_id === userId)?.score;
+
+                    if (isEditing) {
+                      return (
+                        <td
+                          key={userId}
+                          className="px-1 py-2"
+                          style={{ textAlign: "right" }}
+                        >
+                          <Input
+                            compact
+                            type="text"
+                            inputMode="text"
+                            pattern="-?[0-9]*"
+                            value={editInputs[userId] ?? ""}
+                            onChange={(e) => handleEditChange(userId, e.target.value)}
+                            style={{
+                              width: "70px",
+                              textAlign: "right",
+                            }}
+                          />
+                        </td>
+                      );
+                    }
+
+                    return (
+                      <td
+                        key={userId}
+                        className="px-2 py-2 text-right text-xs"
+                        style={{
+                          color:
+                            score !== undefined && score > 0
+                              ? "var(--green-6)"
+                              : score !== undefined && score < 0
+                                ? "var(--red-6)"
+                                : "var(--color-text-2)",
+                        }}
+                      >
+                        {score !== undefined
+                          ? `${score > 0 ? "+" : ""}${score.toLocaleString()}`
+                          : "-"}
+                      </td>
+                    );
+                  })}
+                  {editable && (
+                    <td className="px-2 py-2" style={{ textAlign: "center" }}>
+                      {editingGameIndex === null && (
+                        <button
+                          onClick={() => handleStartEdit(gi)}
+                          style={{
+                            fontSize: "14px",
+                            color: "var(--color-text-3)",
+                            cursor: "pointer",
+                            lineHeight: 1,
+                          }}
+                          title="編集"
+                        >
+                          ✏️
+                        </button>
+                      )}
                     </td>
-                  );
-                })}
-              </tr>
-          ))}
+                  )}
+                </tr>
+                {isEditing && (
+                  <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
+                    <td colSpan={sorted.length + (editable ? 2 : 1)} className="px-3 py-2">
+                      <div className="flex items-center justify-between">
+                        <p
+                          className="text-xs"
+                          style={{
+                            color: editSum === 0 ? "var(--color-text-3)" : "var(--red-6)",
+                          }}
+                        >
+                          合計: {editSum > 0 ? "+" : ""}
+                          {editSum.toLocaleString()}
+                        </p>
+                        <div className="flex gap-2">
+                          <Button variant="tertiary" size="sm" onClick={handleCancelEdit}>
+                            キャンセル
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={handleSaveEdit}
+                            disabled={!canSave || saving}
+                          >
+                            {saving ? "保存中..." : "保存"}
+                          </Button>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
+            );
+          })}
         </tbody>
       </table>
     </div>

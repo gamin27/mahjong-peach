@@ -285,7 +285,7 @@ export default function RoomDetailPage() {
     await supabase.from("game_scores").insert(scoreRows);
 
     // 役満記録を保存
-    let yakumanRows: { game_id: string; user_id: string; display_name: string; avatar_url: string | null; yakuman_type: string; winning_tile: string }[] = [];
+    let yakumanRows: { game_id: string; user_id: string; display_name: string; avatar_url: string | null; yakuman_type: string; winning_tile: string | null }[] = [];
     if (yakumans.length > 0) {
       yakumanRows = yakumans.map((y) => ({
         game_id: game.id,
@@ -324,6 +324,8 @@ export default function RoomDetailPage() {
     } else {
       setPhase("selecting");
     }
+
+    window.scrollTo({ top: 0 });
   };
 
   const handleUpdateScores = async (
@@ -604,7 +606,11 @@ export default function RoomDetailPage() {
               </div>
             ) : (
               <div className="mt-4">
-                <GameScoreTable games={completedGames} ptRate={room.pt_rate} />
+                <GameScoreTable
+                  games={completedGames}
+                  ptRate={room.pt_rate}
+                  onUpdateScores={isCreator ? handleUpdateScores : undefined}
+                />
               </div>
             )}
 

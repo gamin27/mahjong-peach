@@ -203,8 +203,7 @@ export default function ScoreEntry({
                 className="flex-1 text-xs font-medium"
                 style={{ color: "var(--orange-6)" }}
               >
-                {y.displayName} - {y.yakumanType} /{" "}
-                {TILE_LABELS[y.winningTile] || y.winningTile}
+                {y.displayName} - {y.yakumanType}{y.winningTile && ` / ${TILE_LABELS[y.winningTile] || y.winningTile}`}
               </p>
               <button
                 onClick={() =>
