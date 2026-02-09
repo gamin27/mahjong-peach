@@ -292,6 +292,7 @@ export default function RankingPage() {
         setUsername(profile.username);
       }
 
+      // 自分が参加したゲームを取得
       const { data: myScores } = await supabase
         .from("game_scores")
         .select("game_id")
@@ -302,12 +303,26 @@ export default function RankingPage() {
         return;
       }
 
-      const gameIds = [...new Set(myScores.map((s) => s.game_id))];
+      const myGameIds = [...new Set(myScores.map((s) => s.game_id))];
 
+      // 共有ゲームからco-playerのuser_idを特定
+      const { data: sharedScores } = await supabase
+        .from("game_scores")
+        .select("user_id")
+        .in("game_id", myGameIds);
+
+      if (!sharedScores) {
+        setLoading(false);
+        return;
+      }
+
+      const coPlayerIds = [...new Set(sharedScores.map((s) => s.user_id))];
+
+      // co-playerの全スコアを取得（自分が参加していないゲームも含む）
       const { data: allScores } = await supabase
         .from("game_scores")
         .select("game_id, user_id, display_name, avatar_url, score, created_at")
-        .in("game_id", gameIds)
+        .in("user_id", coPlayerIds)
         .order("created_at", { ascending: true });
 
       if (!allScores) {
@@ -315,15 +330,16 @@ export default function RankingPage() {
         return;
       }
 
-      // 最新のプロフィール（username, avatar_url）を取得して上書き
-      const userIds = [...new Set(allScores.map((s) => s.user_id))];
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, username, avatar_url")
-        .in("id", userIds);
-      if (profiles) {
+      // 全game_idの正確なプレイヤー数を取得 + プロフィール更新
+      const allGameIds = [...new Set(allScores.map((s) => s.game_id))];
+      const [countRes, profilesRes] = await Promise.all([
+        supabase.from("game_scores").select("game_id").in("game_id", allGameIds),
+        supabase.from("profiles").select("id, username, avatar_url").in("id", coPlayerIds),
+      ]);
+
+      if (profilesRes.data) {
         const profileMap: Record<string, { username: string; avatar_url: string | null }> = {};
-        for (const p of profiles) profileMap[p.id] = p;
+        for (const p of profilesRes.data) profileMap[p.id] = p;
         for (const s of allScores) {
           const prof = profileMap[s.user_id];
           if (prof) {
@@ -335,8 +351,10 @@ export default function RankingPage() {
 
       // ゲームごとのプレイヤー数を計算
       const gamePlayerCount: Record<string, number> = {};
-      for (const s of allScores) {
-        gamePlayerCount[s.game_id] = (gamePlayerCount[s.game_id] || 0) + 1;
+      if (countRes.data) {
+        for (const row of countRes.data) {
+          gamePlayerCount[row.game_id] = (gamePlayerCount[row.game_id] || 0) + 1;
+        }
       }
 
       // 3人/4人に分割

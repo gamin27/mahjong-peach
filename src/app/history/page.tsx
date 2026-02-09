@@ -150,16 +150,12 @@ export default function HistoryPage() {
       return;
     }
 
-    const [scoresRes, tobiRes, yakumanRes] = await Promise.all([
+    // Step 1: yearGameIdsからプレイヤーIDを取得 + 役満取得
+    const [yearScoresRes, yakumanRes] = await Promise.all([
       supabase
         .from("game_scores")
-        .select("game_id, user_id, display_name, avatar_url, score")
+        .select("user_id")
         .in("game_id", yearGameIds),
-      supabase
-        .from("tobashi_records")
-        .select("game_id, user_id")
-        .in("game_id", yearGameIds)
-        .eq("type", "tobi"),
       supabase
         .from("yakuman_records")
         .select(
@@ -168,14 +164,103 @@ export default function HistoryPage() {
         .in("game_id", yearGameIds),
     ]);
 
-    const allScores = scoresRes.data || [];
+    const playerIds = [
+      ...new Set(yearScoresRes.data?.map((s) => s.user_id) || []),
+    ];
+    if (playerIds.length === 0) {
+      setPlayers([]);
+      setYakumans([]);
+      fetchedRef.current.add(`summary:${year}:${playerCount}`);
+      setTabLoading(false);
+      return;
+    }
+
+    // Step 2: プレイヤーが参加した全ゲームIDを取得
+    const { data: playerGameRows } = await supabase
+      .from("game_scores")
+      .select("game_id")
+      .in("user_id", playerIds);
+
+    const allGameIdsFromPlayers = [
+      ...new Set(playerGameRows?.map((r) => r.game_id) || []),
+    ];
+
+    // Step 3: 追加ゲームのメタデータ + プレイヤー数を取得
+    const knownGameIds = new Set(meta.gamesData.map((g) => g.id));
+    const additionalGameIds = allGameIdsFromPlayers.filter(
+      (id) => !knownGameIds.has(id),
+    );
+
+    const [additionalGamesRes, countRes] = await Promise.all([
+      additionalGameIds.length > 0
+        ? supabase
+            .from("games")
+            .select("id, created_at")
+            .in("id", additionalGameIds)
+        : Promise.resolve({
+            data: [] as { id: string; created_at: string }[],
+          }),
+      supabase
+        .from("game_scores")
+        .select("game_id")
+        .in("game_id", allGameIdsFromPlayers),
+    ]);
+
+    // ゲーム年マップ
+    const gameYearMap: Record<string, number> = {};
+    for (const g of meta.gamesData)
+      gameYearMap[g.id] = new Date(g.created_at).getFullYear();
+    for (const g of additionalGamesRes.data || [])
+      gameYearMap[g.id] = new Date(g.created_at).getFullYear();
+
+    // プレイヤー数マップ
+    const gpc: Record<string, number> = {};
+    for (const row of countRes.data || []) {
+      gpc[row.game_id] = (gpc[row.game_id] || 0) + 1;
+    }
+
+    // year + playerCount でフィルタ
+    const filteredGameIds = allGameIdsFromPlayers.filter(
+      (id) => gameYearMap[id] === year && gpc[id] === playerCount,
+    );
+
+    if (filteredGameIds.length === 0) {
+      setPlayers([]);
+      const yakumanData = yakumanRes.data || [];
+      setYakumans(
+        yakumanData.map((y) => ({
+          displayName: y.display_name,
+          avatarUrl: y.avatar_url,
+          yakumanType: y.yakuman_type,
+          winningTile: y.winning_tile,
+          date: y.created_at,
+        })),
+      );
+      fetchedRef.current.add(`summary:${year}:${playerCount}`);
+      setTabLoading(false);
+      return;
+    }
+
+    // Step 4: filteredGamesの全スコア + 飛びデータを取得
+    const [fullScoresRes, tobiRes] = await Promise.all([
+      supabase
+        .from("game_scores")
+        .select("game_id, user_id, display_name, avatar_url, score")
+        .in("game_id", filteredGameIds),
+      supabase
+        .from("tobashi_records")
+        .select("game_id, user_id")
+        .in("game_id", filteredGameIds)
+        .eq("type", "tobi"),
+    ]);
+
+    const fullScores = fullScoresRes.data || [];
     const tobiData = tobiRes.data || [];
-    const yakumanData = yakumanRes.data || [];
 
-    await updateProfiles(allScores);
+    await updateProfiles(fullScores);
 
-    const gameMap: Record<string, typeof allScores> = {};
-    for (const s of allScores) {
+    const gameMap: Record<string, typeof fullScores> = {};
+    for (const s of fullScores) {
       if (!gameMap[s.game_id]) gameMap[s.game_id] = [];
       gameMap[s.game_id].push(s);
     }
@@ -218,8 +303,12 @@ export default function HistoryPage() {
         if (tobiSet.has(`${gameId}:${s.user_id}`)) st.tobiCount++;
       });
     }
+
+    // co-playerのみ表示
+    const coPlayerSet = new Set(playerIds);
     setPlayers(
       Object.entries(stats)
+        .filter(([uid]) => coPlayerSet.has(uid))
         .map(([uid, st]) => ({
           userId: uid,
           displayName: st.displayName,
@@ -233,14 +322,16 @@ export default function HistoryPage() {
         .sort((a, b) => a.avgRank - b.avgRank),
     );
 
-    const yakumanItems: YakumanItem[] = yakumanData.map((y) => ({
-      displayName: y.display_name,
-      avatarUrl: y.avatar_url,
-      yakumanType: y.yakuman_type,
-      winningTile: y.winning_tile,
-      date: y.created_at,
-    }));
-    setYakumans(yakumanItems);
+    const yakumanData = yakumanRes.data || [];
+    setYakumans(
+      yakumanData.map((y) => ({
+        displayName: y.display_name,
+        avatarUrl: y.avatar_url,
+        yakumanType: y.yakuman_type,
+        winningTile: y.winning_tile,
+        date: y.created_at,
+      })),
+    );
 
     fetchedRef.current.add(`summary:${year}:${playerCount}`);
     setTabLoading(false);
