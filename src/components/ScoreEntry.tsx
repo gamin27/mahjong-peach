@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import type { RoomMember } from "@/lib/types/room";
 import type { YakumanEntry, TobashiEntry } from "@/lib/types/game";
 import Avatar from "@/components/Avatar";
+import Modal from "@/components/Modal";
 import YakumanModal, { TILE_LABELS } from "@/components/YakumanModal";
 import Input from "@/components/Input";
 import Button from "@/components/Button";
@@ -28,6 +29,7 @@ export default function ScoreEntry({
   const [showYakumanModal, setShowYakumanModal] = useState(false);
   const [tobiIds, setTobiIds] = useState<Set<string>>(new Set()); // 飛んだ人
   const [tobashiIds, setTobashiIds] = useState<Set<string>>(new Set()); // 飛ばした人
+  const [showTobashiConfirm, setShowTobashiConfirm] = useState(false);
 
   const handleChange = (userId: string, value: string) => {
     const cleaned = value.replace(/[^0-9-]/g, "");
@@ -61,7 +63,7 @@ export default function ScoreEntry({
   const hasTobashi = tobashiIds.size > 0;
   const hasTobi = tobiIds.size > 0;
   const tobashiIncomplete = (hasTobashi || hasTobi) && !(hasTobashi && hasTobi);
-  const canConfirm = allFilled && !tobashiIncomplete;
+  const canConfirm = !!allFilled;
 
   const toggleTobi = (userId: string) => {
     setTobiIds((prev) => {
@@ -99,8 +101,8 @@ export default function ScoreEntry({
     });
   };
 
-  const handleConfirm = () => {
-    if (!allFilled || autoCalcScore === null || !autoCalcUser) return;
+  const doConfirm = () => {
+    if (autoCalcScore === null || !autoCalcUser) return;
 
     const scores = players.map((p) => ({
       userId: p.user_id,
@@ -129,6 +131,15 @@ export default function ScoreEntry({
     ];
 
     onConfirm(scores, yakumans, tobashis);
+  };
+
+  const handleConfirm = () => {
+    if (!allFilled) return;
+    if (tobashiIncomplete) {
+      setShowTobashiConfirm(true);
+      return;
+    }
+    doConfirm();
   };
 
   return (
@@ -311,12 +322,6 @@ export default function ScoreEntry({
         役満を記録
       </Button>
 
-      {tobashiIncomplete && (
-        <p className="text-xs" style={{ color: "var(--red-6)" }}>
-          飛ばした人と飛んだ人の両方を選択してください
-        </p>
-      )}
-
       <Button onClick={handleConfirm} disabled={!canConfirm}>
         確定
       </Button>
@@ -331,6 +336,40 @@ export default function ScoreEntry({
           }
           onClose={() => setShowYakumanModal(false)}
         />
+      )}
+
+      {showTobashiConfirm && (
+        <Modal onClose={() => setShowTobashiConfirm(false)}>
+          <div className="flex flex-col gap-4 p-2">
+            <p
+              className="text-sm font-medium"
+              style={{ color: "var(--color-text-1)" }}
+            >
+              {hasTobi && !hasTobashi
+                ? "飛んだ人が選択されていますが、飛ばした人が選択されていません。"
+                : "飛ばした人が選択されていますが、飛んだ人が選択されていません。"}
+              このまま確定しますか？
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="tertiary"
+                fullWidth
+                onClick={() => setShowTobashiConfirm(false)}
+              >
+                戻る
+              </Button>
+              <Button
+                fullWidth
+                onClick={() => {
+                  setShowTobashiConfirm(false);
+                  doConfirm();
+                }}
+              >
+                確定する
+              </Button>
+            </div>
+          </div>
+        </Modal>
       )}
     </div>
   );
