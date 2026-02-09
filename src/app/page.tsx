@@ -7,6 +7,8 @@ import Main from "@/components/Main";
 import Tabs from "@/components/Tabs";
 import FooterNav from "@/components/FooterNav";
 import Loading from "@/components/Loading";
+import { ACHIEVEMENTS, computeAchievements } from "@/lib/achievements";
+import type { AchievementData } from "@/lib/achievements";
 
 interface ModeStats {
   totalGames: number;
@@ -30,6 +32,8 @@ export default function Home() {
   const [rankHistory3, setRankHistory3] = useState<RankPoint[]>([]);
   const [rankHistory4, setRankHistory4] = useState<RankPoint[]>([]);
   const [activeTab, setActiveTab] = useState<3 | 4>(3);
+  const [myAch3, setMyAch3] = useState<AchievementData | null>(null);
+  const [myAch4, setMyAch4] = useState<AchievementData | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(true);
@@ -43,14 +47,18 @@ export default function Home() {
       }
       const userId = session.user.id;
 
-      // プロフィールとサマリーを並列取得
-      const [profileRes, rpcRes] = await Promise.all([
+      // プロフィール、サマリー、自分の参加ゲームIDを並列取得
+      const [profileRes, rpcRes, myScoresRes] = await Promise.all([
         supabase
           .from("profiles")
           .select("username, avatar_url")
           .eq("id", userId)
           .single(),
         supabase.rpc("get_home_stats", { p_user_id: userId }),
+        supabase
+          .from("game_scores")
+          .select("game_id")
+          .eq("user_id", userId),
       ]);
 
       if (profileRes.data) {
@@ -83,6 +91,60 @@ export default function Home() {
         const h4 = result.history["4"];
         if (h3) setRankHistory3(h3.slice(-30));
         if (h4) setRankHistory4(h4.slice(-30));
+      }
+
+      // 実績計算
+      const myScores = myScoresRes.data;
+      if (myScores && myScores.length > 0) {
+        const gameIds = [...new Set(myScores.map((s) => s.game_id))];
+        const [gamesRes, allScoresRes, tobashiRes, yakumanRes] =
+          await Promise.all([
+            supabase
+              .from("games")
+              .select("id, created_at")
+              .in("id", gameIds),
+            supabase
+              .from("game_scores")
+              .select("game_id, user_id, display_name, score")
+              .in("game_id", gameIds),
+            supabase
+              .from("tobashi_records")
+              .select("game_id, user_id, type")
+              .in("game_id", gameIds),
+            supabase
+              .from("yakuman_records")
+              .select("game_id, user_id")
+              .in("game_id", gameIds),
+          ]);
+
+        const gamesData = gamesRes.data || [];
+        const allScores = allScoresRes.data || [];
+        const tobashiRecords = tobashiRes.data || [];
+        const yakumanRecords = yakumanRes.data || [];
+
+        // プレイヤー人数でゲームを分類
+        const gamePlayerCount: Record<string, number> = {};
+        for (const s of allScores) {
+          gamePlayerCount[s.game_id] =
+            (gamePlayerCount[s.game_id] || 0) + 1;
+        }
+
+        for (const pc of [3, 4] as const) {
+          const ids = gameIds.filter(
+            (id) => gamePlayerCount[id] === pc,
+          );
+          if (ids.length === 0) continue;
+          const result = computeAchievements(
+            ids,
+            gamesData,
+            allScores.filter((s) => ids.includes(s.game_id)),
+            tobashiRecords.filter((t) => ids.includes(t.game_id)),
+            yakumanRecords.filter((y) => ids.includes(y.game_id)),
+          );
+          const mine = result.find((a) => a.userId === userId) ?? null;
+          if (pc === 3) setMyAch3(mine);
+          else setMyAch4(mine);
+        }
       }
 
       setLoading(false);
@@ -175,6 +237,7 @@ export default function Home() {
           if (stats4.totalGames > 0) tabs.push({ key: 4, label: "4人麻雀" });
           const currentTab = tabs.find((t) => t.key === activeTab) ? activeTab : tabs[0].key;
           const st = currentTab === 3 ? stats3 : stats4;
+          const ach = currentTab === 3 ? myAch3 : myAch4;
           const data = currentTab === 3 ? rankHistory3 : rankHistory4;
           const maxRank = currentTab;
           const RANK_COLORS = ["var(--arcoblue-6)", "var(--green-6)", "var(--orange-6)", "var(--red-6)"];
@@ -336,6 +399,66 @@ export default function Home() {
                         )
                       ))}
                     </svg>
+                  </div>
+                )}
+
+                {/* 実績 */}
+                {ach && (
+                  <div className="mt-4">
+                    <p className="mb-2 text-xs" style={{ color: "var(--color-text-3)" }}>
+                      実績
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {ACHIEVEMENTS.map((def) => {
+                        if (def.key === "aishou") {
+                          if (!ach.aishouName) return null;
+                        }
+                        const count =
+                          def.key === "tobashi"
+                            ? ach.tobashiCount
+                            : def.key === "flow"
+                              ? ach.flowCount
+                              : def.key === "fugou"
+                                ? ach.fugouCount
+                                : def.key === "yakuman"
+                                  ? ach.yakumanCount
+                                  : def.key === "antei"
+                                    ? ach.anteiCount
+                                    : def.key === "wipeout"
+                                      ? ach.wipeoutCount
+                                      : 0;
+                        return (
+                          <span
+                            key={def.key}
+                            className="flex items-center gap-1 rounded-full px-2.5 py-1"
+                            style={{
+                              background: "var(--color-fill-2)",
+                              border: "1px solid var(--color-border)",
+                              fontSize: "12px",
+                            }}
+                          >
+                            {def.key === "aishou" ? (
+                              <span
+                                className="font-semibold"
+                                style={{ color: "var(--color-text-1)" }}
+                              >
+                                {ach.aishouName}{def.icon}
+                              </span>
+                            ) : (
+                              <>
+                                <span>{def.icon}</span>
+                                <span
+                                  className="font-semibold"
+                                  style={{ color: "var(--color-text-1)" }}
+                                >
+                                  ×{count}
+                                </span>
+                              </>
+                            )}
+                          </span>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </div>

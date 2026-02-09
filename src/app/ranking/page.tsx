@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Avatar from "@/components/Avatar";
@@ -93,6 +93,22 @@ function RankingChart({ players }: { players: PlayerData[] }) {
     yTicks.sort((a, b) => a - b);
   }
 
+  const ANIM_DURATION = 1.2;
+  const polyRefs = useRef<(SVGPolylineElement | null)[]>([]);
+  const [lengths, setLengths] = useState<number[]>([]);
+
+  const setPolyRef = useCallback(
+    (idx: number) => (el: SVGPolylineElement | null) => {
+      polyRefs.current[idx] = el;
+    },
+    [],
+  );
+
+  useEffect(() => {
+    const ls = polyRefs.current.map((el) => el?.getTotalLength() ?? 0);
+    setLengths(ls);
+  }, [players, gameCount]);
+
   return (
     <div
       className="rounded-lg p-4"
@@ -139,15 +155,28 @@ function RankingChart({ players }: { players: PlayerData[] }) {
         {players.map((p, pi) => {
           const color = COLORS[pi % COLORS.length];
           const points = p.history.map((v, i) => `${toX(i)},${toY(v)}`).join(" ");
+          const len = lengths[pi] ?? 0;
+          const delay = pi * 0.15;
           return (
             <g key={p.userId}>
               <polyline
+                ref={setPolyRef(pi)}
                 points={points}
                 fill="none"
                 stroke={color}
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
+                style={
+                  len > 0
+                    ? {
+                        ["--line-length" as string]: len,
+                        strokeDasharray: len,
+                        strokeDashoffset: 0,
+                        animation: `draw-line ${ANIM_DURATION}s ease-out ${delay}s both`,
+                      }
+                    : undefined
+                }
               />
               {gameCount > 0 && (
                 <circle
@@ -155,6 +184,10 @@ function RankingChart({ players }: { players: PlayerData[] }) {
                   cy={toY(p.history[gameCount - 1])}
                   r="3"
                   fill={color}
+                  style={{
+                    opacity: 0,
+                    animation: `fade-in 0.3s ease-out ${delay + ANIM_DURATION}s forwards`,
+                  }}
                 />
               )}
             </g>
