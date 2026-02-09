@@ -194,6 +194,7 @@ AS $$
     SELECT DISTINCT yr.game_id
     FROM yakuman_records yr
     JOIN my_game_ids mg ON yr.game_id = mg.game_id
+    WHERE yr.user_id = p_user_id
   ),
   ranked_with_yakuman AS (
     SELECT

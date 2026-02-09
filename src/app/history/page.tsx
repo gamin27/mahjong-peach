@@ -50,15 +50,27 @@ interface AchievementData {
   yakumanCount: number;
   anteiCount: number;
   wipeoutCount: number;
+  aishouName: string | null;
 }
 
 const ACHIEVEMENTS = [
   { key: "tobashi", icon: "💥", label: "飛ばし", desc: "相手を飛ばした回数" },
   { key: "flow", icon: "🔥", label: "雀士フロー", desc: "3連続1位だった回数" },
-  { key: "fugou", icon: "💰", label: "富豪", desc: "スコア100以上を記録した回数" },
+  {
+    key: "fugou",
+    icon: "💰",
+    label: "富豪",
+    desc: "スコア100以上を記録した回数",
+  },
   { key: "yakuman", icon: "🀄", label: "役満", desc: "役満を上がった回数" },
-  { key: "antei", icon: "🧠", label: "安定", desc: "5連続スコアがプラスだった回数" },
+  {
+    key: "antei",
+    icon: "🧠",
+    label: "安定",
+    desc: "5連続スコアがプラスだった回数",
+  },
   { key: "wipeout", icon: "👑", label: "Wipe Out", desc: "全員飛ばした回数" },
+  { key: "aishou", icon: "⭕️", label: "相性", desc: "相性のいい相手" },
 ] as const;
 
 const PAGE_SIZE = 5;
@@ -105,7 +117,10 @@ export default function HistoryPage() {
 
   // 戦績タブのページネーション情報 (key: "year:playerCount")
   const gamesMetaRef = useRef<
-    Record<string, { rooms: string[]; loaded: number; roomGameIds: Record<string, string[]> }>
+    Record<
+      string,
+      { rooms: string[]; loaded: number; roomGameIds: Record<string, string[]> }
+    >
   >({});
 
   // ---- ヘルパー ----
@@ -384,8 +399,7 @@ export default function HistoryPage() {
 
     const rooms = Object.entries(roomInfo)
       .sort(
-        (a, b) =>
-          new Date(b[1].date).getTime() - new Date(a[1].date).getTime(),
+        (a, b) => new Date(b[1].date).getTime() - new Date(a[1].date).getTime(),
       )
       .map(([roomId]) => roomId);
 
@@ -462,8 +476,7 @@ export default function HistoryPage() {
       .filter((g) => yearGameIds.includes(g.id))
       .sort(
         (a, b) =>
-          new Date(a.created_at).getTime() -
-          new Date(b.created_at).getTime(),
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
       );
 
     const pd: Record<
@@ -478,6 +491,12 @@ export default function HistoryPage() {
         yakumanCount: number;
         wipeoutCount: number;
       }
+    > = {};
+
+    // 相性計算用: aishouData[me][opponent] = { games, lastCount }
+    const aishouData: Record<
+      string,
+      Record<string, { games: number; lastCount: number }>
     > = {};
 
     // 飛びをゲーム別に集計（Wipe Out判定用）
@@ -515,6 +534,23 @@ export default function HistoryPage() {
         for (const s of scores) {
           if (!tobiPlayers.has(s.user_id) && pd[s.user_id]) {
             pd[s.user_id].wipeoutCount++;
+          }
+        }
+      }
+
+      // 相性: 1位の人から見て、同卓の各対戦相手の対局数と最下位回数を記録
+      const firstPlace = sorted[0];
+      const lastPlace = sorted[sorted.length - 1];
+      if (firstPlace && lastPlace && sorted.length >= 2) {
+        const me = firstPlace.user_id;
+        if (!aishouData[me]) aishouData[me] = {};
+        for (let i = 1; i < sorted.length; i++) {
+          const opp = sorted[i].user_id;
+          if (!aishouData[me][opp])
+            aishouData[me][opp] = { games: 0, lastCount: 0 };
+          aishouData[me][opp].games++;
+          if (opp === lastPlace.user_id) {
+            aishouData[me][opp].lastCount++;
           }
         }
       }
@@ -557,6 +593,22 @@ export default function HistoryPage() {
               consecutivePositive = 0;
             }
           }
+          // 相性: 10局以上の対戦相手の中で最下位率が最も高い人
+          let aishouName: string | null = null;
+          const opponents = aishouData[uid];
+          if (opponents) {
+            let bestRate = 0;
+            for (const [oppId, data] of Object.entries(opponents)) {
+              if (data.games >= 10) {
+                const rate = data.lastCount / data.games;
+                if (rate > bestRate) {
+                  bestRate = rate;
+                  aishouName = pd[oppId]?.displayName ?? null;
+                }
+              }
+            }
+          }
+
           return {
             userId: uid,
             displayName: d.displayName,
@@ -567,6 +619,7 @@ export default function HistoryPage() {
             yakumanCount: d.yakumanCount,
             anteiCount,
             wipeoutCount: d.wipeoutCount,
+            aishouName,
           };
         })
         .filter(
@@ -576,13 +629,24 @@ export default function HistoryPage() {
             a.fugouCount > 0 ||
             a.yakumanCount > 0 ||
             a.anteiCount > 0 ||
-            a.wipeoutCount > 0,
+            a.wipeoutCount > 0 ||
+            a.aishouName !== null,
         )
         .sort((a, b) => {
           const totalA =
-            a.tobashiCount + a.flowCount + a.fugouCount + a.yakumanCount + a.anteiCount + a.wipeoutCount;
+            a.tobashiCount +
+            a.flowCount +
+            a.fugouCount +
+            a.yakumanCount +
+            a.anteiCount +
+            a.wipeoutCount;
           const totalB =
-            b.tobashiCount + b.flowCount + b.fugouCount + b.yakumanCount + b.anteiCount + b.wipeoutCount;
+            b.tobashiCount +
+            b.flowCount +
+            b.fugouCount +
+            b.yakumanCount +
+            b.anteiCount +
+            b.wipeoutCount;
           return totalB - totalA;
         }),
     );
@@ -667,28 +731,35 @@ export default function HistoryPage() {
         setUsername(profile.username);
       }
 
-      const { data: myScores } = await supabase
-        .from("game_scores")
-        .select("game_id")
+      // 自分が所属するルームを取得
+      const { data: myRooms } = await supabase
+        .from("room_members")
+        .select("room_id")
         .eq("user_id", session.user.id);
-      if (!myScores || myScores.length === 0) {
+      if (!myRooms || myRooms.length === 0) {
         setLoading(false);
         return;
       }
-      const gameIds = [...new Set(myScores.map((s) => s.game_id))];
+      const roomIds = [...new Set(myRooms.map((r) => r.room_id))];
 
-      // ゲームメタデータ + プレイヤー人数を並列fetch
-      const [gamesRes, countsRes] = await Promise.all([
-        supabase
-          .from("games")
-          .select("id, room_id, round_number, created_at")
-          .in("id", gameIds)
-          .order("created_at", { ascending: true }),
-        supabase
-          .from("game_scores")
-          .select("game_id")
-          .in("game_id", gameIds),
-      ]);
+      // ルーム内の全ゲームを取得
+      const gamesRes = await supabase
+        .from("games")
+        .select("id, room_id, round_number, created_at")
+        .in("room_id", roomIds)
+        .order("created_at", { ascending: true });
+
+      const allGameIds = gamesRes.data?.map((g) => g.id) ?? [];
+      if (allGameIds.length === 0) {
+        setLoading(false);
+        return;
+      }
+
+      // プレイヤー人数を取得
+      const countsRes = await supabase
+        .from("game_scores")
+        .select("game_id")
+        .in("game_id", allGameIds);
 
       const gamesData = gamesRes.data;
       if (!gamesData) {
@@ -707,9 +778,7 @@ export default function HistoryPage() {
       metaRef.current = { gamesData, gamePlayerCount };
 
       const years = [
-        ...new Set(
-          gamesData.map((g) => new Date(g.created_at).getFullYear()),
-        ),
+        ...new Set(gamesData.map((g) => new Date(g.created_at).getFullYear())),
       ].sort((a, b) => b - a);
       setAvailableYears(years);
       const initialYear = years[0] || new Date().getFullYear();
@@ -775,8 +844,7 @@ export default function HistoryPage() {
   const currentPlayers = currentTab === 3 ? players3 : players4;
   const currentYakumans = currentTab === 3 ? yakumans3 : yakumans4;
   const currentSessions = currentTab === 3 ? sessions3 : sessions4;
-  const currentAchievements =
-    currentTab === 3 ? achievements3 : achievements4;
+  const currentAchievements = currentTab === 3 ? achievements3 : achievements4;
   const lastLabel = currentTab === 3 ? "3位率" : "4位率";
 
   // 戦績「もっと見る」の残り件数
@@ -1079,15 +1147,14 @@ export default function HistoryPage() {
                           games={session.games}
                           maxHeight="none"
                           ptRate={session.ptRate}
+                          showLabel={false}
                         />
                       </div>
                     ))}
                     {gamesRemaining > 0 && (
                       <Button
                         variant="tertiary"
-                        onClick={() =>
-                          handleLoadMore(currentTab as 3 | 4)
-                        }
+                        onClick={() => handleLoadMore(currentTab as 3 | 4)}
                         disabled={tabLoading}
                       >
                         {tabLoading
@@ -1147,6 +1214,9 @@ export default function HistoryPage() {
                         </div>
                         <div className="flex flex-wrap gap-2">
                           {ACHIEVEMENTS.map((ach) => {
+                            if (ach.key === "aishou") {
+                              if (!a.aishouName) return null;
+                            }
                             const count =
                               ach.key === "tobashi"
                                 ? a.tobashiCount
@@ -1158,7 +1228,9 @@ export default function HistoryPage() {
                                       ? a.yakumanCount
                                       : ach.key === "antei"
                                         ? a.anteiCount
-                                        : a.wipeoutCount;
+                                        : ach.key === "wipeout"
+                                          ? a.wipeoutCount
+                                          : 0;
                             const tooltipId = `${a.userId}:${ach.key}`;
                             const isOpen = activeTooltip === tooltipId;
                             return (
@@ -1188,9 +1260,7 @@ export default function HistoryPage() {
                               >
                                 <button
                                   onClick={() =>
-                                    setActiveTooltip(
-                                      isOpen ? null : tooltipId,
-                                    )
+                                    setActiveTooltip(isOpen ? null : tooltipId)
                                   }
                                   data-achievement-badge
                                   className="flex items-center gap-1 rounded-full px-3 py-1.5"
@@ -1209,7 +1279,9 @@ export default function HistoryPage() {
                                       color: "var(--color-text-1)",
                                     }}
                                   >
-                                    ×{count}
+                                    {ach.key === "aishou"
+                                      ? a.aishouName
+                                      : `×${count}`}
                                   </span>
                                 </button>
                               </Tooltip>

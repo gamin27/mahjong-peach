@@ -10,13 +10,14 @@ interface GameScoreTableProps {
   games: CompletedGame[];
   maxHeight?: string;
   ptRate?: number;
+  showLabel?: boolean;
   onUpdateScores?: (
     gameIndex: number,
     scores: { userId: string; score: number }[]
   ) => Promise<void>;
 }
 
-export default function GameScoreTable({ games, maxHeight = "50vh", ptRate, onUpdateScores }: GameScoreTableProps) {
+export default function GameScoreTable({ games, maxHeight = "50vh", ptRate, showLabel = true, onUpdateScores }: GameScoreTableProps) {
   const [editingGameIndex, setEditingGameIndex] = useState<number | null>(null);
   const [editInputs, setEditInputs] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
@@ -126,10 +127,12 @@ export default function GameScoreTable({ games, maxHeight = "50vh", ptRate, onUp
           }}
         >
           <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
-            <th
-              className="px-3 py-2 text-left text-xs font-medium"
-              style={{ color: "var(--color-text-3)", background: "var(--color-bg-2)" }}
-            />
+            {showLabel && (
+              <th
+                className="px-3 py-2 text-left text-xs font-medium"
+                style={{ color: "var(--color-text-3)", background: "var(--color-bg-2)" }}
+              />
+            )}
             {sorted.map(([userId, data]) => (
               <th key={userId} className="px-2 py-2" style={{ background: "var(--color-bg-2)" }}>
                 <div className="mx-auto flex justify-center" title={data.displayName}>
@@ -149,12 +152,14 @@ export default function GameScoreTable({ games, maxHeight = "50vh", ptRate, onUp
         <tbody>
           {/* 累計行 */}
           <tr style={{ borderBottom: "2px solid var(--color-border)" }}>
-            <td
-              className="px-3 py-2.5 text-xs font-semibold"
-              style={{ color: "var(--color-text-1)", whiteSpace: "nowrap" }}
-            >
-              累計
-            </td>
+            {showLabel && (
+              <td
+                className="px-3 py-2.5 text-xs font-semibold"
+                style={{ color: "var(--color-text-1)", whiteSpace: "nowrap" }}
+              >
+                累計
+              </td>
+            )}
             {sorted.map(([userId, data]) => (
               <td
                 key={userId}
@@ -188,12 +193,14 @@ export default function GameScoreTable({ games, maxHeight = "50vh", ptRate, onUp
             return (
               <Fragment key={g.game.id}>
                 <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
-                  <td
-                    className="px-3 py-2 text-xs font-medium"
-                    style={{ color: "var(--color-text-3)", whiteSpace: "nowrap" }}
-                  >
-                    {gi + 1}半荘
-                  </td>
+                  {showLabel && (
+                    <td
+                      className="px-3 py-2 text-xs font-medium"
+                      style={{ color: "var(--color-text-3)", whiteSpace: "nowrap" }}
+                    >
+                      {gi + 1}半荘
+                    </td>
+                  )}
                   {sorted.map(([userId]) => {
                     const score = g.scores.find((s) => s.user_id === userId)?.score;
 
@@ -260,7 +267,7 @@ export default function GameScoreTable({ games, maxHeight = "50vh", ptRate, onUp
                 </tr>
                 {isEditing && (
                   <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
-                    <td colSpan={sorted.length + (editable ? 2 : 1)} className="px-3 py-2">
+                    <td colSpan={sorted.length + (editable ? 1 : 0) + (showLabel ? 1 : 0)} className="px-3 py-2">
                       <div className="flex items-center justify-between">
                         <p
                           className="text-xs"
