@@ -11,6 +11,7 @@ import GameResult from "@/components/GameResult";
 import GameScoreTable from "@/components/GameScoreTable";
 import Main from "@/components/Main";
 import Button from "@/components/Button";
+import Modal from "@/components/Modal";
 
 type Phase = "selecting" | "scoring" | "result";
 
@@ -584,135 +585,43 @@ export default function RoomDetailPage() {
       </Main>
 
       {/* 途中結果モーダル */}
-      {showResultModal && (() => {
-        if (completedGames.length === 0) {
-          return (
-            <div
-              style={{
-                position: "fixed",
-                inset: 0,
-                background: "rgba(0,0,0,0.4)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                zIndex: 50,
-                padding: "0 24px",
-              }}
-              onClick={() => setShowResultModal(false)}
+      {showResultModal && (
+        <Modal onClose={() => setShowResultModal(false)}>
+            <p
+              className="text-sm font-semibold"
+              style={{ color: "var(--color-text-1)" }}
             >
-              <div
-                style={{
-                  background: "var(--color-bg-1)",
-                  borderRadius: "12px",
-                  padding: "24px",
-                  maxWidth: "420px",
-                  width: "100%",
-                  boxShadow: "var(--shadow-card)",
-                }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <p
-                  className="text-sm font-semibold"
-                  style={{ color: "var(--color-text-1)" }}
-                >
-                  途中結果
-                </p>
-                <div
-                  className="mt-4 flex flex-col items-center gap-2 py-8"
-                  style={{ color: "var(--color-text-3)" }}
-                >
-                  <p className="text-2xl">🀄</p>
-                  <p className="text-sm">まだ対局結果がありません</p>
-                </div>
-                <Button
-                  variant="tertiary"
-                  fullWidth
-                  onClick={() => setShowResultModal(false)}
-                  style={{ marginTop: "8px" }}
-                >
-                  閉じる
-                </Button>
-              </div>
-            </div>
-          );
-        }
-        return (
-          <div
-            style={{
-              position: "fixed",
-              inset: 0,
-              background: "rgba(0,0,0,0.4)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              zIndex: 50,
-              padding: "0 24px",
-            }}
-            onClick={() => setShowResultModal(false)}
-          >
-            <div
-              style={{
-                background: "var(--color-bg-1)",
-                borderRadius: "12px",
-                padding: "24px",
-                maxWidth: "420px",
-                width: "100%",
-                maxHeight: "80vh",
-                overflow: "auto",
-                boxShadow: "var(--shadow-card)",
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <p
-                className="text-sm font-semibold"
-                style={{ color: "var(--color-text-1)" }}
-              >
-                途中結果（{completedGames.length}半荘）
-              </p>
+              途中結果{completedGames.length > 0 && `（${completedGames.length}半荘）`}
+            </p>
 
+            {completedGames.length === 0 ? (
+              <div
+                className="mt-4 flex flex-col items-center gap-2 py-8"
+                style={{ color: "var(--color-text-3)" }}
+              >
+                <p className="text-2xl">🀄</p>
+                <p className="text-sm">まだ対局結果がありません</p>
+              </div>
+            ) : (
               <div className="mt-4">
                 <GameScoreTable games={completedGames} ptRate={room.pt_rate} />
               </div>
+            )}
 
-              <Button
-                variant="tertiary"
-                fullWidth
-                onClick={() => setShowResultModal(false)}
-                style={{ marginTop: "16px" }}
-              >
-                閉じる
-              </Button>
-            </div>
-          </div>
-        );
-      })()}
+            <Button
+              variant="tertiary"
+              fullWidth
+              onClick={() => setShowResultModal(false)}
+              style={{ marginTop: completedGames.length === 0 ? "8px" : "16px" }}
+            >
+              閉じる
+            </Button>
+        </Modal>
+      )}
 
       {/* ホスト退出確認モーダル */}
       {showLeaveModal && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.4)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 50,
-            padding: "0 24px",
-          }}
-          onClick={() => setShowLeaveModal(false)}
-        >
-          <div
-            style={{
-              background: "var(--color-bg-1)",
-              borderRadius: "12px",
-              padding: "24px",
-              maxWidth: "340px",
-              width: "100%",
-              boxShadow: "var(--shadow-card)",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
+        <Modal onClose={() => setShowLeaveModal(false)}>
             <p
               className="text-sm font-semibold"
               style={{ color: "var(--color-text-1)" }}
@@ -743,8 +652,7 @@ export default function RoomDetailPage() {
                 終える
               </Button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

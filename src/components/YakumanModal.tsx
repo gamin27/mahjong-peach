@@ -5,6 +5,7 @@ import type { RoomMember } from "@/lib/types/room";
 import type { YakumanEntry } from "@/lib/types/game";
 import Avatar from "@/components/Avatar";
 import Button from "@/components/Button";
+import Modal from "@/components/Modal";
 
 const YAKUMAN_TYPES = [
   "天和",
@@ -95,32 +96,7 @@ export default function YakumanModal({
   };
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0,0,0,0.4)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 50,
-        padding: "0 16px",
-      }}
-      onClick={onClose}
-    >
-      <div
-        style={{
-          background: "var(--color-bg-1)",
-          borderRadius: "12px",
-          padding: "20px",
-          maxWidth: "420px",
-          width: "100%",
-          maxHeight: "85vh",
-          overflow: "auto",
-          boxShadow: "var(--shadow-popup)",
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
+    <Modal onClose={onClose}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
           <p
             className="text-sm font-semibold"
@@ -320,8 +296,7 @@ export default function YakumanModal({
           </div>
         )}
 
-      </div>
-    </div>
+    </Modal>
   );
 }
 
