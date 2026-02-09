@@ -1,9 +1,9 @@
 "use client";
 
-import { Fragment } from "react";
+
 import type { CompletedGame } from "@/lib/types/game";
 import Avatar from "@/components/Avatar";
-import { TILE_LABELS } from "@/components/YakumanModal";
+
 
 interface GameScoreTableProps {
   games: CompletedGame[];
@@ -105,8 +105,8 @@ export default function GameScoreTable({ games, maxHeight = "50vh", ptRate }: Ga
           </tr>
           {/* 半荘別行 */}
           {games.map((g, gi) => (
-            <Fragment key={g.game.id}>
               <tr
+                key={g.game.id}
                 style={{ borderBottom: "1px solid var(--color-border)" }}
               >
                 <td
@@ -137,32 +137,6 @@ export default function GameScoreTable({ games, maxHeight = "50vh", ptRate }: Ga
                   );
                 })}
               </tr>
-              {g.yakumans && g.yakumans.length > 0 && (
-                <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
-                  <td
-                    colSpan={sorted.length + 1}
-                    className="px-3 py-1.5"
-                  >
-                    <div className="flex flex-wrap gap-1">
-                      {g.yakumans.map((y, yi) => (
-                        <span
-                          key={yi}
-                          className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
-                          style={{
-                            background: "var(--orange-1)",
-                            color: "var(--orange-6)",
-                            border: "1px solid var(--orange-6)",
-                            fontSize: "10px",
-                          }}
-                        >
-                          {y.display_name}: {y.yakuman_type}({TILE_LABELS[y.winning_tile] || y.winning_tile})
-                        </span>
-                      ))}
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </Fragment>
           ))}
         </tbody>
       </table>

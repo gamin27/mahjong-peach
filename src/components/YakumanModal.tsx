@@ -91,10 +91,7 @@ export default function YakumanModal({
       winningTile: selectedTile,
     });
 
-    // リセット
-    setSelectedUserId(null);
-    setSelectedType("");
-    setSelectedTile("");
+    onClose();
   };
 
   return (
@@ -124,12 +121,26 @@ export default function YakumanModal({
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <p
-          className="text-sm font-semibold"
-          style={{ color: "var(--color-text-1)", marginBottom: "16px" }}
-        >
-          役満を記録
-        </p>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+          <p
+            className="text-sm font-semibold"
+            style={{ color: "var(--color-text-1)" }}
+          >
+            役満を記録
+          </p>
+          <button
+            onClick={onClose}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              fontSize: "24px",
+              color: "var(--color-text-3)",
+            }}
+          >
+            ✖︎
+          </button>
+        </div>
 
         {/* 誰が */}
         <div style={{ marginBottom: "16px" }}>
@@ -309,10 +320,6 @@ export default function YakumanModal({
           </div>
         )}
 
-        {/* 完了 */}
-        <Button fullWidth onClick={onClose}>
-          完了
-        </Button>
       </div>
     </div>
   );
