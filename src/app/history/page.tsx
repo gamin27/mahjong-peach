@@ -10,6 +10,7 @@ import GameScoreTable from "@/components/GameScoreTable";
 import Button from "@/components/Button";
 import Tabs from "@/components/Tabs";
 import FooterNav from "@/components/FooterNav";
+import Loading from "@/components/Loading";
 import Tooltip from "@/components/Tooltip";
 import { TILE_LABELS } from "@/components/YakumanModal";
 
@@ -53,10 +54,10 @@ interface AchievementData {
 
 const ACHIEVEMENTS = [
   { key: "tobashi", icon: "💥", label: "飛ばし", desc: "相手を飛ばした回数" },
-  { key: "flow", icon: "🔥", label: "雀士フロー", desc: "3連続1位を達成した回数" },
+  { key: "flow", icon: "🔥", label: "雀士フロー", desc: "3連続1位だった回数" },
   { key: "fugou", icon: "💰", label: "富豪", desc: "スコア100以上を記録した回数" },
   { key: "yakuman", icon: "🀄", label: "役満", desc: "役満を上がった回数" },
-  { key: "antei", icon: "🧠", label: "安定", desc: "5回連続スコアがプラスだった回数" },
+  { key: "antei", icon: "🧠", label: "安定", desc: "5連続スコアがプラスだった回数" },
   { key: "wipeout", icon: "👑", label: "Wipe Out", desc: "全員飛ばした回数" },
 ] as const;
 
@@ -737,7 +738,19 @@ export default function HistoryPage() {
     return () => document.removeEventListener("mousedown", handler);
   }, [activeTooltip]);
 
-  if (loading) return null;
+  if (loading) {
+    return (
+      <div
+        className="flex flex-col"
+        style={{ background: "var(--color-bg-2)", minHeight: "100dvh" }}
+      >
+        <Main>
+          <Loading />
+        </Main>
+        <FooterNav active="history" avatarUrl={avatarUrl} username={username} />
+      </div>
+    );
+  }
 
   const has3 = metaRef.current
     ? metaRef.current.gamesData.some(
@@ -863,14 +876,7 @@ export default function HistoryPage() {
             {subTab === "summary" && (
               <>
                 {tabLoading && currentPlayers.length === 0 ? (
-                  <div className="flex justify-center py-12">
-                    <p
-                      className="text-sm"
-                      style={{ color: "var(--color-text-3)" }}
-                    >
-                      読み込み中...
-                    </p>
-                  </div>
+                  <Loading />
                 ) : (
                   <>
                     {/* プレイヤー一覧 */}
@@ -1038,14 +1044,7 @@ export default function HistoryPage() {
             {subTab === "games" && (
               <>
                 {tabLoading && currentSessions.length === 0 ? (
-                  <div className="flex justify-center py-12">
-                    <p
-                      className="text-sm"
-                      style={{ color: "var(--color-text-3)" }}
-                    >
-                      読み込み中...
-                    </p>
-                  </div>
+                  <Loading />
                 ) : currentSessions.length === 0 ? (
                   <div
                     className="flex flex-col items-center justify-center rounded-lg py-12"
@@ -1105,14 +1104,7 @@ export default function HistoryPage() {
             {subTab === "achievements" && (
               <>
                 {tabLoading && currentAchievements.length === 0 ? (
-                  <div className="flex justify-center py-12">
-                    <p
-                      className="text-sm"
-                      style={{ color: "var(--color-text-3)" }}
-                    >
-                      読み込み中...
-                    </p>
-                  </div>
+                  <Loading />
                 ) : currentAchievements.length === 0 ? (
                   <div
                     className="flex flex-col items-center justify-center rounded-lg py-12"

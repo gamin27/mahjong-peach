@@ -12,6 +12,7 @@ import GameScoreTable from "@/components/GameScoreTable";
 import Main from "@/components/Main";
 import Button from "@/components/Button";
 import Modal from "@/components/Modal";
+import Loading from "@/components/Loading";
 
 type Phase = "selecting" | "scoring" | "result";
 
@@ -379,7 +380,18 @@ export default function RoomDetailPage() {
     }
   };
 
-  if (loading) return null;
+  if (loading) {
+    return (
+      <div
+        className="flex flex-col"
+        style={{ background: "var(--color-bg-2)", minHeight: "100dvh" }}
+      >
+        <Main>
+          <Loading />
+        </Main>
+      </div>
+    );
+  }
 
   if (!room) {
     return (

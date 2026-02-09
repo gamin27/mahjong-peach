@@ -7,6 +7,7 @@ import Avatar from "@/components/Avatar";
 import Main from "@/components/Main";
 import Tabs from "@/components/Tabs";
 import FooterNav from "@/components/FooterNav";
+import Loading from "@/components/Loading";
 
 interface PlayerData {
   userId: string;
@@ -327,8 +328,6 @@ export default function RankingPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (loading) return null;
-
   const has3 = players3.length > 0;
   const has4 = players4.length > 0;
   const tabs: { key: 3 | 4; label: string }[] = [];
@@ -347,7 +346,9 @@ export default function RankingPage() {
           ランキング
         </h1>
 
-        {tabs.length === 0 ? (
+        {loading ? (
+          <Loading card />
+        ) : tabs.length === 0 ? (
           <div
             className="flex flex-col items-center justify-center rounded-lg py-16"
             style={{

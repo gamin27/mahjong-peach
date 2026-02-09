@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import Main from "@/components/Main";
 import Tabs from "@/components/Tabs";
 import FooterNav from "@/components/FooterNav";
+import Loading from "@/components/Loading";
 
 interface ModeStats {
   totalGames: number;
@@ -165,30 +166,7 @@ export default function Home() {
         </div>
 
         {/* ローディング */}
-        {loading && (
-          <div
-            className="flex flex-col items-center justify-center rounded-lg py-12"
-            style={{
-              background: "var(--color-bg-1)",
-              border: "1px solid var(--color-border)",
-              boxShadow: "var(--shadow-card)",
-            }}
-          >
-            <div
-              style={{
-                width: "32px",
-                height: "32px",
-                border: "3px solid var(--color-border)",
-                borderTop: "3px solid var(--arcoblue-6)",
-                borderRadius: "50%",
-                animation: "spin 0.8s linear infinite",
-              }}
-            />
-            <p className="mt-3 text-sm" style={{ color: "var(--color-text-3)" }}>
-              読み込み中...
-            </p>
-          </div>
-        )}
+        {loading && <Loading card />}
 
         {/* 成績（タブ切り替え） */}
         {!loading && (stats3.totalGames > 0 || stats4.totalGames > 0) && (() => {

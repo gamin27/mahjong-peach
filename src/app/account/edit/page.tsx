@@ -9,6 +9,7 @@ import Input from "@/components/Input";
 import Label from "@/components/Label";
 import Main from "@/components/Main";
 import Button from "@/components/Button";
+import Loading from "@/components/Loading";
 
 export default function AccountEditPage() {
   const router = useRouter();
@@ -129,7 +130,18 @@ export default function AccountEditPage() {
     router.push("/");
   };
 
-  if (loading) return null;
+  if (loading) {
+    return (
+      <div
+        className="flex flex-col"
+        style={{ background: "var(--color-bg-2)", minHeight: "100dvh" }}
+      >
+        <Main>
+          <Loading />
+        </Main>
+      </div>
+    );
+  }
 
   const displayPreview = avatarPreview || avatarUrl;
 
