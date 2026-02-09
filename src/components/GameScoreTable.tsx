@@ -33,8 +33,17 @@ export default function GameScoreTable({ games, maxHeight = "50vh", ptRate, onUp
       totals[s.user_id].total += s.score;
     }
   }
-  // 最初のゲームのスコア順（部屋に入った順）を維持
-  const playerOrder = games[0].scores.map((s) => s.user_id);
+  // 全ゲームから出現順にユニークなプレイヤーリストを作成
+  const seen = new Set<string>();
+  const playerOrder: string[] = [];
+  for (const g of games) {
+    for (const s of g.scores) {
+      if (!seen.has(s.user_id)) {
+        seen.add(s.user_id);
+        playerOrder.push(s.user_id);
+      }
+    }
+  }
   const sorted = playerOrder
     .filter((uid) => totals[uid])
     .map((uid) => [uid, totals[uid]] as [string, (typeof totals)[string]]);

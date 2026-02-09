@@ -608,7 +608,6 @@ export default function RoomDetailPage() {
               <div className="mt-4">
                 <GameScoreTable
                   games={completedGames}
-                  ptRate={room.pt_rate}
                   onUpdateScores={isCreator ? handleUpdateScores : undefined}
                 />
               </div>
