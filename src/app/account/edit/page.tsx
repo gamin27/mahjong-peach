@@ -172,7 +172,6 @@ export default function AccountEditPage() {
             fontSize: "18px",
             fontWeight: 600,
             color: "var(--color-text-1)",
-            marginBottom: "24px",
           }}
         >
           アカウント編集

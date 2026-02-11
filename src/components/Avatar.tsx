@@ -21,6 +21,7 @@ export default function Avatar({
         src={src}
         alt={name}
         style={{
+          display: "block",
           width: size,
           height: size,
           borderRadius: "50%",

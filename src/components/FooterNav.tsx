@@ -54,11 +54,11 @@ export default function FooterNav({
           bottom: 0,
           left: 0,
           right: 0,
+          height: "56px",
           display: "flex",
           justifyContent: "space-around",
           alignItems: "center",
-          padding: "8px 16px",
-          paddingBottom: "calc(8px + env(safe-area-inset-bottom))",
+          paddingBottom: "env(safe-area-inset-bottom)",
           background: "var(--color-bg-1)",
           borderTop: "1px solid var(--color-border)",
           zIndex: 10,
@@ -68,9 +68,7 @@ export default function FooterNav({
           <button
             key={item.key}
             onClick={
-              item.key !== active
-                ? () => router.push(item.path)
-                : undefined
+              item.key !== active ? () => router.push(item.path) : undefined
             }
             style={{
               fontSize: "24px",
