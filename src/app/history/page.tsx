@@ -72,6 +72,7 @@ export default function HistoryPage() {
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [username, setUsername] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [availableYears, setAvailableYears] = useState<number[]>([]);
 
@@ -358,7 +359,7 @@ export default function HistoryPage() {
     const [scoresRes, yakumanRes, roomsRes] = await Promise.all([
       supabase
         .from("game_scores")
-        .select("game_id, user_id, display_name, avatar_url, score")
+        .select("id, game_id, user_id, display_name, avatar_url, score")
         .in("game_id", gameIds),
       supabase
         .from("yakuman_records")
@@ -398,7 +399,7 @@ export default function HistoryPage() {
         scores: scores
           .filter((s) => s.game_id === g.id)
           .map((s) => ({
-            id: s.game_id + s.user_id,
+            id: s.id,
             game_id: s.game_id,
             user_id: s.user_id,
             display_name: s.display_name,
@@ -624,6 +625,61 @@ export default function HistoryPage() {
     setTabLoading(false);
   };
 
+  // ---- スコア編集（admin用） ----
+
+  const handleUpdateScores = async (
+    roomId: string,
+    gameIndex: number,
+    scores: { userId: string; score: number }[],
+  ) => {
+    const setSessions = activeTab === 3 ? setSessions3 : setSessions4;
+    const sessions = activeTab === 3 ? sessions3 : sessions4;
+    const session = sessions.find((s) => s.roomId === roomId);
+    if (!session) return;
+    const game = session.games[gameIndex];
+    if (!game) return;
+
+    // 楽観的更新
+    setSessions((prev) =>
+      prev.map((s) => {
+        if (s.roomId !== roomId) return s;
+        return {
+          ...s,
+          games: s.games.map((g, i) => {
+            if (i !== gameIndex) return g;
+            return {
+              ...g,
+              scores: g.scores.map((sc) => {
+                const updated = scores.find((u) => u.userId === sc.user_id);
+                return updated ? { ...sc, score: updated.score } : sc;
+              }),
+            };
+          }),
+        };
+      }),
+    );
+
+    // DB更新
+    for (const s of scores) {
+      const row = game.scores.find((sc) => sc.user_id === s.userId);
+      if (!row) continue;
+      const { data, error } = await supabase
+        .from("game_scores")
+        .update({ score: s.score })
+        .eq("id", row.id)
+        .select();
+      if (error) {
+        console.error("score update failed:", error);
+      } else if (!data || data.length === 0) {
+        await supabase
+          .from("game_scores")
+          .update({ score: s.score })
+          .eq("game_id", game.game.id)
+          .eq("user_id", s.userId);
+      }
+    }
+  };
+
   // ---- 初回ロード: メタデータのみ ----
 
   useEffect(() => {
@@ -635,12 +691,13 @@ export default function HistoryPage() {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("username, avatar_url")
+        .select("username, avatar_url, is_admin")
         .eq("id", session.user.id)
         .single();
       if (profile) {
         setAvatarUrl(profile.avatar_url);
         setUsername(profile.username);
+        if (profile.is_admin) setIsAdmin(true);
       }
 
       // 自分が所属するルームを取得
@@ -1060,6 +1117,16 @@ export default function HistoryPage() {
                           maxHeight="none"
                           ptRate={session.ptRate}
                           showLabel={false}
+                          onUpdateScores={
+                            isAdmin
+                              ? (gameIndex, scores) =>
+                                  handleUpdateScores(
+                                    session.roomId,
+                                    gameIndex,
+                                    scores,
+                                  )
+                              : undefined
+                          }
                         />
                       </div>
                     ))}

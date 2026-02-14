@@ -29,6 +29,7 @@ export default function RoomDetailPage() {
   const [room, setRoom] = useState<Room | null>(null);
   const [members, setMembers] = useState<RoomMember[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // フェーズ管理
@@ -124,9 +125,15 @@ export default function RoomDetailPage() {
   }, [roomNumber, fetchCompletedGames]);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
         setCurrentUserId(session.user.id);
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("is_admin")
+          .eq("id", session.user.id)
+          .single();
+        if (profile?.is_admin) setIsAdmin(true);
       }
     });
     fetchRoom();
@@ -405,7 +412,7 @@ export default function RoomDetailPage() {
 
   const handleLeave = async () => {
     if (!room || !currentUserId) return;
-    const isHost = currentUserId === room.created_by;
+    const isHost = currentUserId === room.created_by || isAdmin;
     if (isHost) {
       closingRef.current = true;
       await supabase
@@ -455,7 +462,7 @@ export default function RoomDetailPage() {
     );
   }
 
-  const isCreator = currentUserId === room.created_by;
+  const isCreator = currentUserId === room.created_by || isAdmin;
   const maxMembers = room.player_count + 3;
   const playerCount = members.filter((m) => playerIds.has(m.user_id)).length;
   const waitingCount = members.length - playerCount;

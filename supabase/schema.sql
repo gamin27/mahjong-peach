@@ -7,6 +7,7 @@
 create table public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   username text not null,
+  is_admin boolean not null default false,
   created_at timestamptz not null default now()
 );
 
@@ -46,7 +47,11 @@ create policy "rooms_insert" on public.rooms
   for insert to authenticated with check (auth.uid() = created_by);
 
 create policy "rooms_update" on public.rooms
-  for update to authenticated using (auth.uid() = created_by);
+  for update to authenticated
+  using (
+    auth.uid() = created_by
+    or exists (select 1 from public.profiles where id = auth.uid() and is_admin = true)
+  );
 
 -- 3. room_members テーブル（部屋のメンバー管理）
 create table public.room_members (
@@ -160,6 +165,14 @@ create policy "tobashi_records_insert" on public.tobashi_records
 -- ALTER TABLE public.profiles ADD COLUMN avatar_url text;
 -- ALTER TABLE public.room_members ADD COLUMN avatar_url text;
 -- ALTER TABLE public.game_scores ADD COLUMN avatar_url text;
+
+-- 10b. マイグレーション: is_admin カラム追加 + rooms RLS 更新
+-- 既存DBに対して実行:
+-- ALTER TABLE public.profiles ADD COLUMN is_admin boolean NOT NULL DEFAULT false;
+-- UPDATE public.profiles SET is_admin = true WHERE id = '<admin-user-uuid>';
+-- DROP POLICY "rooms_update" ON public.rooms;
+-- CREATE POLICY "rooms_update" ON public.rooms FOR UPDATE TO authenticated
+--   USING (auth.uid() = created_by OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = true));
 
 -- 10. Realtime: rooms テーブル追加（解散通知用）
 alter publication supabase_realtime add table public.rooms;
