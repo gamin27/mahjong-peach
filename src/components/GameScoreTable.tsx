@@ -203,8 +203,9 @@ export default function GameScoreTable({ games, maxHeight = "50vh", ptRate, show
                   )}
                   {sorted.map(([userId]) => {
                     const score = g.scores.find((s) => s.user_id === userId)?.score;
+                    const isInGame = score !== undefined;
 
-                    if (isEditing) {
+                    if (isEditing && isInGame) {
                       return (
                         <td
                           key={userId}

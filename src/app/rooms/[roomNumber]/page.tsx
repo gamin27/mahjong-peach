@@ -35,6 +35,7 @@ export default function RoomDetailPage() {
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [showResultModal, setShowResultModal] = useState(false);
   const closingRef = useRef(false);
+  const updatingScoresRef = useRef(false);
 
   const fetchCompletedGames = useCallback(async (roomId: string) => {
     const { data: gamesData } = await supabase
@@ -214,7 +215,9 @@ export default function RoomDetailPage() {
           table: "game_scores",
         },
         () => {
-          fetchCompletedGames(room.id);
+          if (!updatingScoresRef.current) {
+            fetchCompletedGames(room.id);
+          }
         }
       )
       .on(
@@ -225,7 +228,9 @@ export default function RoomDetailPage() {
           table: "game_scores",
         },
         () => {
-          fetchCompletedGames(room.id);
+          if (!updatingScoresRef.current) {
+            fetchCompletedGames(room.id);
+          }
         }
       )
       .subscribe();
@@ -334,25 +339,35 @@ export default function RoomDetailPage() {
     scores: { userId: string; score: number }[]
   ) => {
     const game = completedGames[gameIndex];
-    for (const s of scores) {
-      await supabase
-        .from("game_scores")
-        .update({ score: s.score })
-        .eq("game_id", game.game.id)
-        .eq("user_id", s.userId);
+    updatingScoresRef.current = true;
+    try {
+      await Promise.all(
+        scores.map((s) =>
+          supabase
+            .from("game_scores")
+            .update({ score: s.score })
+            .eq("game_id", game.game.id)
+            .eq("user_id", s.userId)
+        )
+      );
+      setCompletedGames((prev) =>
+        prev.map((g, i) => {
+          if (i !== gameIndex) return g;
+          return {
+            ...g,
+            scores: g.scores.map((sc) => {
+              const updated = scores.find((s) => s.userId === sc.user_id);
+              return updated ? { ...sc, score: updated.score } : sc;
+            }),
+          };
+        })
+      );
+    } finally {
+      // Realtimeイベントが非同期で届くため少し待ってからフラグ解除
+      setTimeout(() => {
+        updatingScoresRef.current = false;
+      }, 1000);
     }
-    setCompletedGames((prev) =>
-      prev.map((g, i) => {
-        if (i !== gameIndex) return g;
-        return {
-          ...g,
-          scores: g.scores.map((sc) => {
-            const updated = scores.find((s) => s.userId === sc.user_id);
-            return updated ? { ...sc, score: updated.score } : sc;
-          }),
-        };
-      })
-    );
   };
 
   const handleLeave = async () => {
@@ -428,6 +443,9 @@ export default function RoomDetailPage() {
         style={{
           background: "var(--color-bg-1)",
           borderBottom: "1px solid var(--color-border)",
+          position: "sticky",
+          top: 0,
+          zIndex: 10,
         }}
       >
         <button
@@ -548,12 +566,26 @@ export default function RoomDetailPage() {
         {phase === "scoring" && (
           <>
             {isCreator ? (
-              <ScoreEntry
-                key={completedGames.length}
-                players={currentGamePlayers}
-                playerCount={room.player_count}
-                onConfirm={handleScoreConfirm}
-              />
+              <>
+                {members.length > room.player_count && (
+                  <button
+                    onClick={() => {
+                      setPhase("selecting");
+                      window.scrollTo({ top: 0 });
+                    }}
+                    className="self-start text-sm"
+                    style={{ color: "var(--color-text-3)" }}
+                  >
+                    ← 対局者選択に戻る
+                  </button>
+                )}
+                <ScoreEntry
+                  key={completedGames.length}
+                  players={currentGamePlayers}
+                  playerCount={room.player_count}
+                  onConfirm={handleScoreConfirm}
+                />
+              </>
             ) : (
               <div
                 className="flex flex-col items-center gap-3 rounded-lg py-12"
@@ -601,15 +633,32 @@ export default function RoomDetailPage() {
         )}
       </Main>
 
-      {/* 途中結果モーダル */}
-      {showResultModal && (
-        <Modal onClose={() => setShowResultModal(false)}>
-            <p
-              className="text-sm font-semibold"
-              style={{ color: "var(--color-text-1)" }}
-            >
-              途中結果{completedGames.length > 0 && `（${completedGames.length}半荘）`}
-            </p>
+      {/* 途中結果モーダル / ホスト退出確認モーダル */}
+      {(showResultModal || showLeaveModal) && (
+        <Modal onClose={() => { setShowResultModal(false); setShowLeaveModal(false); }}>
+            {showLeaveModal ? (
+              <>
+                <p
+                  className="text-sm font-semibold"
+                  style={{ color: "var(--color-text-1)" }}
+                >
+                  この内容で確定しますか？
+                </p>
+                <p
+                  className="mt-1 text-xs"
+                  style={{ color: "var(--color-text-3)" }}
+                >
+                  確定後は変更できません
+                </p>
+              </>
+            ) : (
+              <p
+                className="text-sm font-semibold"
+                style={{ color: "var(--color-text-1)" }}
+              >
+                途中結果{completedGames.length > 0 && `（${completedGames.length}半荘）`}
+              </p>
+            )}
 
             {completedGames.length === 0 ? (
               <div
@@ -623,65 +672,41 @@ export default function RoomDetailPage() {
               <div className="mt-4">
                 <GameScoreTable
                   games={completedGames}
+                  ptRate={room.pt_rate}
                   onUpdateScores={isCreator ? handleUpdateScores : undefined}
                 />
               </div>
             )}
 
-            <Button
-              variant="tertiary"
-              fullWidth
-              onClick={() => setShowResultModal(false)}
-              style={{ marginTop: completedGames.length === 0 ? "8px" : "16px" }}
-            >
-              閉じる
-            </Button>
-        </Modal>
-      )}
-
-      {/* ホスト退出確認モーダル */}
-      {showLeaveModal && (
-        <Modal onClose={() => setShowLeaveModal(false)}>
-            <p
-              className="text-sm font-semibold"
-              style={{ color: "var(--color-text-1)" }}
-            >
-              この内容で確定しますか？
-            </p>
-            <p
-              className="mt-1 text-xs"
-              style={{ color: "var(--color-text-3)" }}
-            >
-              確定後は変更できません
-            </p>
-
-            {completedGames.length > 0 && (
-              <div className="mt-4">
-                <GameScoreTable
-                  games={completedGames}
-                  ptRate={room.pt_rate}
-                />
+            {showLeaveModal ? (
+              <div className="mt-5 flex gap-3">
+                <Button
+                  variant="tertiary"
+                  onClick={() => setShowLeaveModal(false)}
+                  style={{ flex: 1 }}
+                >
+                  戻る
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowLeaveModal(false);
+                    handleLeave();
+                  }}
+                  style={{ flex: 1 }}
+                >
+                  確定する
+                </Button>
               </div>
-            )}
-
-            <div className="mt-5 flex gap-3">
+            ) : (
               <Button
                 variant="tertiary"
-                onClick={() => setShowLeaveModal(false)}
-                style={{ flex: 1 }}
+                fullWidth
+                onClick={() => setShowResultModal(false)}
+                style={{ marginTop: completedGames.length === 0 ? "8px" : "16px" }}
               >
-                戻る
+                閉じる
               </Button>
-              <Button
-                onClick={() => {
-                  setShowLeaveModal(false);
-                  handleLeave();
-                }}
-                style={{ flex: 1 }}
-              >
-                確定する
-              </Button>
-            </div>
+            )}
         </Modal>
       )}
     </div>
