@@ -5,25 +5,90 @@ import GameScoreTable from "../GameScoreTable";
 import type { CompletedGame } from "@/lib/types/game";
 import { describe, it, expect, vi } from "vitest";
 
+type OnUpdateSpy = (
+  gameIndex: number,
+  scores: { userId: string; score: number }[],
+) => void;
+
+
 // テスト用データ: 3人で1半荘 → 4人で1半荘
 function makeTestGames(): CompletedGame[] {
   return [
     {
-      game: { id: "g1", room_id: "r1", round_number: 1, created_at: "2025-01-01T10:00:00Z" },
+      game: {
+        id: "g1",
+        room_id: "r1",
+        round_number: 1,
+        created_at: "2025-01-01T10:00:00Z",
+      },
       scores: [
-        { id: "s1", game_id: "g1", user_id: "A", display_name: "Alice", avatar_url: null, score: 50 },
-        { id: "s2", game_id: "g1", user_id: "B", display_name: "Bob", avatar_url: null, score: 10 },
-        { id: "s3", game_id: "g1", user_id: "C", display_name: "Charlie", avatar_url: null, score: -60 },
+        {
+          id: "s1",
+          game_id: "g1",
+          user_id: "A",
+          display_name: "Alice",
+          avatar_url: null,
+          score: 50,
+        },
+        {
+          id: "s2",
+          game_id: "g1",
+          user_id: "B",
+          display_name: "Bob",
+          avatar_url: null,
+          score: 10,
+        },
+        {
+          id: "s3",
+          game_id: "g1",
+          user_id: "C",
+          display_name: "Charlie",
+          avatar_url: null,
+          score: -60,
+        },
       ],
       yakumans: [],
     },
     {
-      game: { id: "g2", room_id: "r1", round_number: 2, created_at: "2025-01-01T11:00:00Z" },
+      game: {
+        id: "g2",
+        room_id: "r1",
+        round_number: 2,
+        created_at: "2025-01-01T11:00:00Z",
+      },
       scores: [
-        { id: "s4", game_id: "g2", user_id: "A", display_name: "Alice", avatar_url: null, score: 30 },
-        { id: "s5", game_id: "g2", user_id: "B", display_name: "Bob", avatar_url: null, score: -20 },
-        { id: "s6", game_id: "g2", user_id: "C", display_name: "Charlie", avatar_url: null, score: -5 },
-        { id: "s7", game_id: "g2", user_id: "D", display_name: "Dave", avatar_url: null, score: -5 },
+        {
+          id: "s4",
+          game_id: "g2",
+          user_id: "A",
+          display_name: "Alice",
+          avatar_url: null,
+          score: 30,
+        },
+        {
+          id: "s5",
+          game_id: "g2",
+          user_id: "B",
+          display_name: "Bob",
+          avatar_url: null,
+          score: -20,
+        },
+        {
+          id: "s6",
+          game_id: "g2",
+          user_id: "C",
+          display_name: "Charlie",
+          avatar_url: null,
+          score: -5,
+        },
+        {
+          id: "s7",
+          game_id: "g2",
+          user_id: "D",
+          display_name: "Dave",
+          avatar_url: null,
+          score: -5,
+        },
       ],
       yakumans: [],
     },
@@ -31,7 +96,13 @@ function makeTestGames(): CompletedGame[] {
 }
 
 // ===== 旧: stateのみ直接更新するWrapper（コンポーネントUI検証用） =====
-function Wrapper({ initialGames, ptRate }: { initialGames: CompletedGame[]; ptRate?: number }) {
+function Wrapper({
+  initialGames,
+  ptRate,
+}: {
+  initialGames: CompletedGame[];
+  ptRate?: number;
+}) {
   const [games, setGames] = useState(initialGames);
 
   const handleUpdateScores = async (
@@ -70,7 +141,7 @@ function WrapperWithDB({
 }: {
   initialGames: CompletedGame[];
   ptRate?: number;
-  onUpdateSpy?: ReturnType<typeof vi.fn>;
+  onUpdateSpy?: OnUpdateSpy;
 }) {
   const dbRef = useRef<CompletedGame[]>(structuredClone(initialGames));
   const [games, setGames] = useState(initialGames);
@@ -84,7 +155,9 @@ function WrapperWithDB({
     gameIndex: number,
     scores: { userId: string; score: number }[],
   ) => {
-    onUpdateSpy?.(gameIndex, scores);
+    if (onUpdateSpy) {
+      onUpdateSpy(gameIndex, scores);
+    }
 
     // 1. DB (ref) を更新 = supabase.update() 相当
     dbRef.current = dbRef.current.map((g, i) => {
@@ -110,6 +183,61 @@ function WrapperWithDB({
         onUpdateScores={handleUpdateScores}
       />
       {/* Realtimeの再fetchをシミュレートするボタン */}
+      <button onClick={refetchFromDB} data-testid="simulate-refetch">
+        refetch
+      </button>
+    </>
+  );
+}
+
+// ===== DB更新がサイレントに失敗するWrapper =====
+// RLSポリシー未適用など、update が 0行マッチで何も変更しないケースを再現
+function WrapperWithFailingDB({
+  initialGames,
+  ptRate,
+  onUpdateSpy,
+}: {
+  initialGames: CompletedGame[];
+  ptRate?: number;
+  onUpdateSpy?: OnUpdateSpy;
+}) {
+  const dbRef = useRef<CompletedGame[]>(structuredClone(initialGames));
+  const [games, setGames] = useState(initialGames);
+
+  const refetchFromDB = useCallback(() => {
+    setGames(structuredClone(dbRef.current));
+  }, []);
+
+  const handleUpdateScores = async (
+    gameIndex: number,
+    scores: { userId: string; score: number }[],
+  ) => {
+    onUpdateSpy?.(gameIndex, scores);
+
+    // 楽観的に state だけ更新（実際のコードと同様）
+    setGames((prev) =>
+      prev.map((g, i) => {
+        if (i !== gameIndex) return g;
+        return {
+          ...g,
+          scores: g.scores.map((sc) => {
+            const updated = scores.find((s) => s.userId === sc.user_id);
+            return updated ? { ...sc, score: updated.score } : sc;
+          }),
+        };
+      }),
+    );
+
+    // ❌ DB (ref) は更新しない = RLS で 0行マッチのシミュレーション
+  };
+
+  return (
+    <>
+      <GameScoreTable
+        games={games}
+        ptRate={ptRate}
+        onUpdateScores={handleUpdateScores}
+      />
       <button onClick={refetchFromDB} data-testid="simulate-refetch">
         refetch
       </button>
@@ -264,7 +392,11 @@ describe("GameScoreTable", () => {
       const user = userEvent.setup();
       const spy = vi.fn();
       render(
-        <WrapperWithDB initialGames={makeTestGames()} ptRate={50} onUpdateSpy={spy} />,
+        <WrapperWithDB
+          initialGames={makeTestGames()}
+          ptRate={50}
+          onUpdateSpy={spy}
+        />,
       );
 
       // 1半荘目を編集: Alice 50→30, Bob 10→30, Charlie -60のまま
@@ -308,9 +440,7 @@ describe("GameScoreTable", () => {
 
     it("2半荘目を編集→保存後に再fetchしてもpt換算値が正しい", async () => {
       const user = userEvent.setup();
-      render(
-        <WrapperWithDB initialGames={makeTestGames()} ptRate={50} />,
-      );
+      render(<WrapperWithDB initialGames={makeTestGames()} ptRate={50} />);
 
       // 2半荘目を編集: Alice 30→10, Bob -20→-10, Charlie -5→5, Dave -5のまま
       const editButtons = screen.getAllByTitle("編集");
@@ -341,7 +471,11 @@ describe("GameScoreTable", () => {
       const user = userEvent.setup();
       const spy = vi.fn();
       render(
-        <WrapperWithDB initialGames={makeTestGames()} ptRate={50} onUpdateSpy={spy} />,
+        <WrapperWithDB
+          initialGames={makeTestGames()}
+          ptRate={50}
+          onUpdateSpy={spy}
+        />,
       );
 
       // --- 1半荘目を編集 ---
@@ -391,7 +525,11 @@ describe("GameScoreTable", () => {
       const user = userEvent.setup();
       const spy = vi.fn();
       render(
-        <WrapperWithDB initialGames={makeTestGames()} ptRate={50} onUpdateSpy={spy} />,
+        <WrapperWithDB
+          initialGames={makeTestGames()}
+          ptRate={50}
+          onUpdateSpy={spy}
+        />,
       );
 
       // 1半荘目を編集（Daveは不参加）
@@ -408,7 +546,9 @@ describe("GameScoreTable", () => {
 
       // onUpdateScoresにDaveが含まれないこと
       const [, updatedScores] = spy.mock.calls[0];
-      expect(updatedScores.find((s: { userId: string }) => s.userId === "D")).toBeUndefined();
+      expect(
+        updatedScores.find((s: { userId: string }) => s.userId === "D"),
+      ).toBeUndefined();
       expect(updatedScores).toHaveLength(3);
 
       // 再fetchシミュレート
@@ -452,6 +592,68 @@ describe("GameScoreTable", () => {
       const cells2 = getGameRowCells(1);
       expect(cells2[1].textContent).toContain("+30");
       expect(cells2[2].textContent).toContain("-20");
+    });
+  });
+
+  describe("DB更新サイレント失敗の検知", () => {
+    it("DB更新が失敗した場合、再fetchで編集前のスコアに戻る（= 戦績に未反映）", async () => {
+      const user = userEvent.setup();
+      const spy = vi.fn();
+      render(
+        <WrapperWithFailingDB
+          initialGames={makeTestGames()}
+          ptRate={50}
+          onUpdateSpy={spy}
+        />,
+      );
+
+      // 1半荘目を編集: Alice 50→30, Bob 10→30, Charlie -60のまま
+      const editButtons = screen.getAllByTitle("編集");
+      await user.click(editButtons[0]);
+
+      const inputs = screen.getAllByRole("textbox");
+      await user.clear(inputs[0]);
+      await user.type(inputs[0], "30");
+      await user.clear(inputs[1]);
+      await user.type(inputs[1], "30");
+
+      await user.click(screen.getByText("保存"));
+
+      // 楽観的更新で一旦は反映される
+      let scores = getCumulativeScores();
+      expect(scores.some((s) => s.includes("+60"))).toBe(true); // Alice 30+30
+
+      // Realtime 再fetch → DB は未更新のため旧データに戻る
+      await user.click(screen.getByTestId("simulate-refetch"));
+
+      scores = getCumulativeScores();
+      // Alice は元の 50+30=+80 に戻っている（= 戦績ページで表示される値）
+      expect(scores.some((s) => s.includes("+80"))).toBe(true);
+      expect(scores.some((s) => s.includes("+60"))).toBe(false);
+    });
+
+    it("DB更新成功時は再fetchしても編集後の値が維持される", async () => {
+      const user = userEvent.setup();
+      render(<WrapperWithDB initialGames={makeTestGames()} ptRate={50} />);
+
+      // 同じ編集: Alice 50→30, Bob 10→30
+      const editButtons = screen.getAllByTitle("編集");
+      await user.click(editButtons[0]);
+
+      const inputs = screen.getAllByRole("textbox");
+      await user.clear(inputs[0]);
+      await user.type(inputs[0], "30");
+      await user.clear(inputs[1]);
+      await user.type(inputs[1], "30");
+
+      await user.click(screen.getByText("保存"));
+
+      // 再fetch しても編集後の値が維持される
+      await user.click(screen.getByTestId("simulate-refetch"));
+
+      const scores = getCumulativeScores();
+      expect(scores.some((s) => s.includes("+60"))).toBe(true); // Alice 30+30
+      expect(scores.some((s) => s.includes("+80"))).toBe(false); // 旧値には戻らない
     });
   });
 });
