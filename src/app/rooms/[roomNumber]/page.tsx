@@ -4,9 +4,13 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Room, RoomMember } from "@/lib/types/room";
-import type { CompletedGame, YakumanEntry, TobashiEntry } from "@/lib/types/game";
+import type {
+  CompletedGame,
+  YakumanEntry,
+  TobashiEntry,
+} from "@/lib/types/game";
 import PlayerSelection from "@/components/PlayerSelection";
-import ScoreEntry from "@/components/ScoreEntry";
+import ScoreEntry from "@/components/ScoreEntry/ScoreEntry";
 import GameResult from "@/components/GameResult";
 import GameScoreTable from "@/components/GameScoreTable";
 import Main from "@/components/Main";
@@ -30,7 +34,9 @@ export default function RoomDetailPage() {
   // フェーズ管理
   const [phase, setPhase] = useState<Phase>("selecting");
   const [playerIds, setPlayerIds] = useState<Set<string>>(new Set());
-  const [currentGamePlayers, setCurrentGamePlayers] = useState<RoomMember[]>([]);
+  const [currentGamePlayers, setCurrentGamePlayers] = useState<RoomMember[]>(
+    [],
+  );
   const [completedGames, setCompletedGames] = useState<CompletedGame[]>([]);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [showResultModal, setShowResultModal] = useState(false);
@@ -82,8 +88,13 @@ export default function RoomDetailPage() {
       const membersList = room_members as RoomMember[];
 
       // メンバーでなければ入室不可
-      const { data: { session: authSession } } = await supabase.auth.getSession();
-      if (!authSession || !membersList.some((m) => m.user_id === authSession.user.id)) {
+      const {
+        data: { session: authSession },
+      } = await supabase.auth.getSession();
+      if (
+        !authSession ||
+        !membersList.some((m) => m.user_id === authSession.user.id)
+      ) {
         setLoading(false);
         return;
       }
@@ -91,7 +102,9 @@ export default function RoomDetailPage() {
       setRoom(roomData as Room);
       setMembers(membersList);
 
-      const pIds = new Set(membersList.slice(0, roomData.player_count).map((m) => m.user_id));
+      const pIds = new Set(
+        membersList.slice(0, roomData.player_count).map((m) => m.user_id),
+      );
       setPlayerIds(pIds);
 
       await fetchCompletedGames(roomData.id);
@@ -162,7 +175,7 @@ export default function RoomDetailPage() {
               return prev.filter((m) => m.id !== oldMember.id);
             });
           }
-        }
+        },
       )
       .subscribe();
 
@@ -191,7 +204,7 @@ export default function RoomDetailPage() {
           if (updated.status === "closed" && !closingRef.current) {
             router.push("/");
           }
-        }
+        },
       )
       .subscribe();
 
@@ -218,7 +231,7 @@ export default function RoomDetailPage() {
           if (!updatingScoresRef.current) {
             fetchCompletedGames(room.id);
           }
-        }
+        },
       )
       .on(
         "postgres_changes",
@@ -231,7 +244,7 @@ export default function RoomDetailPage() {
           if (!updatingScoresRef.current) {
             fetchCompletedGames(room.id);
           }
-        }
+        },
       )
       .subscribe();
 
@@ -263,7 +276,7 @@ export default function RoomDetailPage() {
   const handleScoreConfirm = async (
     scores: { userId: string; displayName: string; score: number }[],
     yakumans: YakumanEntry[],
-    tobashis: TobashiEntry[]
+    tobashis: TobashiEntry[],
   ) => {
     if (!room) return;
 
@@ -291,7 +304,14 @@ export default function RoomDetailPage() {
     await supabase.from("game_scores").insert(scoreRows);
 
     // 役満記録を保存
-    let yakumanRows: { game_id: string; user_id: string; display_name: string; avatar_url: string | null; yakuman_type: string; winning_tile: string | null }[] = [];
+    let yakumanRows: {
+      game_id: string;
+      user_id: string;
+      display_name: string;
+      avatar_url: string | null;
+      yakuman_type: string;
+      winning_tile: string | null;
+    }[] = [];
     if (yakumans.length > 0) {
       yakumanRows = yakumans.map((y) => ({
         game_id: game.id,
@@ -336,7 +356,7 @@ export default function RoomDetailPage() {
 
   const handleUpdateScores = async (
     gameIndex: number,
-    scores: { userId: string; score: number }[]
+    scores: { userId: string; score: number }[],
   ) => {
     const game = completedGames[gameIndex];
     updatingScoresRef.current = true;
@@ -352,7 +372,7 @@ export default function RoomDetailPage() {
             return updated ? { ...sc, score: updated.score } : sc;
           }),
         };
-      })
+      }),
     );
 
     // DB を更新（各行を主キーで特定して更新）
@@ -428,12 +448,8 @@ export default function RoomDetailPage() {
         style={{ background: "var(--color-bg-2)", minHeight: "100dvh" }}
       >
         <div className="flex flex-col items-center gap-3">
-          <p style={{ color: "var(--color-text-2)" }}>
-            ルームが見つかりません
-          </p>
-          <Button onClick={() => router.push("/")}>
-            ホームに戻る
-          </Button>
+          <p style={{ color: "var(--color-text-2)" }}>ルームが見つかりません</p>
+          <Button onClick={() => router.push("/")}>ホームに戻る</Button>
         </div>
       </div>
     );
@@ -491,8 +507,12 @@ export default function RoomDetailPage() {
             >
               ルーム {room.room_number}
             </h1>
-            <p className="mt-0.5 text-xs" style={{ color: "var(--color-text-3)" }}>
-              {new Date(room.created_at).toLocaleDateString("ja-JP")} ・ {room.player_count}人麻雀
+            <p
+              className="mt-0.5 text-xs"
+              style={{ color: "var(--color-text-3)" }}
+            >
+              {new Date(room.created_at).toLocaleDateString("ja-JP")} ・{" "}
+              {room.player_count}人麻雀
               {completedGames.length > 0 &&
                 ` ・ ${completedGames.length}半荘完了`}
             </p>
@@ -571,7 +591,6 @@ export default function RoomDetailPage() {
                 途中結果を見る
               </Button>
             )}
-
           </>
         )}
 
@@ -648,78 +667,86 @@ export default function RoomDetailPage() {
 
       {/* 途中結果モーダル / ホスト退出確認モーダル */}
       {(showResultModal || showLeaveModal) && (
-        <Modal onClose={() => { setShowResultModal(false); setShowLeaveModal(false); }}>
-            {showLeaveModal ? (
-              <>
-                <p
-                  className="text-sm font-semibold"
-                  style={{ color: "var(--color-text-1)" }}
-                >
-                  この内容で確定しますか？
-                </p>
-                <p
-                  className="mt-1 text-xs"
-                  style={{ color: "var(--color-text-3)" }}
-                >
-                  確定後は変更できません
-                </p>
-              </>
-            ) : (
+        <Modal
+          onClose={() => {
+            setShowResultModal(false);
+            setShowLeaveModal(false);
+          }}
+        >
+          {showLeaveModal ? (
+            <>
               <p
                 className="text-sm font-semibold"
                 style={{ color: "var(--color-text-1)" }}
               >
-                途中結果{completedGames.length > 0 && `（${completedGames.length}半荘）`}
+                この内容で確定しますか？
               </p>
-            )}
-
-            {completedGames.length === 0 ? (
-              <div
-                className="mt-4 flex flex-col items-center gap-2 py-8"
+              <p
+                className="mt-1 text-xs"
                 style={{ color: "var(--color-text-3)" }}
               >
-                <p className="text-2xl">🀄</p>
-                <p className="text-sm">まだ対局結果がありません</p>
-              </div>
-            ) : (
-              <div className="mt-4">
-                <GameScoreTable
-                  games={completedGames}
-                  ptRate={room.pt_rate}
-                  onUpdateScores={isCreator ? handleUpdateScores : undefined}
-                />
-              </div>
-            )}
+                確定後は変更できません
+              </p>
+            </>
+          ) : (
+            <p
+              className="text-sm font-semibold"
+              style={{ color: "var(--color-text-1)" }}
+            >
+              途中結果
+              {completedGames.length > 0 && `（${completedGames.length}半荘）`}
+            </p>
+          )}
 
-            {showLeaveModal ? (
-              <div className="mt-5 flex gap-3">
-                <Button
-                  variant="tertiary"
-                  onClick={() => setShowLeaveModal(false)}
-                  style={{ flex: 1 }}
-                >
-                  戻る
-                </Button>
-                <Button
-                  onClick={() => {
-                    setShowLeaveModal(false);
-                    handleLeave();
-                  }}
-                  style={{ flex: 1 }}
-                >
-                  確定する
-                </Button>
-              </div>
-            ) : (
+          {completedGames.length === 0 ? (
+            <div
+              className="mt-4 flex flex-col items-center gap-2 py-8"
+              style={{ color: "var(--color-text-3)" }}
+            >
+              <p className="text-2xl">🀄</p>
+              <p className="text-sm">まだ対局結果がありません</p>
+            </div>
+          ) : (
+            <div className="mt-4">
+              <GameScoreTable
+                games={completedGames}
+                ptRate={room.pt_rate}
+                onUpdateScores={isCreator ? handleUpdateScores : undefined}
+              />
+            </div>
+          )}
+
+          {showLeaveModal ? (
+            <div className="mt-5 flex gap-3">
               <Button
                 variant="tertiary"
-                fullWidth
-                onClick={() => setShowResultModal(false)}
-                style={{ marginTop: completedGames.length === 0 ? "8px" : "16px" }}
+                onClick={() => setShowLeaveModal(false)}
+                style={{ flex: 1 }}
               >
-                閉じる
+                戻る
               </Button>
-            )}
+              <Button
+                onClick={() => {
+                  setShowLeaveModal(false);
+                  handleLeave();
+                }}
+                style={{ flex: 1 }}
+              >
+                確定する
+              </Button>
+            </div>
+          ) : (
+            <Button
+              variant="tertiary"
+              fullWidth
+              onClick={() => setShowResultModal(false)}
+              style={{
+                marginTop: completedGames.length === 0 ? "8px" : "16px",
+              }}
+            >
+              閉じる
+            </Button>
+          )}
         </Modal>
       )}
     </div>
