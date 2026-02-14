@@ -8,6 +8,8 @@ import Modal from "@/components/Modal";
 import YakumanModal, { TILE_LABELS } from "@/components/YakumanModal";
 import Input from "@/components/Input";
 import Button from "@/components/Button";
+import Field from "@/components/Field";
+import Checkbox from "@/components/Checkbox";
 
 interface ScoreEntryProps {
   players: RoomMember[];
@@ -214,7 +216,9 @@ export default function ScoreEntry({
                 className="flex-1 text-xs font-medium"
                 style={{ color: "var(--orange-6)" }}
               >
-                {y.displayName} - {y.yakumanType}{y.winningTile && ` / ${TILE_LABELS[y.winningTile] || y.winningTile}`}
+                {y.displayName} - {y.yakumanType}
+                {y.winningTile &&
+                  ` / ${TILE_LABELS[y.winningTile] || y.winningTile}`}
               </p>
               <button
                 onClick={() =>
@@ -238,79 +242,32 @@ export default function ScoreEntry({
 
       {/* 飛び / 飛ばし */}
       <div className="gap-4">
-        <div className="mb-4">
-          <p
-            className="mb-2 text-xs font-medium"
-            style={{ color: "var(--color-text-3)" }}
-          >
-            飛ばした人
-          </p>
+        <Field label="飛んだ人">
           <div className="flex flex-wrap gap-2">
-            {players.map((p) => {
-              const selected = tobashiIds.has(p.user_id);
-              const disabled = tobiIds.has(p.user_id);
-              return (
-                <button
-                  key={p.user_id}
-                  onClick={() => toggleTobashi(p.user_id)}
-                  className="rounded-full px-3 py-1.5 text-xs font-medium"
-                  style={{
-                    background: selected
-                      ? "var(--arcoblue-1)"
-                      : "var(--color-bg-1)",
-                    color: selected
-                      ? "var(--arcoblue-6)"
-                      : disabled
-                        ? "var(--color-text-4)"
-                        : "var(--color-text-3)",
-                    border: `1px solid ${selected ? "var(--arcoblue-6)" : "var(--color-border)"}`,
-                    cursor: "pointer",
-                    opacity: disabled ? 0.4 : 1,
-                  }}
-                >
-                  {p.display_name}
-                </button>
-              );
-            })}
+            {players.map((p) => (
+              <Checkbox
+                key={p.user_id}
+                label={p.display_name}
+                selected={tobiIds.has(p.user_id)}
+                disabled={tobashiIds.has(p.user_id)}
+                onClick={() => toggleTobi(p.user_id)}
+              />
+            ))}
           </div>
-        </div>
-
-        <div>
-          <p
-            className="mb-2 text-xs font-medium"
-            style={{ color: "var(--color-text-3)" }}
-          >
-            飛んだ人
-          </p>
+        </Field>
+        <Field label="飛ばした人" className="mt-4">
           <div className="flex flex-wrap gap-2">
-            {players.map((p) => {
-              const selected = tobiIds.has(p.user_id);
-              const disabled = tobashiIds.has(p.user_id);
-              return (
-                <button
-                  key={p.user_id}
-                  onClick={() => toggleTobi(p.user_id)}
-                  className="rounded-full px-3 py-1.5 text-xs font-medium"
-                  style={{
-                    background: selected
-                      ? "var(--arcoblue-1)"
-                      : "var(--color-bg-1)",
-                    color: selected
-                      ? "var(--arcoblue-6)"
-                      : disabled
-                        ? "var(--color-text-4)"
-                        : "var(--color-text-3)",
-                    border: `1px solid ${selected ? "var(--arcoblue-6)" : "var(--color-border)"}`,
-                    cursor: "pointer",
-                    opacity: disabled ? 0.4 : 1,
-                  }}
-                >
-                  {p.display_name}
-                </button>
-              );
-            })}
+            {players.map((p) => (
+              <Checkbox
+                key={p.user_id}
+                label={p.display_name}
+                selected={tobashiIds.has(p.user_id)}
+                disabled={tobiIds.has(p.user_id)}
+                onClick={() => toggleTobashi(p.user_id)}
+              />
+            ))}
           </div>
-        </div>
+        </Field>
       </div>
 
       {/* 役満記録ボタン */}
