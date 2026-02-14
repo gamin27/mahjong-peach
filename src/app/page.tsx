@@ -7,8 +7,9 @@ import Main from "@/components/Main";
 import Tabs from "@/components/Tabs";
 import FooterNav from "@/components/FooterNav";
 import Loading from "@/components/Loading";
-import { ACHIEVEMENTS, computeAchievements } from "@/lib/achievements";
+import { computeAchievements } from "@/lib/achievements";
 import type { AchievementData } from "@/lib/achievements";
+import AchievementBadges from "@/components/AchievementBadges";
 
 interface ModeStats {
   totalGames: number;
@@ -408,57 +409,7 @@ export default function Home() {
                     <p className="mb-2 text-xs" style={{ color: "var(--color-text-3)" }}>
                       実績
                     </p>
-                    <div className="flex flex-wrap gap-2">
-                      {ACHIEVEMENTS.map((def) => {
-                        if (def.key === "aishou") {
-                          if (!ach.aishouName) return null;
-                        }
-                        const count =
-                          def.key === "tobashi"
-                            ? ach.tobashiCount
-                            : def.key === "flow"
-                              ? ach.flowCount
-                              : def.key === "fugou"
-                                ? ach.fugouCount
-                                : def.key === "yakuman"
-                                  ? ach.yakumanCount
-                                  : def.key === "antei"
-                                    ? ach.anteiCount
-                                    : def.key === "wipeout"
-                                      ? ach.wipeoutCount
-                                      : 0;
-                        return (
-                          <span
-                            key={def.key}
-                            className="flex items-center gap-1 rounded-full px-2.5 py-1"
-                            style={{
-                              background: "var(--color-fill-2)",
-                              border: "1px solid var(--color-border)",
-                              fontSize: "12px",
-                            }}
-                          >
-                            {def.key === "aishou" ? (
-                              <span
-                                className="font-semibold"
-                                style={{ color: "var(--color-text-1)" }}
-                              >
-                                {ach.aishouName}{def.icon}
-                              </span>
-                            ) : (
-                              <>
-                                <span>{def.icon}</span>
-                                <span
-                                  className="font-semibold"
-                                  style={{ color: "var(--color-text-1)" }}
-                                >
-                                  ×{count}
-                                </span>
-                              </>
-                            )}
-                          </span>
-                        );
-                      })}
-                    </div>
+                    <AchievementBadges data={ach} />
                   </div>
                 )}
               </div>

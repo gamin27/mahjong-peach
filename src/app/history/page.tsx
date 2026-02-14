@@ -11,9 +11,9 @@ import Button from "@/components/Button";
 import Tabs from "@/components/Tabs";
 import FooterNav from "@/components/FooterNav";
 import Loading from "@/components/Loading";
-import Tooltip from "@/components/Tooltip";
 import { TILE_LABELS } from "@/components/YakumanModal";
-import { ACHIEVEMENTS, computeAchievements } from "@/lib/achievements";
+import AchievementBadges from "@/components/AchievementBadges";
+import { computeAchievements } from "@/lib/achievements";
 import type { AchievementData } from "@/lib/achievements";
 
 interface PlayerStats {
@@ -69,7 +69,6 @@ export default function HistoryPage() {
   const [subTab, setSubTab] = useState<"summary" | "games" | "achievements">(
     "summary",
   );
-  const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [username, setUsername] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
@@ -763,19 +762,6 @@ export default function HistoryPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ツールチップ外クリックで閉じる
-  useEffect(() => {
-    if (!activeTooltip) return;
-    const handler = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (!target.closest("[data-achievement-badge]")) {
-        setActiveTooltip(null);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [activeTooltip]);
-
   if (loading) {
     return (
       <div
@@ -1191,89 +1177,7 @@ export default function HistoryPage() {
                             {a.displayName}
                           </p>
                         </div>
-                        <div className="flex flex-wrap gap-2">
-                          {ACHIEVEMENTS.map((ach) => {
-                            if (ach.key === "aishou") {
-                              if (!a.aishouName) return null;
-                            }
-                            const count =
-                              ach.key === "tobashi"
-                                ? a.tobashiCount
-                                : ach.key === "flow"
-                                  ? a.flowCount
-                                  : ach.key === "fugou"
-                                    ? a.fugouCount
-                                    : ach.key === "yakuman"
-                                      ? a.yakumanCount
-                                      : ach.key === "antei"
-                                        ? a.anteiCount
-                                        : ach.key === "wipeout"
-                                          ? a.wipeoutCount
-                                          : 0;
-                            const tooltipId = `${a.userId}:${ach.key}`;
-                            const isOpen = activeTooltip === tooltipId;
-                            return (
-                              <Tooltip
-                                key={ach.key}
-                                open={isOpen}
-                                content={
-                                  <>
-                                    <p
-                                      className="text-xs font-medium"
-                                      style={{
-                                        color: "var(--color-text-1)",
-                                      }}
-                                    >
-                                      {ach.label}
-                                    </p>
-                                    <p
-                                      className="text-xs"
-                                      style={{
-                                        color: "var(--color-text-3)",
-                                      }}
-                                    >
-                                      {ach.desc}
-                                    </p>
-                                  </>
-                                }
-                              >
-                                <button
-                                  onClick={() =>
-                                    setActiveTooltip(isOpen ? null : tooltipId)
-                                  }
-                                  data-achievement-badge
-                                  className="flex items-center gap-1 rounded-full px-3 py-1.5"
-                                  style={{
-                                    background: "var(--color-fill-2)",
-                                    color: "var(--color-text-1)",
-                                    border: `1px solid ${isOpen ? "var(--arcoblue-6)" : "var(--color-border)"}`,
-                                    cursor: "pointer",
-                                    fontSize: "13px",
-                                  }}
-                                >
-                                  {ach.key === "aishou" ? (
-                                    <span
-                                      className="font-semibold"
-                                      style={{ color: "var(--color-text-1)" }}
-                                    >
-                                      {a.aishouName}{ach.icon}
-                                    </span>
-                                  ) : (
-                                    <>
-                                      <span>{ach.icon}</span>
-                                      <span
-                                        className="font-semibold"
-                                        style={{ color: "var(--color-text-1)" }}
-                                      >
-                                        ×{count}
-                                      </span>
-                                    </>
-                                  )}
-                                </button>
-                              </Tooltip>
-                            );
-                          })}
-                        </div>
+                        <AchievementBadges data={a} />
                       </div>
                     ))}
                   </div>
