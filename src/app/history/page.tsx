@@ -2,6 +2,7 @@
 
 import Avatar from "@/components/Avatar";
 import Main from "@/components/Main";
+import Field from "@/components/Field";
 import GameScoreTable from "@/components/GameScoreTable";
 import Button from "@/components/Button";
 import Tabs from "@/components/Tabs";
@@ -158,62 +159,10 @@ export default function HistoryPage() {
                             </div>
                           </div>
                           <div className="mt-3 grid grid-cols-4 gap-2">
-                            <div>
-                              <p
-                                className="text-xs"
-                                style={{ color: "var(--color-text-3)" }}
-                              >
-                                1位率
-                              </p>
-                              <p
-                                className="text-sm font-semibold"
-                                style={{ color: "var(--arcoblue-6)" }}
-                              >
-                                {p.topRate.toFixed(0)}%
-                              </p>
-                            </div>
-                            <div>
-                              <p
-                                className="text-xs"
-                                style={{ color: "var(--color-text-3)" }}
-                              >
-                                {tabs.lastLabel}
-                              </p>
-                              <p
-                                className="text-sm font-semibold"
-                                style={{ color: "var(--red-6)" }}
-                              >
-                                {p.lastRate.toFixed(0)}%
-                              </p>
-                            </div>
-                            <div>
-                              <p
-                                className="text-xs"
-                                style={{ color: "var(--color-text-3)" }}
-                              >
-                                平均順位
-                              </p>
-                              <p
-                                className="text-sm font-semibold"
-                                style={{ color: "var(--color-text-1)" }}
-                              >
-                                {p.avgRank.toFixed(1)}位
-                              </p>
-                            </div>
-                            <div>
-                              <p
-                                className="text-xs"
-                                style={{ color: "var(--color-text-3)" }}
-                              >
-                                飛び率
-                              </p>
-                              <p
-                                className="text-sm font-semibold"
-                                style={{ color: "var(--orange-6)" }}
-                              >
-                                {p.tobiRate.toFixed(0)}%
-                              </p>
-                            </div>
+                            <Field variant="small" label="1位率" value={`${p.topRate.toFixed(0)}%`} valueColor="var(--arcoblue-6)" />
+                            <Field variant="small" label={tabs.lastLabel} value={`${p.lastRate.toFixed(0)}%`} valueColor="var(--red-6)" />
+                            <Field variant="small" label="平均順位" value={`${p.avgRank.toFixed(1)}位`} />
+                            <Field variant="small" label="飛び率" value={`${p.tobiRate.toFixed(0)}%`} valueColor="var(--orange-6)" />
                           </div>
                         </div>
                       ))}
