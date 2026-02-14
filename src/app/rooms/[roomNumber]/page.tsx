@@ -340,30 +340,43 @@ export default function RoomDetailPage() {
   ) => {
     const game = completedGames[gameIndex];
     updatingScoresRef.current = true;
+
+    // 楽観的にローカル state を即時更新（UIに即反映）
+    setCompletedGames((prev) =>
+      prev.map((g, i) => {
+        if (i !== gameIndex) return g;
+        return {
+          ...g,
+          scores: g.scores.map((sc) => {
+            const updated = scores.find((s) => s.userId === sc.user_id);
+            return updated ? { ...sc, score: updated.score } : sc;
+          }),
+        };
+      })
+    );
+
+    // DB を更新（各行を主キーで特定して更新）
     try {
-      await Promise.all(
-        scores.map((s) =>
-          supabase
+      for (const s of scores) {
+        const row = game.scores.find((sc) => sc.user_id === s.userId);
+        if (!row) continue;
+        const { data, error } = await supabase
+          .from("game_scores")
+          .update({ score: s.score })
+          .eq("id", row.id)
+          .select();
+        if (error) {
+          console.error("score update failed:", error);
+        } else if (!data || data.length === 0) {
+          // 主キーで見つからない場合は game_id + user_id でフォールバック
+          await supabase
             .from("game_scores")
             .update({ score: s.score })
             .eq("game_id", game.game.id)
-            .eq("user_id", s.userId)
-        )
-      );
-      setCompletedGames((prev) =>
-        prev.map((g, i) => {
-          if (i !== gameIndex) return g;
-          return {
-            ...g,
-            scores: g.scores.map((sc) => {
-              const updated = scores.find((s) => s.userId === sc.user_id);
-              return updated ? { ...sc, score: updated.score } : sc;
-            }),
-          };
-        })
-      );
+            .eq("user_id", s.userId);
+        }
+      }
     } finally {
-      // Realtimeイベントが非同期で届くため少し待ってからフラグ解除
       setTimeout(() => {
         updatingScoresRef.current = false;
       }, 1000);
