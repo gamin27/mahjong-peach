@@ -2,7 +2,7 @@
 
 import Avatar from "@/components/Avatar";
 import Input from "@/components/Input";
-import Label from "@/components/Label";
+import Field from "@/components/Field";
 import Main from "@/components/Main";
 import Button from "@/components/Button";
 import Loading from "@/components/Loading";
@@ -78,10 +78,7 @@ export default function AccountEditPage() {
           }}
         >
           {/* アバター変更 */}
-          <div style={{ marginBottom: "24px", textAlign: "center" }}>
-            <Label style={{ marginBottom: "12px", textAlign: "left" }}>
-              アイコン
-            </Label>
+          <Field label="アイコン" className="mb-6 text-center">
             <div
               onClick={openFilePicker}
               style={{
@@ -124,11 +121,10 @@ export default function AccountEditPage() {
             >
               タップして変更（10MB以下）
             </p>
-          </div>
+          </Field>
 
           {/* ユーザー名 */}
-          <div style={{ marginBottom: "20px" }}>
-            <Label>ユーザー名</Label>
+          <Field label="ユーザー名" className="mb-5">
             <Input
               type="text"
               maxLength={5}
@@ -146,7 +142,7 @@ export default function AccountEditPage() {
             >
               {username.trim().length}/5文字
             </p>
-          </div>
+          </Field>
 
           {error && (
             <p

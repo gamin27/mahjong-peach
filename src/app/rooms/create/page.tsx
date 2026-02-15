@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Input from "@/components/Input";
-import Label from "@/components/Label";
+import Field from "@/components/Field";
 import Main from "@/components/Main";
 import Button from "@/components/Button";
 
@@ -125,8 +125,7 @@ export default function CreateRoomPage() {
             boxShadow: "var(--shadow-card)",
           }}
         >
-          <div style={{ marginBottom: "20px" }}>
-            <Label>ルーム番号（4桁）</Label>
+          <Field label="ルーム番号（4桁）" className="mb-5">
             <Input
               type="text"
               inputMode="numeric"
@@ -138,10 +137,9 @@ export default function CreateRoomPage() {
               placeholder="例: 1234"
               autoComplete="off"
             />
-          </div>
+          </Field>
 
-          <div style={{ marginBottom: "20px" }}>
-            <Label>プレイ人数</Label>
+          <Field label="プレイ人数" className="mb-5">
             <div style={{ display: "flex", gap: "12px" }}>
               {([3, 4] as const).map((count) => (
                 <button
@@ -163,10 +161,9 @@ export default function CreateRoomPage() {
                 </button>
               ))}
             </div>
-          </div>
+          </Field>
 
-          <div style={{ marginBottom: "20px" }}>
-            <Label>ptレート</Label>
+          <Field label="ptレート" className="mb-5">
             <Input
               type="text"
               inputMode="numeric"
@@ -178,7 +175,7 @@ export default function CreateRoomPage() {
             <p style={{ fontSize: "12px", color: "var(--color-text-3)", marginTop: "4px" }}>
               1点あたりのpt（必須）
             </p>
-          </div>
+          </Field>
 
           {error && (
             <p style={{ fontSize: "14px", color: "var(--red-6)", marginBottom: "16px" }}>

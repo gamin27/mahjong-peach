@@ -41,7 +41,7 @@ export default function Field(props: FieldProps) {
   return (
     <div className={className}>
       <p
-        className="mb-2 text-xs font-medium"
+        className="mb-2 text-left text-xs font-medium"
         style={{ color: "var(--color-text-3)" }}
       >
         {label}

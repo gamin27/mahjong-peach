@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { compressImage } from "@/lib/compressImage";
 import Input from "@/components/Input";
-import Label from "@/components/Label";
+import Field from "@/components/Field";
 import Main from "@/components/Main";
 
 export default function SetupPage() {
@@ -161,10 +161,7 @@ export default function SetupPage() {
           }}
         >
           {/* アバター設定 */}
-          <div style={{ marginBottom: "20px", textAlign: "center" }}>
-            <Label style={{ marginBottom: "12px", textAlign: "left" }}>
-              アイコン（任意）
-            </Label>
+          <Field label="アイコン（任意）" className="mb-5 text-center">
             <div
               onClick={() => fileInputRef.current?.click()}
               style={{
@@ -218,11 +215,10 @@ export default function SetupPage() {
             >
               10MB以下の画像
             </p>
-          </div>
+          </Field>
 
           {/* ユーザー名 */}
-          <div style={{ marginBottom: "20px" }}>
-            <Label>ユーザー名</Label>
+          <Field label="ユーザー名" className="mb-5">
             <Input
               type="text"
               maxLength={5}
@@ -241,7 +237,7 @@ export default function SetupPage() {
             >
               {username.trim().length}/5文字
             </p>
-          </div>
+          </Field>
 
           {error && (
             <p

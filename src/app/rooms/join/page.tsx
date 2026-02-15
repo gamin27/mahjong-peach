@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import type { RoomMember } from "@/lib/types/room";
 import Input from "@/components/Input";
-import Label from "@/components/Label";
+import Field from "@/components/Field";
 import Main from "@/components/Main";
 import Button from "@/components/Button";
 
@@ -137,8 +137,7 @@ export default function JoinRoomPage() {
             boxShadow: "var(--shadow-card)",
           }}
         >
-          <div className="flex flex-col gap-1.5">
-            <Label>ルーム番号（4桁）</Label>
+          <Field label="ルーム番号（4桁）">
             <Input
               type="text"
               inputMode="numeric"
@@ -151,7 +150,7 @@ export default function JoinRoomPage() {
               placeholder="例: 1234"
               autoComplete="off"
             />
-          </div>
+          </Field>
 
           {error && (
             <p className="text-sm" style={{ color: "var(--red-6)" }}>
