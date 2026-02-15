@@ -202,7 +202,7 @@ export default function SetupPage() {
                 </span>
               )}
             </div>
-            <input
+            <Input
               ref={fileInputRef}
               type="file"
               accept="image/*"
