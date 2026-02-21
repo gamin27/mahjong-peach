@@ -1,6 +1,7 @@
 import Avatar from "@/components/Avatar";
 import Input from "@/components/Input";
 import type { RoomMember } from "@/lib/types/room";
+import Card from "@/components/Card";
 
 interface Props {
   players: RoomMember[];
@@ -23,15 +24,13 @@ export default function ScoreInputList({
         const isAuto = autoCalcUserId === player.user_id;
 
         return (
-          <div
+          <Card
             key={player.user_id}
-            className="flex items-center gap-3 rounded-lg p-4"
+            className="flex items-center gap-3 p-4"
             style={{
-              background: "var(--color-bg-1)",
               border: `1px solid ${
                 isAuto ? "var(--arcoblue-6)" : "var(--color-border)"
               }`,
-              boxShadow: "var(--shadow-card)",
             }}
           >
             <Avatar
@@ -64,7 +63,7 @@ export default function ScoreInputList({
                 }}
               />
             )}
-          </div>
+          </Card>
         );
       })}
     </>

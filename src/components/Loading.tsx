@@ -1,5 +1,7 @@
 "use client";
 
+import Card from "@/components/Card";
+
 interface LoadingProps {
   /** テキストを非表示にする */
   compact?: boolean;
@@ -30,16 +32,9 @@ export default function Loading({ compact, card }: LoadingProps) {
 
   if (card) {
     return (
-      <div
-        className="flex flex-col items-center justify-center rounded-lg py-12"
-        style={{
-          background: "var(--color-bg-1)",
-          border: "1px solid var(--color-border)",
-          boxShadow: "var(--shadow-card)",
-        }}
-      >
+      <Card className="flex flex-col items-center justify-center py-12">
         {inner}
-      </div>
+      </Card>
     );
   }
 

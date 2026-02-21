@@ -6,6 +6,7 @@ import Field from "@/components/Field";
 import Main from "@/components/Main";
 import Button from "@/components/Button";
 import Loading from "@/components/Loading";
+import Card from "@/components/Card";
 import { useAccountEdit } from "./hooks/useAccountEdit";
 
 export default function AccountEditPage() {
@@ -68,15 +69,7 @@ export default function AccountEditPage() {
           アカウント編集
         </h1>
 
-        <div
-          style={{
-            background: "var(--color-bg-1)",
-            border: "1px solid var(--color-border)",
-            borderRadius: "8px",
-            padding: "24px",
-            boxShadow: "var(--shadow-card)",
-          }}
-        >
+        <Card className="p-6">
           {/* アバター変更 */}
           <Field label="アイコン" className="mb-6 text-center">
             <div
@@ -159,7 +152,7 @@ export default function AccountEditPage() {
           <Button onClick={handleSave} disabled={saving || !username.trim()} fullWidth>
             {saving ? "保存中..." : "保存する"}
           </Button>
-        </div>
+        </Card>
       </Main>
     </div>
   );

@@ -9,6 +9,7 @@ import Input from "@/components/Input";
 import Field from "@/components/Field";
 import Main from "@/components/Main";
 import Button from "@/components/Button";
+import Card from "@/components/Card";
 
 export default function JoinRoomPage() {
   const router = useRouter();
@@ -129,14 +130,7 @@ export default function JoinRoomPage() {
           ルームに参加
         </h1>
 
-        <div
-          className="flex flex-col gap-5 rounded-lg p-6"
-          style={{
-            background: "var(--color-bg-1)",
-            border: "1px solid var(--color-border)",
-            boxShadow: "var(--shadow-card)",
-          }}
-        >
+        <Card className="flex flex-col gap-5 p-6">
           <Field label="ルーム番号（4桁）">
             <Input
               type="text"
@@ -161,7 +155,7 @@ export default function JoinRoomPage() {
           <Button onClick={handleJoin} disabled={loading}>
             {loading ? "参加中..." : "ルームに参加"}
           </Button>
-        </div>
+        </Card>
       </Main>
     </div>
   );

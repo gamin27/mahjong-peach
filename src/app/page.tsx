@@ -10,6 +10,7 @@ import Loading from "@/components/Loading";
 import { computeAchievements } from "@/lib/achievements";
 import type { AchievementData } from "@/lib/achievements";
 import AchievementBadges from "@/components/AchievementBadges";
+import Card from "@/components/Card";
 
 interface ModeStats {
   totalGames: number;
@@ -258,14 +259,7 @@ export default function Home() {
           const rankNums = Array.from({ length: maxRank }, (_, i) => i + 1);
 
           return (
-            <div
-              className="rounded-lg"
-              style={{
-                background: "var(--color-bg-1)",
-                border: "1px solid var(--color-border)",
-                boxShadow: "var(--shadow-card)",
-              }}
-            >
+            <Card>
               {/* タブ */}
               {tabs.length > 1 && (
                 <Tabs tabs={tabs} activeKey={currentTab} onChange={setActiveTab} />
@@ -413,7 +407,7 @@ export default function Home() {
                   </div>
                 )}
               </div>
-            </div>
+            </Card>
           );
         })()}
 

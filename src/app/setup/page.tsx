@@ -7,6 +7,7 @@ import { compressImage } from "@/lib/compressImage";
 import Input from "@/components/Input";
 import Field from "@/components/Field";
 import Main from "@/components/Main";
+import Card from "@/components/Card";
 
 export default function SetupPage() {
   const router = useRouter();
@@ -151,15 +152,7 @@ export default function SetupPage() {
           </p>
         </div>
 
-        <div
-          style={{
-            background: "var(--color-bg-1)",
-            border: "1px solid var(--color-border)",
-            borderRadius: "8px",
-            padding: "24px",
-            boxShadow: "var(--shadow-card)",
-          }}
-        >
+        <Card className="p-6">
           {/* アバター設定 */}
           <Field label="アイコン（任意）" className="mb-5 text-center">
             <div
@@ -270,7 +263,7 @@ export default function SetupPage() {
           >
             {loading ? "登録中..." : "はじめる"}
           </button>
-        </div>
+        </Card>
       </Main>
     </div>
   );

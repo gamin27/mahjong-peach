@@ -17,6 +17,7 @@ import Main from "@/components/Main";
 import Button from "@/components/Button";
 import Modal from "@/components/Modal";
 import Loading from "@/components/Loading";
+import Card from "@/components/Card";
 
 type Phase = "selecting" | "scoring" | "result";
 
@@ -626,13 +627,7 @@ export default function RoomDetailPage() {
                 />
               </>
             ) : (
-              <div
-                className="flex flex-col items-center gap-3 rounded-lg py-12"
-                style={{
-                  background: "var(--color-bg-1)",
-                  border: "1px solid var(--color-border)",
-                }}
-              >
+              <Card shadow={false} className="flex flex-col items-center gap-3 py-12">
                 <p className="text-2xl">🀄</p>
                 <p className="text-sm" style={{ color: "var(--color-text-3)" }}>
                   ホストが点数を入力中です...
@@ -644,7 +639,7 @@ export default function RoomDetailPage() {
                 >
                   ホームに戻る
                 </Button>
-              </div>
+              </Card>
             )}
             {(completedGames.length > 0 || !isCreator) && (
               <Button

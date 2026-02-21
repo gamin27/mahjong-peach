@@ -13,6 +13,7 @@ import AchievementBadges from "@/components/AchievementBadges";
 import { useHistoryUI } from "./hooks/useHistoryUI";
 import { useHistoryData } from "./hooks/useHistoryData";
 import { useHistoryTabs } from "./hooks/useHistoryTabs";
+import Card from "@/components/Card";
 
 export default function HistoryPage() {
   const ui = useHistoryUI();
@@ -70,13 +71,7 @@ export default function HistoryPage() {
         </div>
 
         {tabs.tabs.length === 0 ? (
-          <div
-            className="flex flex-col items-center justify-center rounded-lg py-16"
-            style={{
-              background: "var(--color-bg-1)",
-              border: "1px solid var(--color-border)",
-            }}
-          >
+          <Card shadow={false} className="flex flex-col items-center justify-center py-16">
             <p className="text-3xl">🗒️</p>
             <p
               className="mt-2 text-sm"
@@ -84,7 +79,7 @@ export default function HistoryPage() {
             >
               まだ対局記録がありません
             </p>
-          </div>
+          </Card>
         ) : (
           <>
             {/* 3人/4人タブ */}
@@ -128,14 +123,9 @@ export default function HistoryPage() {
                     {/* プレイヤー一覧 */}
                     <div className="flex flex-col gap-3">
                       {tabs.currentPlayers.map((p) => (
-                        <div
+                        <Card
                           key={p.userId}
-                          className="rounded-lg p-4"
-                          style={{
-                            background: "var(--color-bg-1)",
-                            border: "1px solid var(--color-border)",
-                            boxShadow: "var(--shadow-card)",
-                          }}
+                          className="p-4"
                         >
                           <div className="flex items-center gap-3">
                             <Avatar
@@ -164,7 +154,7 @@ export default function HistoryPage() {
                             <Field variant="small" label="平均順位" value={`${p.avgRank.toFixed(1)}位`} />
                             <Field variant="small" label="飛び率" value={`${p.tobiRate.toFixed(0)}%`} valueColor="var(--orange-6)" />
                           </div>
-                        </div>
+                        </Card>
                       ))}
                     </div>
 
@@ -177,13 +167,7 @@ export default function HistoryPage() {
                         >
                           役満一覧
                         </p>
-                        <div
-                          className="rounded-lg"
-                          style={{
-                            background: "var(--color-bg-1)",
-                            border: "1px solid var(--color-border)",
-                          }}
-                        >
+                        <Card shadow={false}>
                           {tabs.currentYakumans.map((y, i) => (
                             <div
                               key={i}
@@ -226,7 +210,7 @@ export default function HistoryPage() {
                               </div>
                             </div>
                           ))}
-                        </div>
+                        </Card>
                       </div>
                     )}
                   </>
@@ -240,20 +224,14 @@ export default function HistoryPage() {
                 {ui.tabLoading && tabs.currentSessions.length === 0 ? (
                   <Loading />
                 ) : tabs.currentSessions.length === 0 ? (
-                  <div
-                    className="flex flex-col items-center justify-center rounded-lg py-12"
-                    style={{
-                      background: "var(--color-bg-1)",
-                      border: "1px solid var(--color-border)",
-                    }}
-                  >
+                  <Card shadow={false} className="flex flex-col items-center justify-center py-12">
                     <p
                       className="text-sm"
                       style={{ color: "var(--color-text-3)" }}
                     >
                       まだ戦績がありません
                     </p>
-                  </div>
+                  </Card>
                 ) : (
                   <div className="flex flex-col gap-4">
                     {tabs.currentSessions.map((session) => (
@@ -312,31 +290,20 @@ export default function HistoryPage() {
                 {ui.tabLoading && tabs.currentAchievements.length === 0 ? (
                   <Loading />
                 ) : tabs.currentAchievements.length === 0 ? (
-                  <div
-                    className="flex flex-col items-center justify-center rounded-lg py-12"
-                    style={{
-                      background: "var(--color-bg-1)",
-                      border: "1px solid var(--color-border)",
-                    }}
-                  >
+                  <Card shadow={false} className="flex flex-col items-center justify-center py-12">
                     <p
                       className="text-sm"
                       style={{ color: "var(--color-text-3)" }}
                     >
                       まだ実績はありません
                     </p>
-                  </div>
+                  </Card>
                 ) : (
                   <div className="flex flex-col gap-3">
                     {tabs.currentAchievements.map((a) => (
-                      <div
+                      <Card
                         key={a.userId}
-                        className="rounded-lg p-4"
-                        style={{
-                          background: "var(--color-bg-1)",
-                          border: "1px solid var(--color-border)",
-                          boxShadow: "var(--shadow-card)",
-                        }}
+                        className="p-4"
                       >
                         <div className="mb-3 flex items-center gap-3">
                           <Avatar
@@ -352,7 +319,7 @@ export default function HistoryPage() {
                           </p>
                         </div>
                         <AchievementBadges data={a} />
-                      </div>
+                      </Card>
                     ))}
                   </div>
                 )}

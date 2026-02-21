@@ -1,5 +1,6 @@
 import type { RoomMember } from "@/lib/types/room";
 import Avatar from "@/components/Avatar";
+import Card from "@/components/Card";
 
 interface PlayerSelectionProps {
   members: RoomMember[];
@@ -21,15 +22,12 @@ export default function PlayerSelection({
       {members.map((member) => {
         const isPlayer = playerIds.has(member.user_id);
         return (
-          <div
+          <Card
             key={member.id}
             data-testid={`member-${member.user_id}`}
             onClick={() => onToggle?.(member)}
-            className="flex items-center gap-3 rounded-lg p-4"
+            className="flex items-center gap-3 p-4"
             style={{
-              background: "var(--color-bg-1)",
-              border: "1px solid var(--color-border)",
-              boxShadow: "var(--shadow-card)",
               cursor: onToggle ? "pointer" : "default",
               opacity: isPlayer ? 1 : 0.45,
               transition: "opacity 0.2s",
@@ -67,7 +65,7 @@ export default function PlayerSelection({
             >
               {isPlayer ? "✅ 対局" : "⬜️ 控え"}
             </span>
-          </div>
+          </Card>
         );
       })}
     </div>

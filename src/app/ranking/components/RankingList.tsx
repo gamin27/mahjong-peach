@@ -1,19 +1,15 @@
 import Avatar from "@/components/Avatar";
 import type { PlayerData } from "@/lib/types/ranking";
 import { COLORS } from "../utils";
+import Card from "@/components/Card";
 
 export function RankingList({ players }: { players: PlayerData[] }) {
   return (
     <div className="flex flex-col gap-2">
       {players.map((p, i) => (
-        <div
+        <Card
           key={p.userId}
-          className="flex items-center gap-3 rounded-lg p-4"
-          style={{
-            background: "var(--color-bg-1)",
-            border: `1px solid var(--color-border)`,
-            boxShadow: "var(--shadow-card)",
-          }}
+          className="flex items-center gap-3 p-4"
         >
           <span
             className="flex h-8 w-8 shrink-0 items-center justify-center text-sm font-bold"
@@ -47,7 +43,7 @@ export function RankingList({ players }: { players: PlayerData[] }) {
             {p.totalScore > 0 ? "+" : ""}
             {p.totalScore.toLocaleString()}
           </p>
-        </div>
+        </Card>
       ))}
     </div>
   );

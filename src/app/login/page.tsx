@@ -1,6 +1,7 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
+import Card from "@/components/Card";
 
 export default function LoginPage() {
   const supabase = createClient();
@@ -19,14 +20,7 @@ export default function LoginPage() {
       className="flex items-center justify-center"
       style={{ background: "var(--color-bg-2)", minHeight: "100dvh" }}
     >
-      <div
-        className="w-full max-w-sm rounded-lg p-8"
-        style={{
-          background: "var(--color-bg-1)",
-          border: "1px solid var(--color-border)",
-          boxShadow: "var(--shadow-card)",
-        }}
-      >
+      <Card className="w-full max-w-sm p-8">
         <div className="flex flex-col items-center gap-2">
           <span className="text-3xl">🀄</span>
           <h1
@@ -74,7 +68,7 @@ export default function LoginPage() {
           </svg>
           Googleでログイン
         </button>
-      </div>
+      </Card>
     </div>
   );
 }

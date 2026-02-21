@@ -3,6 +3,7 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 import type { PlayerData } from "@/lib/types/ranking";
 import { COLORS } from "../utils";
+import Card from "@/components/Card";
 
 const ANIM_DURATION = 1.2;
 
@@ -53,14 +54,7 @@ export function RankingChart({ players }: { players: PlayerData[] }) {
   }, [players, gameCount]);
 
   return (
-    <div
-      className="rounded-lg p-4"
-      style={{
-        background: "var(--color-bg-1)",
-        border: "1px solid var(--color-border)",
-        boxShadow: "var(--shadow-card)",
-      }}
-    >
+    <Card className="p-4">
       <p
         className="mb-3 text-sm font-semibold"
         style={{ color: "var(--color-text-1)" }}
@@ -155,6 +149,6 @@ export function RankingChart({ players }: { players: PlayerData[] }) {
           </div>
         ))}
       </div>
-    </div>
+    </Card>
   );
 }

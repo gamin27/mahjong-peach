@@ -5,6 +5,7 @@ import Avatar from "@/components/Avatar";
 import { TILE_LABELS } from "@/components/YakumanModal";
 import GameScoreTable from "@/components/GameScoreTable";
 import Button from "@/components/Button";
+import Card from "@/components/Card";
 
 interface GameResultProps {
   games: CompletedGame[];
@@ -44,14 +45,7 @@ export default function GameResult({
 
       {/* 役満記録 */}
       {games.some((g) => g.yakumans && g.yakumans.length > 0) && (
-        <div
-          className="rounded-lg p-4"
-          style={{
-            background: "var(--color-bg-1)",
-            border: "1px solid var(--color-border)",
-            boxShadow: "var(--shadow-card)",
-          }}
-        >
+        <Card className="p-4">
           <p
             className="mb-3 text-xs font-semibold"
             style={{ color: "var(--color-text-1)" }}
@@ -86,7 +80,7 @@ export default function GameResult({
               ))
             )}
           </div>
-        </div>
+        </Card>
       )}
 
       <Button onClick={onGoHome}>

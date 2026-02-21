@@ -7,6 +7,7 @@ import Input from "@/components/Input";
 import Field from "@/components/Field";
 import Main from "@/components/Main";
 import Button from "@/components/Button";
+import Card from "@/components/Card";
 
 export default function CreateRoomPage() {
   const router = useRouter();
@@ -116,15 +117,7 @@ export default function CreateRoomPage() {
           ルームを作成
         </h1>
 
-        <div
-          style={{
-            background: "var(--color-bg-1)",
-            border: "1px solid var(--color-border)",
-            borderRadius: "8px",
-            padding: "24px",
-            boxShadow: "var(--shadow-card)",
-          }}
-        >
+        <Card className="p-6">
           <Field label="ルーム番号（4桁）" className="mb-5">
             <Input
               type="text"
@@ -186,7 +179,7 @@ export default function CreateRoomPage() {
           <Button onClick={handleCreate} disabled={loading} fullWidth>
             {loading ? "作成中..." : "ルームを作成"}
           </Button>
-        </div>
+        </Card>
       </Main>
     </div>
   );

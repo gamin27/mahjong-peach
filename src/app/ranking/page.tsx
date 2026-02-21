@@ -8,6 +8,7 @@ import Loading from "@/components/Loading";
 import { useRanking } from "./hooks/useRanking";
 import { RankingChart } from "./components/RankingChart";
 import { RankingList } from "./components/RankingList";
+import Card from "@/components/Card";
 
 export default function RankingPage() {
   const { players3, players4, loading, avatarUrl, username } = useRanking();
@@ -34,18 +35,12 @@ export default function RankingPage() {
         {loading ? (
           <Loading card />
         ) : tabs.length === 0 ? (
-          <div
-            className="flex flex-col items-center justify-center rounded-lg py-16"
-            style={{
-              background: "var(--color-bg-1)",
-              border: "1px solid var(--color-border)",
-            }}
-          >
+          <Card shadow={false} className="flex flex-col items-center justify-center py-16">
             <p className="text-3xl">👑</p>
             <p className="mt-2 text-sm" style={{ color: "var(--color-text-3)" }}>
               まだ対局記録がありません
             </p>
-          </div>
+          </Card>
         ) : (
           <>
             {tabs.length > 1 && (
