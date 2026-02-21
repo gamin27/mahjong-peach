@@ -18,6 +18,7 @@ import Button from "@/components/Button";
 import Modal from "@/components/Modal";
 import Loading from "@/components/Loading";
 import Card from "@/components/Card";
+import BackButton from "@/components/BackButton";
 
 type Phase = "selecting" | "scoring" | "result";
 
@@ -608,16 +609,15 @@ export default function RoomDetailPage() {
             {isCreator ? (
               <>
                 {members.length > room.player_count && (
-                  <button
+                  <BackButton
+                    className="self-start"
                     onClick={() => {
                       setPhase("selecting");
                       window.scrollTo({ top: 0 });
                     }}
-                    className="self-start text-sm"
-                    style={{ color: "var(--color-text-3)" }}
                   >
-                    ← 対局者選択に戻る
-                  </button>
+                    対局者選択に戻る
+                  </BackButton>
                 )}
                 <ScoreEntry
                   key={completedGames.length}

@@ -10,6 +10,7 @@ import Field from "@/components/Field";
 import Main from "@/components/Main";
 import Button from "@/components/Button";
 import Card from "@/components/Card";
+import BackButton from "@/components/BackButton";
 
 export default function JoinRoomPage() {
   const router = useRouter();
@@ -113,13 +114,7 @@ export default function JoinRoomPage() {
           borderBottom: "1px solid var(--color-border)",
         }}
       >
-        <button
-          onClick={() => router.push("/")}
-          className="text-sm"
-          style={{ color: "var(--color-text-3)" }}
-        >
-          ← 戻る
-        </button>
+        <BackButton onClick={() => router.push("/")} />
       </header>
 
       <Main maxWidth="md" className="py-8">

@@ -7,6 +7,7 @@ import Main from "@/components/Main";
 import Button from "@/components/Button";
 import Loading from "@/components/Loading";
 import Card from "@/components/Card";
+import BackButton from "@/components/BackButton";
 import { useAccountEdit } from "./hooks/useAccountEdit";
 
 export default function AccountEditPage() {
@@ -49,13 +50,7 @@ export default function AccountEditPage() {
           borderBottom: "1px solid var(--color-border)",
         }}
       >
-        <button
-          onClick={goBack}
-          className="text-sm"
-          style={{ color: "var(--color-text-3)" }}
-        >
-          ← 戻る
-        </button>
+        <BackButton onClick={goBack} />
       </header>
 
       <Main maxWidth="md" className="py-8">

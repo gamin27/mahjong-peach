@@ -8,6 +8,7 @@ import Field from "@/components/Field";
 import Main from "@/components/Main";
 import Button from "@/components/Button";
 import Card from "@/components/Card";
+import BackButton from "@/components/BackButton";
 
 export default function CreateRoomPage() {
   const router = useRouter();
@@ -97,12 +98,7 @@ export default function CreateRoomPage() {
           padding: "12px 24px",
         }}
       >
-        <button
-          onClick={() => router.push("/")}
-          style={{ color: "var(--color-text-3)", fontSize: "14px" }}
-        >
-          ← 戻る
-        </button>
+        <BackButton onClick={() => router.push("/")} />
       </header>
 
       <Main maxWidth="md" className="py-8">
