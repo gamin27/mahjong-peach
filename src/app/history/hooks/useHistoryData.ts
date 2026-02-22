@@ -5,7 +5,7 @@ import { computeAchievements } from "@/lib/achievements";
 import type { AchievementData } from "@/lib/achievements";
 import type { HistoryUI } from "./useHistoryUI";
 
-export interface PlayerStats {
+interface PlayerStats {
   userId: string;
   displayName: string;
   avatarUrl: string | null;
@@ -16,7 +16,7 @@ export interface PlayerStats {
   tobiRate: number;
 }
 
-export interface YakumanItem {
+interface YakumanItem {
   displayName: string;
   avatarUrl: string | null;
   yakumanType: string;
@@ -24,7 +24,7 @@ export interface YakumanItem {
   date: string;
 }
 
-export interface SessionData {
+interface SessionData {
   roomId: string;
   date: string;
   games: CompletedGame[];
@@ -38,7 +38,7 @@ interface GameMeta {
   created_at: string;
 }
 
-export interface InitResult {
+interface InitResult {
   years: number[];
   initialYear: number;
   initialTab: 3 | 4;
@@ -81,7 +81,7 @@ export function useHistoryData(ui: HistoryUI) {
       user_id: string;
       display_name: string;
       avatar_url: string | null;
-    }>,
+    }>
   ) => {
     const userIds = [...new Set(scores.map((s) => s.user_id))];
     if (userIds.length === 0) return;
@@ -117,7 +117,7 @@ export function useHistoryData(ui: HistoryUI) {
       .filter(
         (g) =>
           new Date(g.created_at).getFullYear() === year &&
-          meta.gamePlayerCount[g.id] === playerCount,
+          meta.gamePlayerCount[g.id] === playerCount
       )
       .map((g) => g.id);
 
@@ -133,14 +133,11 @@ export function useHistoryData(ui: HistoryUI) {
     }
 
     const [yearScoresRes, yakumanRes] = await Promise.all([
-      supabase
-        .from("game_scores")
-        .select("user_id")
-        .in("game_id", yearGameIds),
+      supabase.from("game_scores").select("user_id").in("game_id", yearGameIds),
       supabase
         .from("yakuman_records")
         .select(
-          "game_id, user_id, display_name, avatar_url, yakuman_type, winning_tile, created_at",
+          "game_id, user_id, display_name, avatar_url, yakuman_type, winning_tile, created_at"
         )
         .in("game_id", yearGameIds),
     ]);
@@ -167,7 +164,7 @@ export function useHistoryData(ui: HistoryUI) {
 
     const knownGameIds = new Set(meta.gamesData.map((g) => g.id));
     const additionalGameIds = allGameIdsFromPlayers.filter(
-      (id) => !knownGameIds.has(id),
+      (id) => !knownGameIds.has(id)
     );
 
     const [additionalGamesRes, countRes] = await Promise.all([
@@ -197,7 +194,7 @@ export function useHistoryData(ui: HistoryUI) {
     }
 
     const filteredGameIds = allGameIdsFromPlayers.filter(
-      (id) => gameYearMap[id] === year && gpc[id] === playerCount,
+      (id) => gameYearMap[id] === year && gpc[id] === playerCount
     );
 
     if (filteredGameIds.length === 0) {
@@ -210,7 +207,7 @@ export function useHistoryData(ui: HistoryUI) {
           yakumanType: y.yakuman_type,
           winningTile: y.winning_tile,
           date: y.created_at,
-        })),
+        }))
       );
       fetchedRef.current.add(`summary:${year}:${playerCount}`);
       ui.setTabLoading(false);
@@ -293,7 +290,7 @@ export function useHistoryData(ui: HistoryUI) {
           avgRank: st.rankSum / st.games,
           tobiRate: (st.tobiCount / st.games) * 100,
         }))
-        .sort((a, b) => a.avgRank - b.avgRank),
+        .sort((a, b) => a.avgRank - b.avgRank)
     );
 
     const yakumanData = yakumanRes.data || [];
@@ -304,7 +301,7 @@ export function useHistoryData(ui: HistoryUI) {
         yakumanType: y.yakuman_type,
         winningTile: y.winning_tile,
         date: y.created_at,
-      })),
+      }))
     );
 
     fetchedRef.current.add(`summary:${year}:${playerCount}`);
@@ -319,12 +316,12 @@ export function useHistoryData(ui: HistoryUI) {
 
     const nextRooms = gamesMeta.rooms.slice(
       gamesMeta.loaded,
-      gamesMeta.loaded + PAGE_SIZE,
+      gamesMeta.loaded + PAGE_SIZE
     );
     if (nextRooms.length === 0) return;
 
     const gameIds = nextRooms.flatMap(
-      (roomId) => gamesMeta.roomGameIds[roomId] || [],
+      (roomId) => gamesMeta.roomGameIds[roomId] || []
     );
     if (gameIds.length === 0) return;
 
@@ -336,7 +333,7 @@ export function useHistoryData(ui: HistoryUI) {
       supabase
         .from("yakuman_records")
         .select(
-          "game_id, user_id, display_name, avatar_url, yakuman_type, winning_tile",
+          "game_id, user_id, display_name, avatar_url, yakuman_type, winning_tile"
         )
         .in("game_id", gameIds),
       supabase.from("rooms").select("id, pt_rate").in("id", nextRooms),
@@ -357,7 +354,7 @@ export function useHistoryData(ui: HistoryUI) {
         .filter(
           (g) =>
             g.room_id === roomId &&
-            gamesMeta.roomGameIds[roomId]?.includes(g.id),
+            gamesMeta.roomGameIds[roomId]?.includes(g.id)
         )
         .sort((a, b) => a.round_number - b.round_number);
 
@@ -415,7 +412,7 @@ export function useHistoryData(ui: HistoryUI) {
     const yearGames = meta.gamesData.filter(
       (g) =>
         new Date(g.created_at).getFullYear() === year &&
-        meta.gamePlayerCount[g.id] === playerCount,
+        meta.gamePlayerCount[g.id] === playerCount
     );
 
     const roomInfo: Record<string, { date: string; gameIds: string[] }> = {};
@@ -431,7 +428,7 @@ export function useHistoryData(ui: HistoryUI) {
 
     const rooms = Object.entries(roomInfo)
       .sort(
-        (a, b) => new Date(b[1].date).getTime() - new Date(a[1].date).getTime(),
+        (a, b) => new Date(b[1].date).getTime() - new Date(a[1].date).getTime()
       )
       .map(([roomId]) => roomId);
 
@@ -464,7 +461,7 @@ export function useHistoryData(ui: HistoryUI) {
       .filter(
         (g) =>
           new Date(g.created_at).getFullYear() === year &&
-          meta.gamePlayerCount[g.id] === playerCount,
+          meta.gamePlayerCount[g.id] === playerCount
       )
       .map((g) => g.id);
 
@@ -501,7 +498,7 @@ export function useHistoryData(ui: HistoryUI) {
       meta.gamesData,
       allScores,
       allTobashiRecords,
-      yakumanData,
+      yakumanData
     );
 
     setAch(
@@ -514,7 +511,7 @@ export function useHistoryData(ui: HistoryUI) {
             a.yakumanCount > 0 ||
             a.anteiCount > 0 ||
             a.wipeoutCount > 0 ||
-            a.aishouName !== null,
+            a.aishouName !== null
         )
         .sort((a, b) => {
           const totalA =
@@ -532,7 +529,7 @@ export function useHistoryData(ui: HistoryUI) {
             b.anteiCount +
             b.wipeoutCount;
           return totalB - totalA;
-        }),
+        })
     );
 
     fetchedRef.current.add(`achievements:${year}:${playerCount}`);
@@ -545,7 +542,7 @@ export function useHistoryData(ui: HistoryUI) {
     playerCount: 3 | 4,
     roomId: string,
     gameIndex: number,
-    scores: { userId: string; score: number }[],
+    scores: { userId: string; score: number }[]
   ) => {
     const setSessions = playerCount === 3 ? setSessions3 : setSessions4;
     const sessions = playerCount === 3 ? sessions3 : sessions4;
@@ -571,7 +568,7 @@ export function useHistoryData(ui: HistoryUI) {
             };
           }),
         };
-      }),
+      })
     );
 
     // DB更新
@@ -666,12 +663,12 @@ export function useHistoryData(ui: HistoryUI) {
       const has3 = gamesData.some(
         (g) =>
           new Date(g.created_at).getFullYear() === initialYear &&
-          gamePlayerCount[g.id] === 3,
+          gamePlayerCount[g.id] === 3
       );
       const has4 = gamesData.some(
         (g) =>
           new Date(g.created_at).getFullYear() === initialYear &&
-          gamePlayerCount[g.id] === 4,
+          gamePlayerCount[g.id] === 4
       );
       const initialTab: 3 | 4 = has3 ? 3 : has4 ? 4 : 3;
 

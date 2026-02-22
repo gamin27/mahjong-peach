@@ -3,7 +3,6 @@
 import {
   useRef,
   useLayoutEffect,
-  useState,
   type ReactNode,
   type CSSProperties,
 } from "react";
@@ -22,28 +21,23 @@ export default function Tooltip({
   style,
 }: TooltipProps) {
   const tooltipRef = useRef<HTMLDivElement>(null);
-  const [offsetX, setOffsetX] = useState(0);
-  const [ready, setReady] = useState(false);
 
   useLayoutEffect(() => {
-    if (!open) {
-      setReady(false);
-      setOffsetX(0);
-      return;
-    }
-    if (!tooltipRef.current) return;
+    const el = tooltipRef.current;
+    if (!el) return;
 
-    const rect = tooltipRef.current.getBoundingClientRect();
+    const rect = el.getBoundingClientRect();
     const margin = 12;
+    let offsetX = 0;
 
     if (rect.left < margin) {
-      setOffsetX(margin - rect.left);
+      offsetX = margin - rect.left;
     } else if (rect.right > window.innerWidth - margin) {
-      setOffsetX(window.innerWidth - margin - rect.right);
-    } else {
-      setOffsetX(0);
+      offsetX = window.innerWidth - margin - rect.right;
     }
-    setReady(true);
+
+    el.style.transform = `translateX(calc(-50% + ${offsetX}px))`;
+    el.style.visibility = "visible";
   }, [open]);
 
   return (
@@ -56,8 +50,8 @@ export default function Tooltip({
             position: "absolute",
             top: "calc(100% + 6px)",
             left: "50%",
-            transform: `translateX(calc(-50% + ${offsetX}px))`,
-            visibility: ready ? "visible" : "hidden",
+            transform: "translateX(-50%)",
+            visibility: "hidden",
             background: "var(--color-bg-1)",
             border: "1px solid var(--color-border)",
             borderRadius: "8px",

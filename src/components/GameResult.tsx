@@ -68,7 +68,9 @@ export default function GameResult({
                     className="flex-1 text-xs font-medium"
                     style={{ color: "var(--orange-6)" }}
                   >
-                    {y.display_name} - {y.yakuman_type}{y.winning_tile && ` / ${TILE_LABELS[y.winning_tile] || y.winning_tile}`}
+                    {y.display_name} - {y.yakuman_type}
+                    {y.winning_tile &&
+                      ` / ${TILE_LABELS[y.winning_tile] || y.winning_tile}`}
                   </p>
                   <span
                     className="text-xs"
@@ -83,9 +85,7 @@ export default function GameResult({
         </Card>
       )}
 
-      <Button onClick={onGoHome}>
-        ホームに戻る
-      </Button>
+      <Button onClick={onGoHome}>ホームに戻る</Button>
     </div>
   );
 }

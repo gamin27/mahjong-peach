@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 interface AvatarProps {
   src?: string | null;
   name: string;
@@ -17,9 +19,11 @@ export default function Avatar({
 
   if (src) {
     return (
-      <img
+      <Image
         src={src}
         alt={name}
+        width={size}
+        height={size}
         style={{
           display: "block",
           width: size,

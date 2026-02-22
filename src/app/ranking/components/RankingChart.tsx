@@ -22,7 +22,8 @@ export function RankingChart({ players }: { players: PlayerData[] }) {
   const range = maxVal - minVal || 1;
   const gameCount = players.length > 0 ? players[0].history.length : 0;
 
-  const toX = (i: number) => PAD_L + (gameCount > 1 ? (i / (gameCount - 1)) * CHART_W : CHART_W / 2);
+  const toX = (i: number) =>
+    PAD_L + (gameCount > 1 ? (i / (gameCount - 1)) * CHART_W : CHART_W / 2);
   const toY = (v: number) => PAD_Y + ((maxVal - v) / range) * CHART_H;
 
   const yTicks: number[] = [];
@@ -45,7 +46,7 @@ export function RankingChart({ players }: { players: PlayerData[] }) {
     (idx: number) => (el: SVGPolylineElement | null) => {
       polyRefs.current[idx] = el;
     },
-    [],
+    []
   );
 
   useEffect(() => {
@@ -91,7 +92,9 @@ export function RankingChart({ players }: { players: PlayerData[] }) {
 
         {players.map((p, pi) => {
           const color = COLORS[pi % COLORS.length];
-          const points = p.history.map((v, i) => `${toX(i)},${toY(v)}`).join(" ");
+          const points = p.history
+            .map((v, i) => `${toX(i)},${toY(v)}`)
+            .join(" ");
           const len = lengths[pi] ?? 0;
           const delay = pi * 0.15;
           return (

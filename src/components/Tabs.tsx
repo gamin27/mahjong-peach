@@ -57,7 +57,10 @@ export default function Tabs<T extends string | number>({
       };
 
   return (
-    <div className={contained ? "rounded-lg" : undefined} style={containerStyle}>
+    <div
+      className={contained ? "rounded-lg" : undefined}
+      style={containerStyle}
+    >
       {tabs.map((tab) => {
         const active = tab.key === activeKey;
         return (

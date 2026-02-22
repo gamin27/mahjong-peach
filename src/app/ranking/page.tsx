@@ -19,11 +19,16 @@ export default function RankingPage() {
   const tabs: { key: 3 | 4; label: string }[] = [];
   if (has3) tabs.push({ key: 3, label: "3人麻雀" });
   if (has4) tabs.push({ key: 4, label: "4人麻雀" });
-  const currentTab = tabs.find((t) => t.key === activeTab) ? activeTab : tabs[0]?.key;
+  const currentTab = tabs.find((t) => t.key === activeTab)
+    ? activeTab
+    : tabs[0]?.key;
   const currentPlayers = currentTab === 3 ? players3 : players4;
 
   return (
-    <div className="flex flex-col" style={{ background: "var(--color-bg-2)", minHeight: "100dvh" }}>
+    <div
+      className="flex flex-col"
+      style={{ background: "var(--color-bg-2)", minHeight: "100dvh" }}
+    >
       <Main>
         <h1
           className="text-lg font-semibold"
@@ -35,20 +40,34 @@ export default function RankingPage() {
         {loading ? (
           <Loading card />
         ) : tabs.length === 0 ? (
-          <Card shadow={false} className="flex flex-col items-center justify-center py-16">
+          <Card
+            shadow={false}
+            className="flex flex-col items-center justify-center py-16"
+          >
             <p className="text-3xl">👑</p>
-            <p className="mt-2 text-sm" style={{ color: "var(--color-text-3)" }}>
+            <p
+              className="mt-2 text-sm"
+              style={{ color: "var(--color-text-3)" }}
+            >
               まだ対局記録がありません
             </p>
           </Card>
         ) : (
           <>
             {tabs.length > 1 && (
-              <Tabs tabs={tabs} activeKey={currentTab} onChange={setActiveTab} contained />
+              <Tabs
+                tabs={tabs}
+                activeKey={currentTab}
+                onChange={setActiveTab}
+                contained
+              />
             )}
 
             {tabs.length === 1 && (
-              <p className="text-sm font-medium" style={{ color: "var(--color-text-3)" }}>
+              <p
+                className="text-sm font-medium"
+                style={{ color: "var(--color-text-3)" }}
+              >
                 {tabs[0].label}
               </p>
             )}

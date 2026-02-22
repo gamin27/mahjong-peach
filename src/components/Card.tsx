@@ -4,7 +4,13 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
   shadow?: boolean;
 }
 
-export default function Card({ className, style, shadow = true, children, ...props }: CardProps) {
+export default function Card({
+  className,
+  style,
+  shadow = true,
+  children,
+  ...props
+}: CardProps) {
   return (
     <div
       className={`rounded-lg${className ? ` ${className}` : ""}`}

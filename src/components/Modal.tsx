@@ -8,11 +8,7 @@ interface ModalProps {
   style?: CSSProperties;
 }
 
-export default function Modal({
-  children,
-  onClose,
-  style,
-}: ModalProps) {
+export default function Modal({ children, onClose, style }: ModalProps) {
   return (
     <div
       style={{

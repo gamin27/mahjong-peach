@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { RoomMember } from "@/lib/types/room";
-import type { CompletedGame, YakumanEntry } from "@/lib/types/game";
+import type { CompletedGame } from "@/lib/types/game";
 import PlayerSelection from "@/components/PlayerSelection";
 import ScoreEntry from "@/components/ScoreEntry/ScoreEntry";
 import GameScoreTable from "@/components/GameScoreTable";
@@ -12,7 +12,7 @@ const makeMember = (
   id: string,
   name: string,
   userId: string,
-  roomId = "room-1",
+  roomId = "room-1"
 ): RoomMember => ({
   id,
   room_id: roomId,
@@ -48,7 +48,7 @@ describe("PlayerSelection", () => {
         playerIds={playerIds}
         currentUserId={HOST_ID}
         createdBy={HOST_ID}
-      />,
+      />
     );
 
     // 4人が対局、1人が控え
@@ -64,13 +64,12 @@ describe("PlayerSelection", () => {
         playerIds={playerIds}
         currentUserId={HOST_ID}
         createdBy={HOST_ID}
-      />,
+      />
     );
 
     // 控えEの行を取得
-    const cards = container.querySelectorAll("[data-testid]");
     const substituteCard = container.querySelector(
-      '[data-testid="member-user-e"]',
+      '[data-testid="member-user-e"]'
     );
     expect(substituteCard).not.toBeNull();
     expect(substituteCard!.getAttribute("style")).toContain("opacity");
@@ -88,7 +87,7 @@ describe("PlayerSelection", () => {
         onToggle={onToggle}
         currentUserId={HOST_ID}
         createdBy={HOST_ID}
-      />,
+      />
     );
 
     // 控えEをクリック
@@ -106,7 +105,7 @@ describe("ScoreEntry", () => {
     const players = members4.slice(0, 4); // 4人対局
 
     render(
-      <ScoreEntry players={players} playerCount={4} onConfirm={onConfirm} />,
+      <ScoreEntry players={players} playerCount={4} onConfirm={onConfirm} />
     );
 
     const inputs = screen.getAllByPlaceholderText("点数");
@@ -131,7 +130,7 @@ describe("ScoreEntry", () => {
     // スコア合計が0であることを確認
     const total = scores.reduce(
       (sum: number, s: { score: number }) => sum + s.score,
-      0,
+      0
     );
     expect(total).toBe(0);
 
@@ -148,7 +147,7 @@ describe("ScoreEntry", () => {
     const players = members3.slice(0, 3);
 
     render(
-      <ScoreEntry players={players} playerCount={3} onConfirm={onConfirm} />,
+      <ScoreEntry players={players} playerCount={3} onConfirm={onConfirm} />
     );
 
     const inputs = screen.getAllByPlaceholderText("点数");
@@ -167,7 +166,7 @@ describe("ScoreEntry", () => {
     expect(scores).toHaveLength(3);
     const total = scores.reduce(
       (sum: number, s: { score: number }) => sum + s.score,
-      0,
+      0
     );
     expect(total).toBe(0);
   });
@@ -177,7 +176,7 @@ describe("ScoreEntry", () => {
     const players = members4.slice(0, 4);
 
     render(
-      <ScoreEntry players={players} playerCount={4} onConfirm={onConfirm} />,
+      <ScoreEntry players={players} playerCount={4} onConfirm={onConfirm} />
     );
 
     const confirmBtn = screen.getByRole("button", { name: "確定" });
@@ -299,7 +298,7 @@ describe("GameScoreTable - 複数半荘の累計", () => {
 
     // 各半荘のスコアが存在するか確認（テーブル内テキスト）
     const cellTexts = Array.from(table.querySelectorAll("td")).map(
-      (td) => td.textContent,
+      (td) => td.textContent
     );
 
     // 半荘1のスコアが含まれている
@@ -366,7 +365,7 @@ describe("ゲームフロー統合テスト", () => {
         playerIds={playerIds1}
         currentUserId={HOST_ID}
         createdBy={HOST_ID}
-      />,
+      />
     );
 
     expect(screen.getAllByText(/対局/)).toHaveLength(4);
@@ -377,7 +376,7 @@ describe("ゲームフロー統合テスト", () => {
     const players1 = members4.filter((m) => playerIds1.has(m.user_id));
     const onConfirm1 = vi.fn();
     const { unmount: unmountScore1 } = render(
-      <ScoreEntry players={players1} playerCount={4} onConfirm={onConfirm1} />,
+      <ScoreEntry players={players1} playerCount={4} onConfirm={onConfirm1} />
     );
 
     const inputs1 = screen.getAllByPlaceholderText("点数");
@@ -424,7 +423,7 @@ describe("ゲームフロー統合テスト", () => {
         playerIds={playerIds2}
         currentUserId={HOST_ID}
         createdBy={HOST_ID}
-      />,
+      />
     );
 
     // 確認: user-e が対局、user-d が控え
@@ -438,7 +437,7 @@ describe("ゲームフロー統合テスト", () => {
     const players2 = members4.filter((m) => playerIds2.has(m.user_id));
     const onConfirm2 = vi.fn();
     const { unmount: unmountScore2 } = render(
-      <ScoreEntry players={players2} playerCount={4} onConfirm={onConfirm2} />,
+      <ScoreEntry players={players2} playerCount={4} onConfirm={onConfirm2} />
     );
 
     const inputs2 = screen.getAllByPlaceholderText("点数");
@@ -478,7 +477,7 @@ describe("ゲームフロー統合テスト", () => {
 
     // --- 結果テーブルで累計を検証 ---
     const { container } = render(
-      <GameScoreTable games={completedGames} ptRate={50} />,
+      <GameScoreTable games={completedGames} ptRate={50} />
     );
 
     const table = container.querySelector("table")!;
@@ -495,7 +494,7 @@ describe("ゲームフロー統合テスト", () => {
     // 合計: 30+30+10-30-40 = 0 ✓
 
     const cellTexts = Array.from(table.querySelectorAll("td")).map(
-      (td) => td.textContent,
+      (td) => td.textContent
     );
     // 累計の pt 表示が含まれている
     expect(cellTexts.some((t) => t?.includes("pt"))).toBe(true);
@@ -509,7 +508,7 @@ describe("ゲームフロー統合テスト", () => {
     // --- 第1半荘 ---
     const onConfirm1 = vi.fn();
     const { unmount: unmount1 } = render(
-      <ScoreEntry players={players} playerCount={3} onConfirm={onConfirm1} />,
+      <ScoreEntry players={players} playerCount={3} onConfirm={onConfirm1} />
     );
 
     const inputs1 = screen.getAllByPlaceholderText("点数");
@@ -547,7 +546,7 @@ describe("ゲームフロー統合テスト", () => {
     // --- 第2半荘 ---
     const onConfirm2 = vi.fn();
     const { unmount: unmount2 } = render(
-      <ScoreEntry players={players} playerCount={3} onConfirm={onConfirm2} />,
+      <ScoreEntry players={players} playerCount={3} onConfirm={onConfirm2} />
     );
 
     const inputs2 = screen.getAllByPlaceholderText("点数");

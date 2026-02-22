@@ -60,7 +60,7 @@ export function computeAchievements(
   gamesData: GameRow[],
   allScores: ScoreRow[],
   tobashiRecords: TobashiRow[],
-  yakumanRecords: YakumanRow[],
+  yakumanRecords: YakumanRow[]
 ): AchievementData[] {
   const tobashiData = tobashiRecords.filter((t) => t.type === "tobashi");
   const tobiData = tobashiRecords.filter((t) => t.type === "tobi");
@@ -75,7 +75,7 @@ export function computeAchievements(
     .filter((g) => gameIds.includes(g.id))
     .sort(
       (a, b) =>
-        new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
     );
 
   const pd: Record<

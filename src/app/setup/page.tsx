@@ -168,16 +168,16 @@ export default function SetupPage() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                background: avatarPreview ? "transparent" : "var(--color-bg-2)",
+                ...(avatarPreview
+                  ? {
+                      backgroundImage: `url(${avatarPreview})`,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                    }
+                  : { background: "var(--color-bg-2)" }),
               }}
             >
-              {avatarPreview ? (
-                <img
-                  src={avatarPreview}
-                  alt="avatar preview"
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                />
-              ) : (
+              {!avatarPreview && (
                 <span
                   style={{
                     fontSize: "12px",
@@ -256,8 +256,7 @@ export default function SetupPage() {
               border: "none",
               background: "var(--arcoblue-6)",
               color: "#fff",
-              cursor:
-                loading || !username.trim() ? "not-allowed" : "pointer",
+              cursor: loading || !username.trim() ? "not-allowed" : "pointer",
               opacity: loading || !username.trim() ? 0.5 : 1,
             }}
           >

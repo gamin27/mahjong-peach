@@ -22,7 +22,7 @@ interface ScoreEntryProps {
       score: number;
     }[],
     yakumans: YakumanEntry[],
-    tobashis: TobashiEntry[],
+    tobashis: TobashiEntry[]
   ) => void;
 }
 
@@ -102,44 +102,35 @@ export default function ScoreEntry({
 
   const filledEntries = useMemo(() => {
     return players.filter(
-      (p) =>
-        inputs[p.user_id] !== undefined &&
-        inputs[p.user_id] !== "",
+      (p) => inputs[p.user_id] !== undefined && inputs[p.user_id] !== ""
     );
   }, [players, inputs]);
 
   const emptyEntries = useMemo(() => {
     return players.filter(
-      (p) =>
-        inputs[p.user_id] === undefined ||
-        inputs[p.user_id] === "",
+      (p) => inputs[p.user_id] === undefined || inputs[p.user_id] === ""
     );
   }, [players, inputs]);
 
-  const autoCalcUser =
-    emptyEntries.length === 1 ? emptyEntries[0] : null;
+  const autoCalcUser = emptyEntries.length === 1 ? emptyEntries[0] : null;
 
   const autoCalcScore = useMemo(() => {
     if (!autoCalcUser) return null;
 
     const sum = filledEntries.reduce(
-      (acc, p) =>
-        acc + (parseInt(inputs[p.user_id], 10) || 0),
-      0,
+      (acc, p) => acc + (parseInt(inputs[p.user_id], 10) || 0),
+      0
     );
 
     return -sum;
   }, [autoCalcUser, filledEntries, inputs]);
 
-  const allFilled =
-    filledEntries.length >= playerCount - 1 &&
-    !!autoCalcUser;
+  const allFilled = filledEntries.length >= playerCount - 1 && !!autoCalcUser;
 
   const hasTobi = tobiIds.size > 0;
   const hasTobashi = tobashiIds.size > 0;
 
-  const tobashiIncomplete =
-    (hasTobi || hasTobashi) && !(hasTobi && hasTobashi);
+  const tobashiIncomplete = (hasTobi || hasTobashi) && !(hasTobi && hasTobashi);
 
   const canConfirm = allFilled;
 
@@ -210,14 +201,8 @@ export default function ScoreEntry({
       <YakumanSection
         players={players}
         yakumans={yakumans}
-        onAdd={(y) =>
-          setYakumans((prev) => [...prev, y])
-        }
-        onRemove={(i) =>
-          setYakumans((prev) =>
-            prev.filter((_, j) => j !== i),
-          )
-        }
+        onAdd={(y) => setYakumans((prev) => [...prev, y])}
+        onRemove={(i) => setYakumans((prev) => prev.filter((_, j) => j !== i))}
       />
 
       {/* 飛び / 飛ばし */}
@@ -249,9 +234,7 @@ export default function ScoreEntry({
               <Button
                 variant="tertiary"
                 fullWidth
-                onClick={() =>
-                  setShowTobashiConfirm(false)
-                }
+                onClick={() => setShowTobashiConfirm(false)}
               >
                 戻る
               </Button>

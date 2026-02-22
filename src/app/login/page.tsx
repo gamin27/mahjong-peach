@@ -36,7 +36,7 @@ export default function LoginPage() {
             Safari. Chrome, Edge で立ち上げてね
           </p>
           <p className="text-sm" style={{ color: "var(--green-6)" }}>
-            <span style={{ color: ""}}>LINE</span> ブラウザは非対応だよ
+            <span style={{ color: "" }}>LINE</span> ブラウザは非対応だよ
           </p>
         </div>
 

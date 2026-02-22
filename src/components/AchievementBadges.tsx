@@ -11,13 +11,20 @@ interface AchievementBadgesProps {
 
 function getCount(data: AchievementData, key: string): number {
   switch (key) {
-    case "tobashi": return data.tobashiCount;
-    case "flow": return data.flowCount;
-    case "fugou": return data.fugouCount;
-    case "yakuman": return data.yakumanCount;
-    case "antei": return data.anteiCount;
-    case "wipeout": return data.wipeoutCount;
-    default: return 0;
+    case "tobashi":
+      return data.tobashiCount;
+    case "flow":
+      return data.flowCount;
+    case "fugou":
+      return data.fugouCount;
+    case "yakuman":
+      return data.yakumanCount;
+    case "antei":
+      return data.anteiCount;
+    case "wipeout":
+      return data.wipeoutCount;
+    default:
+      return 0;
   }
 }
 
@@ -56,10 +63,7 @@ export default function AchievementBadges({ data }: AchievementBadgesProps) {
                 >
                   {def.label}
                 </p>
-                <p
-                  className="text-xs"
-                  style={{ color: "var(--color-text-3)" }}
-                >
+                <p className="text-xs" style={{ color: "var(--color-text-3)" }}>
                   {def.desc}
                 </p>
               </>
@@ -82,7 +86,8 @@ export default function AchievementBadges({ data }: AchievementBadgesProps) {
                   className="font-semibold"
                   style={{ color: "var(--color-text-1)" }}
                 >
-                  {data.aishouName}{def.icon}
+                  {data.aishouName}
+                  {def.icon}
                 </span>
               ) : (
                 <>

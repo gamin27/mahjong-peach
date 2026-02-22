@@ -29,7 +29,11 @@ export default function HistoryPage() {
         <Main>
           <Loading />
         </Main>
-        <FooterNav active="history" avatarUrl={ui.avatarUrl} username={ui.username} />
+        <FooterNav
+          active="history"
+          avatarUrl={ui.avatarUrl}
+          username={ui.username}
+        />
       </div>
     );
   }
@@ -71,7 +75,10 @@ export default function HistoryPage() {
         </div>
 
         {tabs.tabs.length === 0 ? (
-          <Card shadow={false} className="flex flex-col items-center justify-center py-16">
+          <Card
+            shadow={false}
+            className="flex flex-col items-center justify-center py-16"
+          >
             <p className="text-3xl">🗒️</p>
             <p
               className="mt-2 text-sm"
@@ -123,10 +130,7 @@ export default function HistoryPage() {
                     {/* プレイヤー一覧 */}
                     <div className="flex flex-col gap-3">
                       {tabs.currentPlayers.map((p) => (
-                        <Card
-                          key={p.userId}
-                          className="p-4"
-                        >
+                        <Card key={p.userId} className="p-4">
                           <div className="flex items-center gap-3">
                             <Avatar
                               src={p.avatarUrl}
@@ -149,10 +153,29 @@ export default function HistoryPage() {
                             </div>
                           </div>
                           <div className="mt-3 grid grid-cols-4 gap-2">
-                            <Field variant="small" label="1位率" value={`${p.topRate.toFixed(0)}%`} valueColor="var(--arcoblue-6)" />
-                            <Field variant="small" label={tabs.lastLabel} value={`${p.lastRate.toFixed(0)}%`} valueColor="var(--red-6)" />
-                            <Field variant="small" label="平均順位" value={`${p.avgRank.toFixed(1)}位`} />
-                            <Field variant="small" label="飛び率" value={`${p.tobiRate.toFixed(0)}%`} valueColor="var(--orange-6)" />
+                            <Field
+                              variant="small"
+                              label="1位率"
+                              value={`${p.topRate.toFixed(0)}%`}
+                              valueColor="var(--arcoblue-6)"
+                            />
+                            <Field
+                              variant="small"
+                              label={tabs.lastLabel}
+                              value={`${p.lastRate.toFixed(0)}%`}
+                              valueColor="var(--red-6)"
+                            />
+                            <Field
+                              variant="small"
+                              label="平均順位"
+                              value={`${p.avgRank.toFixed(1)}位`}
+                            />
+                            <Field
+                              variant="small"
+                              label="飛び率"
+                              value={`${p.tobiRate.toFixed(0)}%`}
+                              valueColor="var(--orange-6)"
+                            />
                           </div>
                         </Card>
                       ))}
@@ -204,7 +227,7 @@ export default function HistoryPage() {
                                       year: "numeric",
                                       month: "short",
                                       day: "numeric",
-                                    },
+                                    }
                                   )}
                                 </p>
                               </div>
@@ -224,7 +247,10 @@ export default function HistoryPage() {
                 {ui.tabLoading && tabs.currentSessions.length === 0 ? (
                   <Loading />
                 ) : tabs.currentSessions.length === 0 ? (
-                  <Card shadow={false} className="flex flex-col items-center justify-center py-12">
+                  <Card
+                    shadow={false}
+                    className="flex flex-col items-center justify-center py-12"
+                  >
                     <p
                       className="text-sm"
                       style={{ color: "var(--color-text-3)" }}
@@ -259,7 +285,7 @@ export default function HistoryPage() {
                                     tabs.currentTab as 3 | 4,
                                     session.roomId,
                                     gameIndex,
-                                    scores,
+                                    scores
                                   )
                               : undefined
                           }
@@ -290,7 +316,10 @@ export default function HistoryPage() {
                 {ui.tabLoading && tabs.currentAchievements.length === 0 ? (
                   <Loading />
                 ) : tabs.currentAchievements.length === 0 ? (
-                  <Card shadow={false} className="flex flex-col items-center justify-center py-12">
+                  <Card
+                    shadow={false}
+                    className="flex flex-col items-center justify-center py-12"
+                  >
                     <p
                       className="text-sm"
                       style={{ color: "var(--color-text-3)" }}
@@ -301,10 +330,7 @@ export default function HistoryPage() {
                 ) : (
                   <div className="flex flex-col gap-3">
                     {tabs.currentAchievements.map((a) => (
-                      <Card
-                        key={a.userId}
-                        className="p-4"
-                      >
+                      <Card key={a.userId} className="p-4">
                         <div className="mb-3 flex items-center gap-3">
                           <Avatar
                             src={a.avatarUrl}
@@ -329,7 +355,11 @@ export default function HistoryPage() {
         )}
       </Main>
 
-      <FooterNav active="history" avatarUrl={ui.avatarUrl} username={ui.username} />
+      <FooterNav
+        active="history"
+        avatarUrl={ui.avatarUrl}
+        username={ui.username}
+      />
     </div>
   );
 }

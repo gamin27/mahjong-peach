@@ -53,9 +53,7 @@ export default function ScoreInputList({
               <Input
                 compact
                 value={inputs[player.user_id] ?? ""}
-                onChange={(e) =>
-                  onChange(player.user_id, e.target.value)
-                }
+                onChange={(e) => onChange(player.user_id, e.target.value)}
                 placeholder="点数"
                 style={{
                   width: "100px",

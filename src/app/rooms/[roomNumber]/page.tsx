@@ -38,7 +38,7 @@ export default function RoomDetailPage() {
   const [phase, setPhase] = useState<Phase>("selecting");
   const [playerIds, setPlayerIds] = useState<Set<string>>(new Set());
   const [currentGamePlayers, setCurrentGamePlayers] = useState<RoomMember[]>(
-    [],
+    []
   );
   const [completedGames, setCompletedGames] = useState<CompletedGame[]>([]);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
@@ -106,7 +106,7 @@ export default function RoomDetailPage() {
       setMembers(membersList);
 
       const pIds = new Set(
-        membersList.slice(0, roomData.player_count).map((m) => m.user_id),
+        membersList.slice(0, roomData.player_count).map((m) => m.user_id)
       );
       setPlayerIds(pIds);
 
@@ -184,7 +184,7 @@ export default function RoomDetailPage() {
               return prev.filter((m) => m.id !== oldMember.id);
             });
           }
-        },
+        }
       )
       .subscribe();
 
@@ -213,7 +213,7 @@ export default function RoomDetailPage() {
           if (updated.status === "closed" && !closingRef.current) {
             router.push("/");
           }
-        },
+        }
       )
       .subscribe();
 
@@ -240,7 +240,7 @@ export default function RoomDetailPage() {
           if (!updatingScoresRef.current) {
             fetchCompletedGames(room.id);
           }
-        },
+        }
       )
       .on(
         "postgres_changes",
@@ -253,7 +253,7 @@ export default function RoomDetailPage() {
           if (!updatingScoresRef.current) {
             fetchCompletedGames(room.id);
           }
-        },
+        }
       )
       .subscribe();
 
@@ -285,7 +285,7 @@ export default function RoomDetailPage() {
   const handleScoreConfirm = async (
     scores: { userId: string; displayName: string; score: number }[],
     yakumans: YakumanEntry[],
-    tobashis: TobashiEntry[],
+    tobashis: TobashiEntry[]
   ) => {
     if (!room) return;
 
@@ -365,7 +365,7 @@ export default function RoomDetailPage() {
 
   const handleUpdateScores = async (
     gameIndex: number,
-    scores: { userId: string; score: number }[],
+    scores: { userId: string; score: number }[]
   ) => {
     const game = completedGames[gameIndex];
     updatingScoresRef.current = true;
@@ -381,7 +381,7 @@ export default function RoomDetailPage() {
             return updated ? { ...sc, score: updated.score } : sc;
           }),
         };
-      }),
+      })
     );
 
     // DB を更新（各行を主キーで特定して更新）
@@ -467,7 +467,6 @@ export default function RoomDetailPage() {
   const isCreator = currentUserId === room.created_by || isAdmin;
   const maxMembers = room.player_count + 3;
   const playerCount = members.filter((m) => playerIds.has(m.user_id)).length;
-  const waitingCount = members.length - playerCount;
   const isReady = playerCount === room.player_count;
   const isFull = members.length >= maxMembers;
 
@@ -627,7 +626,10 @@ export default function RoomDetailPage() {
                 />
               </>
             ) : (
-              <Card shadow={false} className="flex flex-col items-center gap-3 py-12">
+              <Card
+                shadow={false}
+                className="flex flex-col items-center gap-3 py-12"
+              >
                 <p className="text-2xl">🀄</p>
                 <p className="text-sm" style={{ color: "var(--color-text-3)" }}>
                   ホストが点数を入力中です...

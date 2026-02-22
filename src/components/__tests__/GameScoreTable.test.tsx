@@ -7,9 +7,8 @@ import { describe, it, expect, vi } from "vitest";
 
 type OnUpdateSpy = (
   gameIndex: number,
-  scores: { userId: string; score: number }[],
+  scores: { userId: string; score: number }[]
 ) => void;
-
 
 // テスト用データ: 3人で1半荘 → 4人で1半荘
 function makeTestGames(): CompletedGame[] {
@@ -107,7 +106,7 @@ function Wrapper({
 
   const handleUpdateScores = async (
     gameIndex: number,
-    scores: { userId: string; score: number }[],
+    scores: { userId: string; score: number }[]
   ) => {
     setGames((prev) =>
       prev.map((g, i) => {
@@ -119,7 +118,7 @@ function Wrapper({
             return updated ? { ...sc, score: updated.score } : sc;
           }),
         };
-      }),
+      })
     );
   };
 
@@ -153,7 +152,7 @@ function WrapperWithDB({
 
   const handleUpdateScores = async (
     gameIndex: number,
-    scores: { userId: string; score: number }[],
+    scores: { userId: string; score: number }[]
   ) => {
     if (onUpdateSpy) {
       onUpdateSpy(gameIndex, scores);
@@ -210,7 +209,7 @@ function WrapperWithFailingDB({
 
   const handleUpdateScores = async (
     gameIndex: number,
-    scores: { userId: string; score: number }[],
+    scores: { userId: string; score: number }[]
   ) => {
     onUpdateSpy?.(gameIndex, scores);
 
@@ -225,7 +224,7 @@ function WrapperWithFailingDB({
             return updated ? { ...sc, score: updated.score } : sc;
           }),
         };
-      }),
+      })
     );
 
     // ❌ DB (ref) は更新しない = RLS で 0行マッチのシミュレーション
@@ -277,7 +276,7 @@ describe("GameScoreTable", () => {
           expect.stringContaining("-10"),
           expect.stringContaining("-65"),
           expect.stringContaining("-5"),
-        ]),
+        ])
       );
     });
 
@@ -396,7 +395,7 @@ describe("GameScoreTable", () => {
           initialGames={makeTestGames()}
           ptRate={50}
           onUpdateSpy={spy}
-        />,
+        />
       );
 
       // 1半荘目を編集: Alice 50→30, Bob 10→30, Charlie -60のまま
@@ -420,7 +419,7 @@ describe("GameScoreTable", () => {
           { userId: "A", score: 30 },
           { userId: "B", score: 30 },
           { userId: "C", score: -60 },
-        ]),
+        ])
       );
 
       // 累計: Alice=30+30=60, Bob=30+(-20)=10, Charlie=-60+(-5)=-65, Dave=-5
@@ -475,7 +474,7 @@ describe("GameScoreTable", () => {
           initialGames={makeTestGames()}
           ptRate={50}
           onUpdateSpy={spy}
-        />,
+        />
       );
 
       // --- 1半荘目を編集 ---
@@ -529,7 +528,7 @@ describe("GameScoreTable", () => {
           initialGames={makeTestGames()}
           ptRate={50}
           onUpdateSpy={spy}
-        />,
+        />
       );
 
       // 1半荘目を編集（Daveは不参加）
@@ -547,7 +546,7 @@ describe("GameScoreTable", () => {
       // onUpdateScoresにDaveが含まれないこと
       const [, updatedScores] = spy.mock.calls[0];
       expect(
-        updatedScores.find((s: { userId: string }) => s.userId === "D"),
+        updatedScores.find((s: { userId: string }) => s.userId === "D")
       ).toBeUndefined();
       expect(updatedScores).toHaveLength(3);
 
@@ -604,7 +603,7 @@ describe("GameScoreTable", () => {
           initialGames={makeTestGames()}
           ptRate={50}
           onUpdateSpy={spy}
-        />,
+        />
       );
 
       // 1半荘目を編集: Alice 50→30, Bob 10→30, Charlie -60のまま

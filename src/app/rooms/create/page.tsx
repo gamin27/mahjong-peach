@@ -127,7 +127,6 @@ export default function CreateRoomPage() {
               autoComplete="off"
             />
           </Field>
-
           <Field label="プレイ人数" className="mb-5">
             <div style={{ display: "flex", gap: "12px" }}>
               {([3, 4] as const).map((count) => (
@@ -141,8 +140,14 @@ export default function CreateRoomPage() {
                     fontWeight: 500,
                     borderRadius: "8px",
                     border: `1px solid ${playerCount === count ? "var(--arcoblue-6)" : "var(--color-border)"}`,
-                    background: playerCount === count ? "var(--arcoblue-1)" : "var(--color-bg-2)",
-                    color: playerCount === count ? "var(--arcoblue-6)" : "var(--color-text-2)",
+                    background:
+                      playerCount === count
+                        ? "var(--arcoblue-1)"
+                        : "var(--color-bg-2)",
+                    color:
+                      playerCount === count
+                        ? "var(--arcoblue-6)"
+                        : "var(--color-text-2)",
                     cursor: "pointer",
                   }}
                 >
@@ -161,13 +166,25 @@ export default function CreateRoomPage() {
               placeholder="50"
               autoComplete="off"
             />
-            <p style={{ fontSize: "12px", color: "var(--color-text-3)", marginTop: "4px" }}>
+            <p
+              style={{
+                fontSize: "12px",
+                color: "var(--color-text-3)",
+                marginTop: "4px",
+              }}
+            >
               1点あたりのpt（必須）
             </p>
           </Field>
 
           {error && (
-            <p style={{ fontSize: "14px", color: "var(--red-6)", marginBottom: "16px" }}>
+            <p
+              style={{
+                fontSize: "14px",
+                color: "var(--red-6)",
+                marginBottom: "16px",
+              }}
+            >
               {error}
             </p>
           )}

@@ -83,14 +83,12 @@ export default function JoinRoomPage() {
         .single();
       const displayName = profile?.username ?? "プレイヤー";
 
-      const { error: joinError } = await supabase
-        .from("room_members")
-        .insert({
-          room_id: room.id,
-          user_id: user.id,
-          display_name: displayName,
-          avatar_url: profile?.avatar_url ?? null,
-        });
+      const { error: joinError } = await supabase.from("room_members").insert({
+        room_id: room.id,
+        user_id: user.id,
+        display_name: displayName,
+        avatar_url: profile?.avatar_url ?? null,
+      });
 
       if (joinError) {
         setError("参加に失敗しました");

@@ -80,18 +80,16 @@ export default function AccountEditPage() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                background: displayPreview ? "transparent" : "var(--color-bg-2)",
+                ...(displayPreview
+                  ? {
+                      backgroundImage: `url(${displayPreview})`,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                    }
+                  : { background: "var(--color-bg-2)" }),
               }}
             >
-              {displayPreview ? (
-                <img
-                  src={displayPreview}
-                  alt="avatar"
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                />
-              ) : (
-                <Avatar name={username || "?"} size={76} />
-              )}
+              {!displayPreview && <Avatar name={username || "?"} size={76} />}
             </div>
             <Input
               ref={fileInputRef}
@@ -144,7 +142,11 @@ export default function AccountEditPage() {
             </p>
           )}
 
-          <Button onClick={handleSave} disabled={saving || !username.trim()} fullWidth>
+          <Button
+            onClick={handleSave}
+            disabled={saving || !username.trim()}
+            fullWidth
+          >
             {saving ? "保存中..." : "保存する"}
           </Button>
         </Card>

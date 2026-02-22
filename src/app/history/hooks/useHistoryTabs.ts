@@ -1,22 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { HistoryData } from "./useHistoryData";
 import type { HistoryUI } from "./useHistoryUI";
 
 type SubTab = "summary" | "games" | "achievements";
 
 export function useHistoryTabs(data: HistoryData, ui: HistoryUI) {
-  const [activeTab, setActiveTab] = useState<3 | 4>(3);
   const [subTab, setSubTab] = useState<SubTab>("summary");
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [availableYears, setAvailableYears] = useState<number[]>([]);
+  const [yearOverride, setYearOverride] = useState<number | null>(null);
+  const [tabOverride, setTabOverride] = useState<3 | 4 | null>(null);
 
-  // initResult を消費して初期タブ・年を設定
-  useEffect(() => {
-    if (!data.initResult) return;
-    setAvailableYears(data.initResult.years);
-    setSelectedYear(data.initResult.initialYear);
-    setActiveTab(data.initResult.initialTab);
-  }, [data.initResult]);
+  // initResult をデフォルト値として使い、ユーザー操作時のみ override に保存
+  const availableYears = data.initResult?.years ?? [];
+  const selectedYear =
+    yearOverride ?? data.initResult?.initialYear ?? new Date().getFullYear();
+  const activeTab = tabOverride ?? data.initResult?.initialTab ?? 3;
 
   const getEffectiveTab = (desired: 3 | 4, year: number): 3 | 4 => {
     const meta = data.metaRef.current;
@@ -24,14 +21,14 @@ export function useHistoryTabs(data: HistoryData, ui: HistoryUI) {
     const hasDesired = meta.gamesData.some(
       (g) =>
         new Date(g.created_at).getFullYear() === year &&
-        meta.gamePlayerCount[g.id] === desired,
+        meta.gamePlayerCount[g.id] === desired
     );
     if (hasDesired) return desired;
     const other: 3 | 4 = desired === 3 ? 4 : 3;
     const hasOther = meta.gamesData.some(
       (g) =>
         new Date(g.created_at).getFullYear() === year &&
-        meta.gamePlayerCount[g.id] === other,
+        meta.gamePlayerCount[g.id] === other
     );
     return hasOther ? other : desired;
   };
@@ -46,9 +43,9 @@ export function useHistoryTabs(data: HistoryData, ui: HistoryUI) {
 
   const handleYearChange = async (year: number) => {
     if (year === selectedYear) return;
-    setSelectedYear(year);
+    setYearOverride(year);
     const pc = getEffectiveTab(activeTab, year);
-    setActiveTab(pc);
+    setTabOverride(pc);
     await fetchForTab(year, subTab, pc);
   };
 
@@ -58,7 +55,7 @@ export function useHistoryTabs(data: HistoryData, ui: HistoryUI) {
   };
 
   const handleActiveTabChange = async (pc: 3 | 4) => {
-    setActiveTab(pc);
+    setTabOverride(pc);
     await fetchForTab(selectedYear, subTab, pc);
   };
 
@@ -74,14 +71,14 @@ export function useHistoryTabs(data: HistoryData, ui: HistoryUI) {
     ? data.metaRef.current.gamesData.some(
         (g) =>
           new Date(g.created_at).getFullYear() === selectedYear &&
-          data.metaRef.current!.gamePlayerCount[g.id] === 3,
+          data.metaRef.current!.gamePlayerCount[g.id] === 3
       )
     : false;
   const has4 = data.metaRef.current
     ? data.metaRef.current.gamesData.some(
         (g) =>
           new Date(g.created_at).getFullYear() === selectedYear &&
-          data.metaRef.current!.gamePlayerCount[g.id] === 4,
+          data.metaRef.current!.gamePlayerCount[g.id] === 4
       )
     : false;
 

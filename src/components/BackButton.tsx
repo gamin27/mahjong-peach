@@ -1,8 +1,12 @@
 import { type ButtonHTMLAttributes } from "react";
 
-interface BackButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {}
+type BackButtonProps = ButtonHTMLAttributes<HTMLButtonElement>;
 
-export default function BackButton({ children = "戻る", className, ...props }: BackButtonProps) {
+export default function BackButton({
+  children = "戻る",
+  className,
+  ...props
+}: BackButtonProps) {
   return (
     <button
       className={`text-sm${className ? ` ${className}` : ""}`}

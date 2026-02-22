@@ -17,7 +17,13 @@ interface GameScoreTableProps {
   ) => Promise<void>;
 }
 
-export default function GameScoreTable({ games, maxHeight = "50vh", ptRate, showLabel = true, onUpdateScores }: GameScoreTableProps) {
+export default function GameScoreTable({
+  games,
+  maxHeight = "50vh",
+  ptRate,
+  showLabel = true,
+  onUpdateScores,
+}: GameScoreTableProps) {
   const [editingGameIndex, setEditingGameIndex] = useState<number | null>(null);
   const [editInputs, setEditInputs] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
@@ -25,11 +31,18 @@ export default function GameScoreTable({ games, maxHeight = "50vh", ptRate, show
   if (games.length === 0) return null;
 
   // 累計スコアを計算
-  const totals: Record<string, { displayName: string; avatarUrl: string | null; total: number }> = {};
+  const totals: Record<
+    string,
+    { displayName: string; avatarUrl: string | null; total: number }
+  > = {};
   for (const g of games) {
     for (const s of g.scores) {
       if (!totals[s.user_id]) {
-        totals[s.user_id] = { displayName: s.display_name, avatarUrl: s.avatar_url, total: 0 };
+        totals[s.user_id] = {
+          displayName: s.display_name,
+          avatarUrl: s.avatar_url,
+          total: 0,
+        };
       }
       totals[s.user_id].total += s.score;
     }
@@ -130,12 +143,22 @@ export default function GameScoreTable({ games, maxHeight = "50vh", ptRate, show
             {showLabel && (
               <th
                 className="px-3 py-2 text-left text-xs font-medium"
-                style={{ color: "var(--color-text-3)", background: "var(--color-bg-2)" }}
+                style={{
+                  color: "var(--color-text-3)",
+                  background: "var(--color-bg-2)",
+                }}
               />
             )}
             {sorted.map(([userId, data]) => (
-              <th key={userId} className="px-2 py-2" style={{ background: "var(--color-bg-2)" }}>
-                <div className="mx-auto flex justify-center" title={data.displayName}>
+              <th
+                key={userId}
+                className="px-2 py-2"
+                style={{ background: "var(--color-bg-2)" }}
+              >
+                <div
+                  className="mx-auto flex justify-center"
+                  title={data.displayName}
+                >
                   <Avatar
                     src={data.avatarUrl}
                     name={data.displayName}
@@ -178,7 +201,10 @@ export default function GameScoreTable({ games, maxHeight = "50vh", ptRate, show
                   {data.total.toLocaleString()}
                 </span>
                 {ptRate != null && (
-                  <p className="text-xs" style={{ color: "var(--color-text-3)", fontWeight: 400 }}>
+                  <p
+                    className="text-xs"
+                    style={{ color: "var(--color-text-3)", fontWeight: 400 }}
+                  >
                     ({data.total > 0 ? "+" : ""}
                     {(data.total * ptRate).toLocaleString()}pt)
                   </p>
@@ -196,13 +222,18 @@ export default function GameScoreTable({ games, maxHeight = "50vh", ptRate, show
                   {showLabel && (
                     <td
                       className="px-3 py-2 text-xs font-medium"
-                      style={{ color: "var(--color-text-3)", whiteSpace: "nowrap" }}
+                      style={{
+                        color: "var(--color-text-3)",
+                        whiteSpace: "nowrap",
+                      }}
                     >
                       {gi + 1}半荘
                     </td>
                   )}
                   {sorted.map(([userId]) => {
-                    const score = g.scores.find((s) => s.user_id === userId)?.score;
+                    const score = g.scores.find(
+                      (s) => s.user_id === userId
+                    )?.score;
                     const isInGame = score !== undefined;
 
                     if (isEditing && isInGame) {
@@ -218,7 +249,9 @@ export default function GameScoreTable({ games, maxHeight = "50vh", ptRate, show
                             inputMode="text"
                             pattern="-?[0-9]*"
                             value={editInputs[userId] ?? ""}
-                            onChange={(e) => handleEditChange(userId, e.target.value)}
+                            onChange={(e) =>
+                              handleEditChange(userId, e.target.value)
+                            }
                             style={{
                               width: "70px",
                               textAlign: "right",
@@ -268,19 +301,31 @@ export default function GameScoreTable({ games, maxHeight = "50vh", ptRate, show
                 </tr>
                 {isEditing && (
                   <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
-                    <td colSpan={sorted.length + (editable ? 1 : 0) + (showLabel ? 1 : 0)} className="px-3 py-2">
+                    <td
+                      colSpan={
+                        sorted.length + (editable ? 1 : 0) + (showLabel ? 1 : 0)
+                      }
+                      className="px-3 py-2"
+                    >
                       <div className="flex items-center justify-between">
                         <p
                           className="text-xs"
                           style={{
-                            color: editSum === 0 ? "var(--color-text-3)" : "var(--red-6)",
+                            color:
+                              editSum === 0
+                                ? "var(--color-text-3)"
+                                : "var(--red-6)",
                           }}
                         >
                           合計: {editSum > 0 ? "+" : ""}
                           {editSum.toLocaleString()}
                         </p>
                         <div className="flex gap-2">
-                          <Button variant="tertiary" size="sm" onClick={handleCancelEdit}>
+                          <Button
+                            variant="tertiary"
+                            size="sm"
+                            onClick={handleCancelEdit}
+                          >
                             キャンセル
                           </Button>
                           <Button

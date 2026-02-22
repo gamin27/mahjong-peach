@@ -13,7 +13,9 @@ export function useRanking() {
 
   useEffect(() => {
     const fetchRanking = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) return;
       const userId = session.user.id;
 
@@ -68,12 +70,21 @@ export function useRanking() {
       // 全game_idの正確なプレイヤー数を取得 + プロフィール更新
       const allGameIds = [...new Set(allScores.map((s) => s.game_id))];
       const [countRes, profilesRes] = await Promise.all([
-        supabase.from("game_scores").select("game_id").in("game_id", allGameIds),
-        supabase.from("profiles").select("id, username, avatar_url").in("id", coPlayerIds),
+        supabase
+          .from("game_scores")
+          .select("game_id")
+          .in("game_id", allGameIds),
+        supabase
+          .from("profiles")
+          .select("id, username, avatar_url")
+          .in("id", coPlayerIds),
       ]);
 
       if (profilesRes.data) {
-        const profileMap: Record<string, { username: string; avatar_url: string | null }> = {};
+        const profileMap: Record<
+          string,
+          { username: string; avatar_url: string | null }
+        > = {};
         for (const p of profilesRes.data) profileMap[p.id] = p;
         for (const s of allScores) {
           const prof = profileMap[s.user_id];
@@ -88,7 +99,8 @@ export function useRanking() {
       const gamePlayerCount: Record<string, number> = {};
       if (countRes.data) {
         for (const row of countRes.data) {
-          gamePlayerCount[row.game_id] = (gamePlayerCount[row.game_id] || 0) + 1;
+          gamePlayerCount[row.game_id] =
+            (gamePlayerCount[row.game_id] || 0) + 1;
         }
       }
 

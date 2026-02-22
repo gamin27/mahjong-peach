@@ -12,13 +12,30 @@ export const COLORS = [
 ];
 
 export function buildRanking(
-  allScores: { game_id: string; user_id: string; display_name: string; avatar_url: string | null; score: number }[],
+  allScores: {
+    game_id: string;
+    user_id: string;
+    display_name: string;
+    avatar_url: string | null;
+    score: number;
+  }[],
   gameOrder: string[]
 ): PlayerData[] {
-  const playerMap: Record<string, { displayName: string; avatarUrl: string | null; scores: Record<string, number> }> = {};
+  const playerMap: Record<
+    string,
+    {
+      displayName: string;
+      avatarUrl: string | null;
+      scores: Record<string, number>;
+    }
+  > = {};
   for (const s of allScores) {
     if (!playerMap[s.user_id]) {
-      playerMap[s.user_id] = { displayName: s.display_name, avatarUrl: s.avatar_url, scores: {} };
+      playerMap[s.user_id] = {
+        displayName: s.display_name,
+        avatarUrl: s.avatar_url,
+        scores: {},
+      };
     }
     playerMap[s.user_id].scores[s.game_id] = s.score;
   }
