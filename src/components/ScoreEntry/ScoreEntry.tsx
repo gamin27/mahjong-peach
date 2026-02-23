@@ -48,11 +48,12 @@ export default function ScoreEntry({
    ======================= */
 
   const handleChange = (userId: string, value: string) => {
-    const cleaned = value.replace(/[^0-9-]/g, "");
+    const cleaned = value.replace(/[^0-9]/g, "");
+    const withSign = value.startsWith("-") ? `-${cleaned}` : cleaned;
 
     setInputs((prev) => ({
       ...prev,
-      [userId]: cleaned,
+      [userId]: withSign,
     }));
   };
 
