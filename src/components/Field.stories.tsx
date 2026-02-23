@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import Field from "./Field";
 import Input from "./Input";
 
-// Field は discriminated union 型のため render を使用し、as Story でキャスト
+// Field は discriminated union 型のため render を使用
 const meta = {
   title: "Components/Field",
   component: Field,
@@ -20,7 +20,8 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
+// discriminated union により args 型が never になるため型注釈なしでキャスト
+export const Default = {
   render: () => (
     <Field label="プレイヤー名">
       <Input placeholder="名前を入力" />
@@ -28,11 +29,11 @@ export const Default: Story = {
   ),
 } as unknown as Story;
 
-export const Small: Story = {
+export const Small = {
   render: () => <Field variant="small" label="スコア" value="+50" />,
 } as unknown as Story;
 
-export const SmallWithColor: Story = {
+export const SmallWithColor = {
   render: () => (
     <Field
       variant="small"
