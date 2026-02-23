@@ -1,20 +1,21 @@
-interface CheckboxProps {
+interface ToggleChipProps {
   label: string;
   selected: boolean;
   disabled?: boolean;
   onClick: () => void;
 }
 
-export default function Checkbox({
+export default function ToggleChip({
   label,
   selected,
   disabled,
   onClick,
-}: CheckboxProps) {
+}: ToggleChipProps) {
   return (
     <button
       onClick={onClick}
       disabled={disabled}
+      aria-pressed={selected}
       className="rounded-full px-3 py-1.5 text-xs font-medium"
       style={{
         background: selected ? "var(--arcoblue-1)" : "var(--color-bg-1)",

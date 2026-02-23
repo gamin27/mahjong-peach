@@ -1,5 +1,5 @@
 import Field from "@/components/Field";
-import Checkbox from "@/components/Checkbox";
+import ToggleChip from "@/components/ToggleChip";
 import type { RoomMember } from "@/lib/types/room";
 
 interface Props {
@@ -22,7 +22,7 @@ export default function TobashiSection({
       <Field label="飛んだ人">
         <div className="flex flex-wrap gap-2">
           {players.map((p) => (
-            <Checkbox
+            <ToggleChip
               key={p.user_id}
               label={p.display_name}
               selected={tobiIds.has(p.user_id)}
@@ -36,7 +36,7 @@ export default function TobashiSection({
       <Field label="飛ばした人" className="mt-4">
         <div className="flex flex-wrap gap-2">
           {players.map((p) => (
-            <Checkbox
+            <ToggleChip
               key={p.user_id}
               label={p.display_name}
               selected={tobashiIds.has(p.user_id)}
