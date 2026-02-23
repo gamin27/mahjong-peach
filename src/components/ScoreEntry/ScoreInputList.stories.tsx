@@ -39,6 +39,11 @@ export const WithAutoCalc: Story = {
 };
 
 export const Interactive: Story = {
+  args: {
+    players: MEMBERS,
+    inputs: {},
+    onChange: () => {},
+  },
   render: () => {
     const [inputs, setInputs] = useState<Record<string, string>>({});
     const filled = MEMBERS.filter((p) => inputs[p.user_id]);

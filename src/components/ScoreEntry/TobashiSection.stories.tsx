@@ -41,6 +41,13 @@ export const WithSelection: Story = {
 };
 
 export const Interactive: Story = {
+  args: {
+    players: MEMBERS,
+    tobiIds: new Set<string>(),
+    tobashiIds: new Set<string>(),
+    onToggleTobi: () => {},
+    onToggleTobashi: () => {},
+  },
   render: () => {
     const [tobiIds, setTobiIds] = useState(new Set<string>());
     const [tobashiIds, setTobashiIds] = useState(new Set<string>());
@@ -51,7 +58,11 @@ export const Interactive: Story = {
       id: string
     ) => {
       const next = new Set(set);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       setter(next);
     };
 

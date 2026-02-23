@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import GameScoreTable from "./GameScoreTable";
-import { COMPLETED_GAMES, COMPLETED_GAMES_WITH_YAKUMAN } from "./__fixtures__";
+import { COMPLETED_GAMES } from "./__fixtures__";
 
 const meta = {
   title: "Components/GameScoreTable",

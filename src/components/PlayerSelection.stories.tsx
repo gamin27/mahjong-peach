@@ -39,6 +39,12 @@ export const PartiallySelected: Story = {
 };
 
 export const Interactive: Story = {
+  args: {
+    members: MEMBERS,
+    playerIds: new Set(MEMBERS.map((m) => m.user_id)),
+    currentUserId: "u1",
+    createdBy: "u1",
+  },
   render: () => {
     const [playerIds, setPlayerIds] = useState(
       new Set(MEMBERS.map((m) => m.user_id))
@@ -52,9 +58,11 @@ export const Interactive: Story = {
         onToggle={(member) =>
           setPlayerIds((prev) => {
             const next = new Set(prev);
-            next.has(member.user_id)
-              ? next.delete(member.user_id)
-              : next.add(member.user_id);
+            if (next.has(member.user_id)) {
+              next.delete(member.user_id);
+            } else {
+              next.add(member.user_id);
+            }
             return next;
           })
         }

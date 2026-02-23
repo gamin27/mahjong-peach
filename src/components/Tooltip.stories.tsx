@@ -45,6 +45,11 @@ export const Closed: Story = {
 };
 
 export const Interactive: Story = {
+  args: {
+    open: false,
+    content: "",
+    children: null,
+  },
   render: () => {
     const [open, setOpen] = useState(false);
     return (
