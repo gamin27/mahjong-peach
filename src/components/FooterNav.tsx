@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Avatar from "@/components/Avatar";
+import DropdownMenu from "@/components/DropdownMenu";
 
 const NAV_ITEMS = [
   { key: "home", icon: "🀄", path: "/" },
@@ -26,20 +26,6 @@ export default function FooterNav({
 }: FooterNavProps) {
   const router = useRouter();
   const supabase = createClient();
-  const [showMenu, setShowMenu] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setShowMenu(false);
-      }
-    };
-    if (showMenu) {
-      document.addEventListener("mousedown", handleClick);
-    }
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [showMenu]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -79,76 +65,22 @@ export default function FooterNav({
             {item.icon}
           </button>
         ))}
-        <div ref={menuRef} style={{ position: "relative" }}>
-          <button
-            onClick={() => setShowMenu((v) => !v)}
-            style={{
-              lineHeight: 1,
-              padding: 0,
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-            }}
-          >
-            <Avatar src={avatarUrl} name={username || "?"} size={28} />
-          </button>
-          {showMenu && (
-            <div
-              style={{
-                position: "absolute",
-                bottom: "calc(100% + 8px)",
-                right: 0,
-                background: "var(--color-bg-1)",
-                border: "1px solid var(--color-border)",
-                borderRadius: "8px",
-                boxShadow: "var(--shadow-popup)",
-                minWidth: "160px",
-                overflow: "hidden",
-                zIndex: 100,
-              }}
-            >
-              <button
-                onClick={() => {
-                  setShowMenu(false);
-                  router.push("/account/edit");
-                }}
-                style={{
-                  display: "block",
-                  width: "100%",
-                  padding: "12px 16px",
-                  fontSize: "14px",
-                  color: "var(--color-text-1)",
-                  background: "none",
-                  border: "none",
-                  borderBottom: "1px solid var(--color-border)",
-                  textAlign: "left",
-                  cursor: "pointer",
-                }}
-              >
-                アカウント編集
-              </button>
-              <button
-                onClick={() => {
-                  setShowMenu(false);
-                  handleLogout();
-                }}
-                style={{
-                  display: "block",
-                  width: "100%",
-                  padding: "12px 16px",
-                  fontSize: "14px",
-                  color: "var(--red-6)",
-                  background: "none",
-                  border: "none",
-                  textAlign: "left",
-                  cursor: "pointer",
-                }}
-              >
-                ログアウト
-              </button>
-            </div>
-          )}
-        </div>
+        <DropdownMenu
+          trigger={<Avatar src={avatarUrl} name={username || "?"} size={28} />}
+          placement="top-right"
+          items={[
+            {
+              label: "アカウント編集",
+              onClick: () => router.push("/account/edit"),
+              separator: true,
+            },
+            {
+              label: "ログアウト",
+              onClick: handleLogout,
+              color: "var(--red-6)",
+            },
+          ]}
+        />
       </nav>
       <div style={{ height: "70px" }} />
     </>
