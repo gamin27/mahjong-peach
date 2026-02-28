@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Main from "@/components/Main";
 import Tabs from "@/components/Tabs";
-import FooterNav from "@/components/FooterNav";
 import Loading from "@/components/Loading";
 import { computeAchievements } from "@/lib/achievements";
 import type { AchievementData } from "@/lib/achievements";
@@ -41,8 +40,6 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<3 | 4>(3);
   const [myAch3, setMyAch3] = useState<AchievementData | null>(null);
   const [myAch4, setMyAch4] = useState<AchievementData | null>(null);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -57,20 +54,10 @@ export default function Home() {
       const userId = session.user.id;
 
       // プロフィール、サマリー、自分の参加ゲームIDを並列取得
-      const [profileRes, rpcRes, myScoresRes] = await Promise.all([
-        supabase
-          .from("profiles")
-          .select("username, avatar_url")
-          .eq("id", userId)
-          .single(),
+      const [rpcRes, myScoresRes] = await Promise.all([
         supabase.rpc("get_home_stats", { p_user_id: userId }),
         supabase.from("game_scores").select("game_id").eq("user_id", userId),
       ]);
-
-      if (profileRes.data) {
-        setAvatarUrl(profileRes.data.avatar_url);
-        setUsername(profileRes.data.username);
-      }
 
       if (rpcRes.data) {
         const result = rpcRes.data as {
@@ -518,8 +505,6 @@ export default function Home() {
             );
           })()}
       </Main>
-
-      <FooterNav active="home" avatarUrl={avatarUrl} username={username} />
     </div>
   );
 }

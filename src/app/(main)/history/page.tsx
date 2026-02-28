@@ -6,7 +6,6 @@ import Field from "@/components/Field";
 import GameScoreTable from "@/components/GameScoreTable";
 import Button from "@/components/Button";
 import Tabs from "@/components/Tabs";
-import FooterNav from "@/components/FooterNav";
 import Loading from "@/components/Loading";
 import { TILE_LABELS } from "@/components/YakumanModal";
 import AchievementBadges from "@/components/AchievementBadges";
@@ -29,11 +28,6 @@ export default function HistoryPage() {
         <Main>
           <Loading />
         </Main>
-        <FooterNav
-          active="history"
-          avatarUrl={ui.avatarUrl}
-          username={ui.username}
-        />
       </div>
     );
   }
@@ -354,12 +348,6 @@ export default function HistoryPage() {
           </>
         )}
       </Main>
-
-      <FooterNav
-        active="history"
-        avatarUrl={ui.avatarUrl}
-        username={ui.username}
-      />
     </div>
   );
 }

@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Main from "@/components/Main";
 import Tabs from "@/components/Tabs";
-import FooterNav from "@/components/FooterNav";
 import Loading from "@/components/Loading";
 import { useRanking } from "./hooks/useRanking";
 import { RankingChart } from "./components/RankingChart";
@@ -11,7 +10,7 @@ import { RankingList } from "./components/RankingList";
 import Card from "@/components/Card";
 
 export default function RankingPage() {
-  const { players3, players4, loading, avatarUrl, username } = useRanking();
+  const { players3, players4, loading } = useRanking();
   const [activeTab, setActiveTab] = useState<3 | 4>(3);
 
   const has3 = players3.length > 0;
@@ -77,8 +76,6 @@ export default function RankingPage() {
           </>
         )}
       </Main>
-
-      <FooterNav active="ranking" avatarUrl={avatarUrl} username={username} />
     </div>
   );
 }

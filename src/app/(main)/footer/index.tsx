@@ -1,6 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Avatar from "@/components/Avatar";
 import DropdownMenu from "@/components/DropdownMenu";
@@ -11,21 +12,42 @@ const NAV_ITEMS = [
   { key: "ranking", icon: "👑", path: "/ranking" },
 ] as const;
 
-type ActivePage = (typeof NAV_ITEMS)[number]["key"];
+type NavKey = (typeof NAV_ITEMS)[number]["key"];
 
-interface FooterNavProps {
-  active: ActivePage;
-  avatarUrl: string | null;
-  username: string;
+function getActiveKey(pathname: string): NavKey {
+  if (pathname === "/") return "home";
+  if (pathname.startsWith("/history")) return "history";
+  if (pathname.startsWith("/ranking")) return "ranking";
+  return "home";
 }
 
-export default function FooterNav({
-  active,
-  avatarUrl,
-  username,
-}: FooterNavProps) {
+export default function Footer() {
   const router = useRouter();
+  const pathname = usePathname();
   const supabase = createClient();
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [username, setUsername] = useState("");
+
+  const active = getActiveKey(pathname);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("username, avatar_url")
+        .eq("id", session.user.id)
+        .single();
+      if (data) {
+        setUsername(data.username ?? "");
+        setAvatarUrl(data.avatar_url ?? null);
+      }
+    };
+    fetchProfile();
+  }, []);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
