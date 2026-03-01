@@ -12,7 +12,8 @@
     "test:storybook": "vitest run --project=storybook",
     "prepare": "husky",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "gen:types": "npx supabase gen types typescript --project-id zwmxrmnypsakypirtyxr > src/lib/types/database.generated.ts"
   },
   "lint-staged": {
     "*.{ts,tsx}": [

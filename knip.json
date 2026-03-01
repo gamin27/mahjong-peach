@@ -1,5 +1,10 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
-  "ignore": ["src/lib/supabase/server.ts", "src/components/__fixtures__/**"],
-  "ignoreDependencies": ["postcss", "@vitest/coverage-v8"]
+  "ignore": [
+    "src/lib/supabase/server.ts",
+    "src/components/__fixtures__/**",
+    "src/lib/types/database.generated.ts"
+  ],
+  "ignoreDependencies": ["postcss", "@vitest/coverage-v8"],
+  "ignoreBinaries": ["supabase"]
 }

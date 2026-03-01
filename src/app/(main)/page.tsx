@@ -60,7 +60,7 @@ export default function Home() {
       ]);
 
       if (rpcRes.data) {
-        const result = rpcRes.data as {
+        const result = rpcRes.data as unknown as {
           stats: {
             player_count: number;
             total_games: number;

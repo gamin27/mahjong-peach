@@ -319,7 +319,7 @@ export default function RoomDetailPage() {
       display_name: string;
       avatar_url: string | null;
       yakuman_type: string;
-      winning_tile: string | null;
+      winning_tile: string;
     }[] = [];
     if (yakumans.length > 0) {
       yakumanRows = yakumans.map((y) => ({
@@ -328,7 +328,7 @@ export default function RoomDetailPage() {
         display_name: y.displayName,
         avatar_url: y.avatarUrl,
         yakuman_type: y.yakumanType,
-        winning_tile: y.winningTile,
+        winning_tile: y.winningTile ?? "",
       }));
       await supabase.from("yakuman_records").insert(yakumanRows);
     }
