@@ -24,7 +24,7 @@ function getActiveKey(pathname: string): NavKey {
 export default function Footer() {
   const router = useRouter();
   const pathname = usePathname();
-  const supabase = createClient();
+  const [supabase] = useState(() => createClient());
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [username, setUsername] = useState("");
 
@@ -47,7 +47,7 @@ export default function Footer() {
       }
     };
     fetchProfile();
-  }, []);
+  }, [supabase]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
