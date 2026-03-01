@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "麻雀ピーチ - 成績管理",
   description: "麻雀の成績を記録・管理するアプリ",
-  themeColor: "#FF7D45",
+  themeColor: "#FFF",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
