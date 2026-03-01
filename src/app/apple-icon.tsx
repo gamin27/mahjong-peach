@@ -17,7 +17,7 @@ export default function AppleIcon() {
         fontSize: 110,
       }}
     >
-      🍑
+      🀄️
     </div>,
     size
   );
