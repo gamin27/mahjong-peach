@@ -33,6 +33,7 @@ export default function Footer() {
   const active = getActiveKey(pathname);
   const activeIndex = NAV_ITEMS.findIndex((item) => item.key === active);
   const [targetIndex, setTargetIndex] = useState(activeIndex);
+  const targetKey = NAV_ITEMS[targetIndex]?.key ?? active;
   const [morphState, setMorphState] = useState<"bounce" | "rest">("rest");
 
   const handleNavClick = (item: (typeof NAV_ITEMS)[number]) => {
@@ -123,10 +124,9 @@ export default function Footer() {
               style={{
                 display: "flex",
                 color:
-                  item.key === active
+                  item.key === targetKey
                     ? "var(--arcoblue-6)"
                     : "var(--color-text-3)",
-                transition: "color 0.25s ease",
               }}
             >
               <Icon path={item.icon} size={1} />
