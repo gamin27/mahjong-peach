@@ -32,15 +32,14 @@ export default function Footer() {
 
   const active = getActiveKey(pathname);
   const activeIndex = NAV_ITEMS.findIndex((item) => item.key === active);
-  const [morphState, setMorphState] = useState<"rest" | "moving" | "bounce">(
-    "rest"
-  );
+  const [targetIndex, setTargetIndex] = useState(activeIndex);
+  const [morphState, setMorphState] = useState<"bounce" | "rest">("rest");
 
   const handleNavClick = (item: (typeof NAV_ITEMS)[number]) => {
     if (item.key === active) return;
-    setMorphState("moving");
-    setTimeout(() => setMorphState("bounce"), 370);
-    setTimeout(() => setMorphState("rest"), 510);
+    setTargetIndex(NAV_ITEMS.findIndex((i) => i.key === item.key));
+    setMorphState("bounce");
+    setTimeout(() => setMorphState("rest"), 120);
     router.push(item.path);
   };
 
@@ -91,26 +90,16 @@ export default function Footer() {
           style={{
             position: "absolute",
             top: "28px",
-            left: `calc(${activeIndex * 25 + 12.5}% - 20px)`,
+            left: `calc(${targetIndex * 25 + 12.5}% - 20px)`,
             width: "40px",
             height: "40px",
             borderRadius: "50%",
             background: "var(--arcoblue-1)",
-            transform: `translateY(-50%) scaleX(${
-              morphState === "moving" ? 1.6 : morphState === "bounce" ? 0.72 : 1
-            }) scaleY(${
-              morphState === "moving"
-                ? 0.62
-                : morphState === "bounce"
-                  ? 1.35
-                  : 1
-            })`,
+            transform: `translateY(-50%) scaleX(${morphState === "bounce" ? 0.72 : 1}) scaleY(${morphState === "bounce" ? 1.35 : 1})`,
             transition:
-              morphState === "moving"
-                ? "left 0.42s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.08s ease-in"
-                : morphState === "bounce"
-                  ? "transform 0.1s ease-out"
-                  : "transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1)",
+              morphState === "bounce"
+                ? "transform 0.1s ease-out"
+                : "transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1)",
             zIndex: 0,
           }}
         />
