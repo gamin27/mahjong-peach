@@ -5,11 +5,13 @@ import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Avatar from "@/components/Avatar";
 import DropdownMenu from "@/components/DropdownMenu";
+import Icon from "@mdi/react";
+import { mdiHome, mdiHistory, mdiTrophy } from "@mdi/js";
 
 const NAV_ITEMS = [
-  { key: "home", icon: "🀄", path: "/" },
-  { key: "history", icon: "🗒️", path: "/history" },
-  { key: "ranking", icon: "👑", path: "/ranking" },
+  { key: "home", icon: mdiHome, path: "/" },
+  { key: "history", icon: mdiHistory, path: "/history" },
+  { key: "ranking", icon: mdiTrophy, path: "/ranking" },
 ] as const;
 
 type NavKey = (typeof NAV_ITEMS)[number]["key"];
@@ -78,13 +80,16 @@ export default function Footer() {
             onClick={
               item.key !== active ? () => router.push(item.path) : undefined
             }
-            style={{
-              fontSize: "24px",
-              lineHeight: 1,
-              opacity: item.key === active ? 1 : undefined,
-            }}
           >
-            {item.icon}
+            <Icon
+              path={item.icon}
+              size={1}
+              color={
+                item.key === active
+                  ? "var(--arcoblue-6)"
+                  : "var(--color-text-3)"
+              }
+            />
           </button>
         ))}
         <DropdownMenu

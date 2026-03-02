@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { ACHIEVEMENTS } from "@/lib/achievements";
 import type { AchievementData } from "@/lib/achievements";
 import Tooltip from "@/components/Tooltip";
+import Icon from "@mdi/react";
 
 interface AchievementBadgesProps {
   data: AchievementData;
@@ -82,16 +83,18 @@ export default function AchievementBadges({ data }: AchievementBadgesProps) {
               }}
             >
               {def.key === "aishou" ? (
-                <span
-                  className="font-semibold"
-                  style={{ color: "var(--color-text-1)" }}
-                >
-                  {data.aishouName}
-                  {def.icon}
-                </span>
+                <>
+                  <Icon path={def.icon} size={0.7} color={def.color} />
+                  <span
+                    className="font-semibold"
+                    style={{ color: "var(--color-text-1)" }}
+                  >
+                    {data.aishouName}
+                  </span>
+                </>
               ) : (
                 <>
-                  <span>{def.icon}</span>
+                  <Icon path={def.icon} size={0.7} color={def.color} />
                   <span
                     className="font-semibold"
                     style={{ color: "var(--color-text-1)" }}

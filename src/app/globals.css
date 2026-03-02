@@ -2,12 +2,12 @@
 
 :root {
   /* Arco Design Color Tokens */
-  --arcoblue-1: #e8f3ff;
-  --arcoblue-2: #bedaff;
-  --arcoblue-3: #94bfff;
-  --arcoblue-5: #4080ff;
-  --arcoblue-6: #165dff;
-  --arcoblue-7: #0e42d2;
+  --arcoblue-1: #e8f0f6;
+  --arcoblue-2: #c5d9e8;
+  --arcoblue-3: #7fa8c4;
+  --arcoblue-5: #3a72a0;
+  --arcoblue-6: #224968;
+  --arcoblue-7: #183650;
 
   --green-1: #e8ffea;
   --green-6: #00b42a;
@@ -64,24 +64,41 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes draw-line {
-  from { stroke-dashoffset: var(--line-length); }
-  to { stroke-dashoffset: 0; }
+  from {
+    stroke-dashoffset: var(--line-length);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 
 @keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Inter, -apple-system, BlinkMacSystemFont, "PingFang SC",
-    "Hiragino Sans GB", "Noto Sans CJK JP", "Microsoft YaHei", sans-serif;
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "PingFang SC",
+    "Hiragino Sans GB",
+    "Noto Sans CJK JP",
+    "Microsoft YaHei",
+    sans-serif;
   font-size: 14px;
   line-height: 1.5715;
   overscroll-behavior: none;

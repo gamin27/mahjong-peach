@@ -10,6 +10,8 @@ import { computeAchievements } from "@/lib/achievements";
 import type { AchievementData } from "@/lib/achievements";
 import AchievementBadges from "@/components/AchievementBadges";
 import Card from "@/components/Card";
+import Icon from "@mdi/react";
+import { mdiPlus, mdiLoginVariant, mdiStar } from "@mdi/js";
 
 interface ModeStats {
   totalGames: number;
@@ -171,9 +173,6 @@ export default function Home() {
           }}
         >
           <h1 className="text-xl font-semibold text-white">麻雀成績管理</h1>
-          <p className="mt-1 text-sm text-blue-100">
-            対局結果を記録して、成績を振り返ろう
-          </p>
         </div>
 
         {/* アクションカード */}
@@ -188,13 +187,13 @@ export default function Home() {
             }}
           >
             <div
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-lg"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
               style={{
                 background: "var(--arcoblue-1)",
                 color: "var(--arcoblue-6)",
               }}
             >
-              +
+              <Icon path={mdiPlus} size={1} />
             </div>
             <div>
               <p
@@ -222,10 +221,13 @@ export default function Home() {
             }}
           >
             <div
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-lg"
-              style={{ background: "var(--green-1)", color: "var(--green-6)" }}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
+              style={{
+                background: "var(--arcoblue-2)",
+                color: "var(--arcoblue-6)",
+              }}
             >
-              🚪
+              <Icon path={mdiLoginVariant} size={1} />
             </div>
             <div>
               <p
@@ -261,12 +263,7 @@ export default function Home() {
             const ach = currentTab === 3 ? myAch3 : myAch4;
             const data = currentTab === 3 ? rankHistory3 : rankHistory4;
             const maxRank = currentTab;
-            const RANK_COLORS = [
-              "var(--arcoblue-6)",
-              "var(--green-6)",
-              "var(--orange-6)",
-              "var(--red-6)",
-            ];
+            const RANK_COLORS = ["#224968", "#3a72a0", "#7fa8c4", "#b8d5e6"];
 
             const count = data.length;
             const svgW = 340;
@@ -464,16 +461,16 @@ export default function Home() {
                         />
                         {data.map((p, i) =>
                           p.hasYakuman ? (
-                            <text
+                            <svg
                               key={i}
-                              x={toX(i)}
-                              y={toY(p.rank)}
-                              fontSize="12"
-                              textAnchor="middle"
-                              dominantBaseline="central"
+                              x={toX(i) - 7}
+                              y={toY(p.rank) - 7}
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
                             >
-                              😎
-                            </text>
+                              <path d={mdiStar} fill="#c4a040" />
+                            </svg>
                           ) : (
                             <circle
                               key={i}

@@ -580,7 +580,7 @@ export default function RoomDetailPage() {
 
             {isCreator && (
               <Button
-                color="green"
+                color="blue"
                 disabled={!isReady}
                 onClick={handleStartGame}
               >

@@ -2,6 +2,14 @@ import Avatar from "@/components/Avatar";
 import type { PlayerData } from "@/lib/types/ranking";
 import { COLORS } from "../utils";
 import Card from "@/components/Card";
+import Icon from "@mdi/react";
+import { mdiTrophy } from "@mdi/js";
+
+const RANK_ICONS = [
+  { icon: mdiTrophy, color: "#d4a843" },
+  { icon: mdiTrophy, color: "#9faec0" },
+  { icon: mdiTrophy, color: "#b87333" },
+];
 
 export function RankingList({ players }: { players: PlayerData[] }) {
   return (
@@ -12,7 +20,15 @@ export function RankingList({ players }: { players: PlayerData[] }) {
             className="flex h-8 w-8 shrink-0 items-center justify-center text-sm font-bold"
             style={{ color: "var(--color-text-2)" }}
           >
-            {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : i + 1}
+            {i < 3 ? (
+              <Icon
+                path={RANK_ICONS[i].icon}
+                size={0.85}
+                color={RANK_ICONS[i].color}
+              />
+            ) : (
+              i + 1
+            )}
           </span>
           <Avatar
             src={p.avatarUrl}

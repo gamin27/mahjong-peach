@@ -151,13 +151,12 @@ export default function HistoryPage() {
                               variant="small"
                               label="1位率"
                               value={`${p.topRate.toFixed(0)}%`}
-                              valueColor="var(--arcoblue-6)"
+                              valueColor="var(--red-6)"
                             />
                             <Field
                               variant="small"
                               label={tabs.lastLabel}
                               value={`${p.lastRate.toFixed(0)}%`}
-                              valueColor="var(--red-6)"
                             />
                             <Field
                               variant="small"
@@ -168,7 +167,6 @@ export default function HistoryPage() {
                               variant="small"
                               label="飛び率"
                               value={`${p.tobiRate.toFixed(0)}%`}
-                              valueColor="var(--orange-6)"
                             />
                           </div>
                         </Card>

@@ -1,6 +1,8 @@
 import type { RoomMember } from "@/lib/types/room";
 import Avatar from "@/components/Avatar";
 import Card from "@/components/Card";
+import Icon from "@mdi/react";
+import { mdiCheckCircle, mdiMinusCircleOutline } from "@mdi/js";
 
 interface PlayerSelectionProps {
   members: RoomMember[];
@@ -57,13 +59,17 @@ export default function PlayerSelection({
               )}
             </div>
             <span
-              className="shrink-0 rounded-full px-2.5 py-1 text-xs font-medium"
+              className="flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium"
               style={{
-                background: isPlayer ? "var(--green-1)" : "var(--orange-1)",
-                color: isPlayer ? "var(--green-6)" : "var(--orange-6)",
+                background: isPlayer ? "var(--arcoblue-1)" : "var(--gray-2)",
+                color: isPlayer ? "var(--arcoblue-6)" : "var(--gray-6)",
               }}
             >
-              {isPlayer ? "✅ 対局" : "⬜️ 控え"}
+              <Icon
+                path={isPlayer ? mdiCheckCircle : mdiMinusCircleOutline}
+                size={0.6}
+              />
+              {isPlayer ? "対局" : "控え"}
             </span>
           </Card>
         );

@@ -11,24 +11,66 @@ export interface AchievementData {
   aishouName: string | null;
 }
 
+import {
+  mdiBomb,
+  mdiFire,
+  mdiCurrencyJpy,
+  mdiDiamond,
+  mdiBrain,
+  mdiCrown,
+  mdiHeart,
+} from "@mdi/js";
+
 export const ACHIEVEMENTS = [
-  { key: "tobashi", icon: "💥", label: "飛ばし", desc: "相手を飛ばした回数" },
-  { key: "flow", icon: "🔥", label: "雀士フロー", desc: "3連続1位だった回数" },
+  {
+    key: "tobashi",
+    icon: mdiBomb,
+    color: "#b07070",
+    label: "飛ばし",
+    desc: "相手を飛ばした回数",
+  },
+  {
+    key: "flow",
+    icon: mdiFire,
+    color: "#b08848",
+    label: "雀士フロー",
+    desc: "3連続1位だった回数",
+  },
   {
     key: "fugou",
-    icon: "💰",
+    icon: mdiCurrencyJpy,
+    color: "#a09050",
     label: "富豪",
     desc: "スコア100以上を記録した回数",
   },
-  { key: "yakuman", icon: "🀄", label: "役満", desc: "役満を上がった回数" },
+  {
+    key: "yakuman",
+    icon: mdiDiamond,
+    color: "#3a72a0",
+    label: "役満",
+    desc: "役満を上がった回数",
+  },
   {
     key: "antei",
-    icon: "🧠",
+    icon: mdiBrain,
+    color: "#7a72a8",
     label: "安定",
     desc: "5連続スコアがプラスだった回数",
   },
-  { key: "wipeout", icon: "👑", label: "Wipe Out", desc: "全員飛ばした回数" },
-  { key: "aishou", icon: "⭕️", label: "相性", desc: "得意な相手" },
+  {
+    key: "wipeout",
+    icon: mdiCrown,
+    color: "#a09050",
+    label: "Wipe Out",
+    desc: "全員飛ばした回数",
+  },
+  {
+    key: "aishou",
+    icon: mdiHeart,
+    color: "#b07080",
+    label: "相性",
+    desc: "得意な相手",
+  },
 ] as const;
 
 interface ScoreRow {

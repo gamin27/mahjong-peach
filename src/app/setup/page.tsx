@@ -8,6 +8,8 @@ import Input from "@/components/Input";
 import Field from "@/components/Field";
 import Main from "@/components/Main";
 import Card from "@/components/Card";
+import Icon from "@mdi/react";
+import { mdiCards } from "@mdi/js";
 
 export default function SetupPage() {
   const router = useRouter();
@@ -130,7 +132,7 @@ export default function SetupPage() {
     <div style={{ background: "var(--color-bg-2)", minHeight: "100dvh" }}>
       <Main maxWidth="md" style={{ paddingTop: "80px", paddingBottom: "32px" }}>
         <div style={{ textAlign: "center", marginBottom: "32px" }}>
-          <span style={{ fontSize: "48px" }}>🀄</span>
+          <Icon path={mdiCards} size={3} color="var(--arcoblue-6)" />
           <h1
             style={{
               fontSize: "20px",

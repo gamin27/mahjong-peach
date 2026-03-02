@@ -54,7 +54,7 @@ export default function YakumanSection({
         </div>
       )}
 
-      <Button variant="secondary" color="orange" onClick={() => setOpen(true)}>
+      <Button variant="secondary" color="blue" onClick={() => setOpen(true)}>
         役満を記録
       </Button>
 
