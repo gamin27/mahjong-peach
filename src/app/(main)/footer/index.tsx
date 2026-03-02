@@ -10,8 +10,8 @@ import { mdiHome, mdiHistory, mdiTrophy } from "@mdi/js";
 
 const NAV_ITEMS = [
   { key: "home", icon: mdiHome, path: "/" },
-  { key: "history", icon: mdiHistory, path: "/history" },
   { key: "ranking", icon: mdiTrophy, path: "/ranking" },
+  { key: "history", icon: mdiHistory, path: "/history" },
 ] as const;
 
 type NavKey = (typeof NAV_ITEMS)[number]["key"];
