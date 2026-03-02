@@ -32,12 +32,15 @@ export default function Footer() {
 
   const active = getActiveKey(pathname);
   const activeIndex = NAV_ITEMS.findIndex((item) => item.key === active);
-  const [isMoving, setIsMoving] = useState(false);
+  const [morphState, setMorphState] = useState<"rest" | "moving" | "bounce">(
+    "rest"
+  );
 
   const handleNavClick = (item: (typeof NAV_ITEMS)[number]) => {
     if (item.key === active) return;
-    setIsMoving(true);
-    setTimeout(() => setIsMoving(false), 180);
+    setMorphState("moving");
+    setTimeout(() => setMorphState("bounce"), 370);
+    setTimeout(() => setMorphState("rest"), 510);
     router.push(item.path);
   };
 
@@ -93,10 +96,21 @@ export default function Footer() {
             height: "40px",
             borderRadius: "50%",
             background: "var(--arcoblue-1)",
-            transform: `translateY(-50%) scaleX(${isMoving ? 1.6 : 1}) scaleY(${isMoving ? 0.62 : 1})`,
-            transition: isMoving
-              ? "left 0.42s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.1s ease-in"
-              : "left 0.42s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)",
+            transform: `translateY(-50%) scaleX(${
+              morphState === "moving" ? 1.6 : morphState === "bounce" ? 0.72 : 1
+            }) scaleY(${
+              morphState === "moving"
+                ? 0.62
+                : morphState === "bounce"
+                  ? 1.35
+                  : 1
+            })`,
+            transition:
+              morphState === "moving"
+                ? "left 0.42s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.08s ease-in"
+                : morphState === "bounce"
+                  ? "transform 0.1s ease-out"
+                  : "transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1)",
             zIndex: 0,
           }}
         />
