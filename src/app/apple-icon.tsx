@@ -17,11 +17,8 @@ export default function AppleIcon() {
         borderRadius: "20%",
       }}
     >
-      <svg
-        viewBox="0 0 24 24"
-        style={{ width: "65%", height: "65%", fill: "white" }}
-      >
-        <path d={mdiCards} />
+      <svg viewBox="0 0 24 24" style={{ width: "65%", height: "65%" }}>
+        <path d={mdiCards} fill="white" />
       </svg>
     </div>,
     size
