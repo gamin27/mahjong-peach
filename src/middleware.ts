@@ -25,13 +25,13 @@ export async function middleware(request: NextRequest) {
   );
 
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
 
   const { pathname } = request.nextUrl;
   const isPublic = pathname === "/login" || pathname === "/setup";
 
-  if (!user && !isPublic) {
+  if (!session && !isPublic) {
     const loginUrl = new URL("/login", request.url);
     return NextResponse.redirect(loginUrl);
   }
