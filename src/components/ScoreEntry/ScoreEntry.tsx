@@ -15,6 +15,11 @@ import TobashiSection from "./TobashiSection";
 interface ScoreEntryProps {
   players: RoomMember[];
   playerCount: 3 | 4;
+  initialInputs?: Record<string, string>;
+  initialYakumans?: YakumanEntry[];
+  initialTobiIds?: Set<string>;
+  initialTobashiIds?: Set<string>;
+  confirmLabel?: string;
   onConfirm: (
     scores: {
       userId: string;
@@ -24,22 +29,37 @@ interface ScoreEntryProps {
     yakumans: YakumanEntry[],
     tobashis: TobashiEntry[]
   ) => void;
+  onDelete?: () => void;
 }
 
 export default function ScoreEntry({
   players,
   playerCount,
+  initialInputs,
+  initialYakumans,
+  initialTobiIds,
+  initialTobashiIds,
+  confirmLabel = "確定",
   onConfirm,
+  onDelete,
 }: ScoreEntryProps) {
   /* =======================
    * State
    ======================= */
 
-  const [inputs, setInputs] = useState<Record<string, string>>({});
-  const [yakumans, setYakumans] = useState<YakumanEntry[]>([]);
+  const [inputs, setInputs] = useState<Record<string, string>>(
+    () => initialInputs ?? {}
+  );
+  const [yakumans, setYakumans] = useState<YakumanEntry[]>(
+    () => initialYakumans ?? []
+  );
 
-  const [tobiIds, setTobiIds] = useState<Set<string>>(new Set());
-  const [tobashiIds, setTobashiIds] = useState<Set<string>>(new Set());
+  const [tobiIds, setTobiIds] = useState<Set<string>>(
+    () => initialTobiIds ?? new Set()
+  );
+  const [tobashiIds, setTobashiIds] = useState<Set<string>>(
+    () => initialTobashiIds ?? new Set()
+  );
 
   const [showTobashiConfirm, setShowTobashiConfirm] = useState(false);
 
@@ -215,9 +235,16 @@ export default function ScoreEntry({
         onToggleTobashi={toggleTobashi}
       />
 
+      {/* 削除 */}
+      {onDelete && (
+        <Button variant="tertiary" onClick={onDelete}>
+          この半荘を削除
+        </Button>
+      )}
+
       {/* 確定 */}
       <Button onClick={handleConfirm} disabled={!canConfirm}>
-        確定
+        {confirmLabel}
       </Button>
 
       {/* 飛び確認モーダル */}

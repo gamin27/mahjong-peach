@@ -25,8 +25,11 @@ export const Default: Story = {
     date: "2024-01-01T10:00:00Z",
     ptRate: 3,
     onGoHome: () => console.log("go home"),
-    onUpdateScores: async (gameIndex, scores) => {
-      console.log("update", gameIndex, scores);
+    onUpdateGame: async (gameIndex, scores, yakumans, tobashis) => {
+      console.log("update", gameIndex, scores, yakumans, tobashis);
+    },
+    onDeleteGame: async (gameIndex) => {
+      console.log("delete", gameIndex);
     },
   },
 };
@@ -37,6 +40,7 @@ export const WithYakuman: Story = {
     date: "2024-01-01T10:00:00Z",
     ptRate: 3,
     onGoHome: () => console.log("go home"),
-    onUpdateScores: async () => {},
+    onUpdateGame: async () => {},
+    onDeleteGame: async () => {},
   },
 };

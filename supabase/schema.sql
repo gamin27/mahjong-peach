@@ -160,6 +160,21 @@ create policy "tobashi_records_select" on public.tobashi_records
 create policy "tobashi_records_insert" on public.tobashi_records
   for insert to authenticated with check (true);
 
+-- 11. マイグレーション: 編集・削除用 RLS ポリシー追加
+-- 既存DBに対して以下を Supabase ダッシュボードの SQL Editor で実行してください:
+--
+-- games テーブルの DELETE 許可（対局削除）
+-- CREATE POLICY "games_delete" ON public.games
+--   FOR DELETE TO authenticated USING (true);
+--
+-- yakuman_records テーブルの DELETE 許可（役満記録の再登録時）
+-- CREATE POLICY "yakuman_records_delete" ON public.yakuman_records
+--   FOR DELETE TO authenticated USING (true);
+--
+-- tobashi_records テーブルの DELETE 許可（飛び記録の再登録時）
+-- CREATE POLICY "tobashi_records_delete" ON public.tobashi_records
+--   FOR DELETE TO authenticated USING (true);
+
 -- 10. マイグレーション: avatar_url カラム追加
 -- 既存DBに対して実行:
 -- ALTER TABLE public.profiles ADD COLUMN avatar_url text;

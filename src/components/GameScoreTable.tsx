@@ -11,6 +11,9 @@ interface GameScoreTableProps {
   maxHeight?: string;
   ptRate?: number;
   showLabel?: boolean;
+  /** フル編集モーダルを開く（役満・飛び込み含む） */
+  onEditGame?: (gameIndex: number) => void;
+  /** スコアのみインライン編集（後方互換） */
   onUpdateScores?: (
     gameIndex: number,
     scores: { userId: string; score: number }[]
@@ -22,6 +25,7 @@ export default function GameScoreTable({
   maxHeight = "50vh",
   ptRate,
   showLabel = true,
+  onEditGame,
   onUpdateScores,
 }: GameScoreTableProps) {
   const [editingGameIndex, setEditingGameIndex] = useState<number | null>(null);
@@ -62,7 +66,7 @@ export default function GameScoreTable({
     .filter((uid) => totals[uid])
     .map((uid) => [uid, totals[uid]] as [string, (typeof totals)[string]]);
 
-  const editable = !!onUpdateScores;
+  const editable = !!(onEditGame || onUpdateScores);
 
   const handleStartEdit = (gameIndex: number) => {
     const game = games[gameIndex];
@@ -284,7 +288,9 @@ export default function GameScoreTable({
                     <td className="px-2 py-2" style={{ textAlign: "center" }}>
                       {editingGameIndex === null && (
                         <button
-                          onClick={() => handleStartEdit(gi)}
+                          onClick={() =>
+                            onEditGame ? onEditGame(gi) : handleStartEdit(gi)
+                          }
                           style={{
                             fontSize: "14px",
                             color: "var(--color-text-3)",

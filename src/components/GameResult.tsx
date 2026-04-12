@@ -1,9 +1,15 @@
 "use client";
 
-import type { CompletedGame } from "@/lib/types/game";
+import { useState } from "react";
+import type {
+  CompletedGame,
+  YakumanEntry,
+  TobashiEntry,
+} from "@/lib/types/game";
 import Avatar from "@/components/Avatar";
 import { TILE_LABELS } from "@/components/YakumanModal";
 import GameScoreTable from "@/components/GameScoreTable";
+import GameEditModal from "@/components/GameEditModal";
 import Button from "@/components/Button";
 import Card from "@/components/Card";
 
@@ -12,10 +18,13 @@ interface GameResultProps {
   date: string;
   ptRate: number;
   onGoHome: () => void;
-  onUpdateScores: (
+  onUpdateGame: (
     gameIndex: number,
-    scores: { userId: string; score: number }[]
+    scores: { userId: string; displayName: string; score: number }[],
+    yakumans: YakumanEntry[],
+    tobashis: TobashiEntry[]
   ) => Promise<void>;
+  onDeleteGame: (gameIndex: number) => Promise<void>;
 }
 
 export default function GameResult({
@@ -23,8 +32,11 @@ export default function GameResult({
   date,
   ptRate,
   onGoHome,
-  onUpdateScores,
+  onUpdateGame,
+  onDeleteGame,
 }: GameResultProps) {
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+
   return (
     <div className="flex flex-col gap-6">
       <p className="text-sm" style={{ color: "var(--color-text-2)" }}>
@@ -40,7 +52,7 @@ export default function GameResult({
         games={games}
         maxHeight="60vh"
         ptRate={ptRate}
-        onUpdateScores={onUpdateScores}
+        onEditGame={(gi) => setEditingIndex(gi)}
       />
 
       {/* 役満記録 */}
@@ -86,6 +98,22 @@ export default function GameResult({
       )}
 
       <Button onClick={onGoHome}>ホームに戻る</Button>
+
+      {editingIndex !== null && (
+        <GameEditModal
+          game={games[editingIndex]}
+          roundNumber={editingIndex + 1}
+          onSave={async (scores, yakumans, tobashis) => {
+            await onUpdateGame(editingIndex, scores, yakumans, tobashis);
+            setEditingIndex(null);
+          }}
+          onDelete={async () => {
+            await onDeleteGame(editingIndex);
+            setEditingIndex(null);
+          }}
+          onClose={() => setEditingIndex(null)}
+        />
+      )}
     </div>
   );
 }

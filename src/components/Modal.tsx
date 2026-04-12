@@ -6,9 +6,15 @@ interface ModalProps {
   children: ReactNode;
   onClose: () => void;
   style?: CSSProperties;
+  zIndex?: number;
 }
 
-export default function Modal({ children, onClose, style }: ModalProps) {
+export default function Modal({
+  children,
+  onClose,
+  style,
+  zIndex = 50,
+}: ModalProps) {
   return (
     <div
       style={{
@@ -18,7 +24,7 @@ export default function Modal({ children, onClose, style }: ModalProps) {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        zIndex: 50,
+        zIndex,
         padding: "0 24px",
       }}
       onClick={onClose}

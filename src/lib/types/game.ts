@@ -24,10 +24,19 @@ export interface YakumanRecord {
   winning_tile: string | null;
 }
 
+export interface TobashiRecord {
+  id: string;
+  game_id: string;
+  user_id: string;
+  display_name: string;
+  type: "tobi" | "tobashi";
+}
+
 export interface CompletedGame {
   game: Game;
   scores: GameScore[];
   yakumans: YakumanRecord[];
+  tobashis?: TobashiRecord[];
 }
 
 /** ScoreEntry → RoomDetailPage へ渡す役満入力データ */

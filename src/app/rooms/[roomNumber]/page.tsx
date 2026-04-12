@@ -13,6 +13,7 @@ import PlayerSelection from "@/components/PlayerSelection";
 import ScoreEntry from "@/components/ScoreEntry/ScoreEntry";
 import GameResult from "@/components/GameResult";
 import GameScoreTable from "@/components/GameScoreTable";
+import GameEditModal from "@/components/GameEditModal";
 import Main from "@/components/Main";
 import Button from "@/components/Button";
 import Modal from "@/components/Modal";
@@ -43,6 +44,9 @@ export default function RoomDetailPage() {
   const [completedGames, setCompletedGames] = useState<CompletedGame[]>([]);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [showResultModal, setShowResultModal] = useState(false);
+  const [editingGameInModal, setEditingGameInModal] = useState<number | null>(
+    null
+  );
   const closingRef = useRef(false);
   const updatingScoresRef = useRef(false);
 
@@ -68,10 +72,18 @@ export default function RoomDetailPage() {
       .select("*")
       .in("game_id", gameIds);
 
+    const { data: tobashiData } = await supabase
+      .from("tobashi_records")
+      .select("*")
+      .in("game_id", gameIds);
+
     const completed: CompletedGame[] = gamesData.map((game) => ({
       game,
       scores: scoresData.filter((s) => s.game_id === game.id),
       yakumans: yakumanData?.filter((y) => y.game_id === game.id) ?? [],
+      tobashis: (tobashiData?.filter((t) => t.game_id === game.id) ?? []).map(
+        (t) => ({ ...t, type: t.type as "tobi" | "tobashi" })
+      ),
     }));
 
     setCompletedGames(completed);
@@ -363,53 +375,111 @@ export default function RoomDetailPage() {
     window.scrollTo({ top: 0 });
   };
 
-  const handleUpdateScores = async (
+  const handleUpdateGame = async (
     gameIndex: number,
-    scores: { userId: string; score: number }[]
+    scores: { userId: string; displayName: string; score: number }[],
+    yakumans: YakumanEntry[],
+    tobashis: TobashiEntry[]
   ) => {
     const game = completedGames[gameIndex];
     updatingScoresRef.current = true;
 
-    // 楽観的にローカル state を即時更新（UIに即反映）
-    setCompletedGames((prev) =>
-      prev.map((g, i) => {
-        if (i !== gameIndex) return g;
-        return {
-          ...g,
-          scores: g.scores.map((sc) => {
-            const updated = scores.find((s) => s.userId === sc.user_id);
-            return updated ? { ...sc, score: updated.score } : sc;
-          }),
-        };
-      })
-    );
-
-    // DB を更新（各行を主キーで特定して更新）
     try {
+      // スコアを更新
       for (const s of scores) {
         const row = game.scores.find((sc) => sc.user_id === s.userId);
         if (!row) continue;
-        const { data, error } = await supabase
+        await supabase
           .from("game_scores")
           .update({ score: s.score })
-          .eq("id", row.id)
-          .select();
-        if (error) {
-          console.error("score update failed:", error);
-        } else if (!data || data.length === 0) {
-          // 主キーで見つからない場合は game_id + user_id でフォールバック
-          await supabase
-            .from("game_scores")
-            .update({ score: s.score })
-            .eq("game_id", game.game.id)
-            .eq("user_id", s.userId);
-        }
+          .eq("id", row.id);
       }
+
+      // 役満記録: 全削除して再挿入
+      await supabase
+        .from("yakuman_records")
+        .delete()
+        .eq("game_id", game.game.id);
+      if (yakumans.length > 0) {
+        await supabase.from("yakuman_records").insert(
+          yakumans.map((y) => ({
+            game_id: game.game.id,
+            user_id: y.userId,
+            display_name: y.displayName,
+            avatar_url: y.avatarUrl,
+            yakuman_type: y.yakumanType,
+            winning_tile: y.winningTile ?? "",
+          }))
+        );
+      }
+
+      // 飛び・飛ばし記録: 全削除して再挿入
+      await supabase
+        .from("tobashi_records")
+        .delete()
+        .eq("game_id", game.game.id);
+      if (tobashis.length > 0) {
+        await supabase.from("tobashi_records").insert(
+          tobashis.map((t) => ({
+            game_id: game.game.id,
+            user_id: t.userId,
+            display_name: t.displayName,
+            type: t.type,
+          }))
+        );
+      }
+
+      // ローカル state を更新
+      setCompletedGames((prev) =>
+        prev.map((g, i) => {
+          if (i !== gameIndex) return g;
+          return {
+            ...g,
+            scores: g.scores.map((sc) => {
+              const updated = scores.find((s) => s.userId === sc.user_id);
+              return updated ? { ...sc, score: updated.score } : sc;
+            }),
+            yakumans: yakumans.map((y, idx) => ({
+              id: `updated-y-${idx}`,
+              game_id: g.game.id,
+              user_id: y.userId,
+              display_name: y.displayName,
+              avatar_url: y.avatarUrl,
+              yakuman_type: y.yakumanType,
+              winning_tile: y.winningTile,
+            })),
+            tobashis: tobashis.map((t, idx) => ({
+              id: `updated-t-${idx}`,
+              game_id: g.game.id,
+              user_id: t.userId,
+              display_name: t.displayName,
+              type: t.type,
+            })),
+          };
+        })
+      );
     } finally {
       setTimeout(() => {
         updatingScoresRef.current = false;
       }, 1000);
     }
+  };
+
+  const handleDeleteGame = async (gameIndex: number) => {
+    const game = completedGames[gameIndex];
+    // .select() で実際に削除された行を確認する（RLS で弾かれた場合は空配列が返る）
+    const { data, error } = await supabase
+      .from("games")
+      .delete()
+      .eq("id", game.game.id)
+      .select();
+    if (error || !data || data.length === 0) {
+      alert(
+        '削除に失敗しました。Supabase の SQL Editor で DELETE ポリシーを追加してください。\n\nCREATE POLICY "games_delete" ON public.games FOR DELETE TO authenticated USING (true);'
+      );
+      return;
+    }
+    setCompletedGames((prev) => prev.filter((_, i) => i !== gameIndex));
   };
 
   const handleLeave = async () => {
@@ -664,10 +734,33 @@ export default function RoomDetailPage() {
             date={room.created_at}
             ptRate={room.pt_rate}
             onGoHome={() => router.push("/")}
-            onUpdateScores={handleUpdateScores}
+            onUpdateGame={handleUpdateGame}
+            onDeleteGame={handleDeleteGame}
           />
         )}
       </Main>
+
+      {/* 途中結果モーダル内の編集モーダル */}
+      {editingGameInModal !== null && (
+        <GameEditModal
+          game={completedGames[editingGameInModal]}
+          roundNumber={editingGameInModal + 1}
+          onSave={async (scores, yakumans, tobashis) => {
+            await handleUpdateGame(
+              editingGameInModal,
+              scores,
+              yakumans,
+              tobashis
+            );
+            setEditingGameInModal(null);
+          }}
+          onDelete={async () => {
+            await handleDeleteGame(editingGameInModal);
+            setEditingGameInModal(null);
+          }}
+          onClose={() => setEditingGameInModal(null)}
+        />
+      )}
 
       {/* 途中結果モーダル / ホスト退出確認モーダル */}
       {(showResultModal || showLeaveModal) && (
@@ -715,7 +808,9 @@ export default function RoomDetailPage() {
               <GameScoreTable
                 games={completedGames}
                 ptRate={room.pt_rate}
-                onUpdateScores={isCreator ? handleUpdateScores : undefined}
+                onEditGame={
+                  isCreator ? (gi) => setEditingGameInModal(gi) : undefined
+                }
               />
             </div>
           )}
