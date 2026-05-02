@@ -214,5 +214,78 @@ describe("ScoreEntry", () => {
         ])
       );
     });
+
+    it("3人麻雀で-70以下の人がいて飛び・飛ばし未入力なら確認を表示する", async () => {
+      const user = userEvent.setup();
+      const onConfirm = vi.fn();
+      render(
+        <ScoreEntry
+          players={makePlayers(3)}
+          playerCount={3}
+          onConfirm={onConfirm}
+        />
+      );
+
+      const inputs = screen.getAllByRole("textbox");
+      await user.type(inputs[0], "50");
+      await user.type(inputs[1], "20");
+      await user.click(screen.getByRole("button", { name: "確定" }));
+
+      expect(onConfirm).not.toHaveBeenCalled();
+      expect(
+        screen.getByText(
+          "3人麻雀で -70 以下の人がいますが、飛んだ人・飛ばした人が選択されていません。このまま確定しますか？"
+        )
+      ).toBeInTheDocument();
+
+      await user.click(screen.getByRole("button", { name: "確定する" }));
+
+      expect(onConfirm).toHaveBeenCalledTimes(1);
+    });
+
+    it("3人麻雀でも-69までなら飛び・飛ばし未入力でそのまま確定する", async () => {
+      const user = userEvent.setup();
+      const onConfirm = vi.fn();
+      render(
+        <ScoreEntry
+          players={makePlayers(3)}
+          playerCount={3}
+          onConfirm={onConfirm}
+        />
+      );
+
+      const inputs = screen.getAllByRole("textbox");
+      await user.type(inputs[0], "50");
+      await user.type(inputs[1], "19");
+      await user.click(screen.getByRole("button", { name: "確定" }));
+
+      expect(onConfirm).toHaveBeenCalledTimes(1);
+      expect(
+        screen.queryByText(/3人麻雀で -70 以下の人がいます/)
+      ).not.toBeInTheDocument();
+    });
+
+    it("4人麻雀では-70以下の人がいても飛び・飛ばし未入力確認は表示しない", async () => {
+      const user = userEvent.setup();
+      const onConfirm = vi.fn();
+      render(
+        <ScoreEntry
+          players={makePlayers(4)}
+          playerCount={4}
+          onConfirm={onConfirm}
+        />
+      );
+
+      const inputs = screen.getAllByRole("textbox");
+      await user.type(inputs[0], "40");
+      await user.type(inputs[1], "20");
+      await user.type(inputs[2], "10");
+      await user.click(screen.getByRole("button", { name: "確定" }));
+
+      expect(onConfirm).toHaveBeenCalledTimes(1);
+      expect(
+        screen.queryByText(/3人麻雀で -70 以下の人がいます/)
+      ).not.toBeInTheDocument();
+    });
   });
 });

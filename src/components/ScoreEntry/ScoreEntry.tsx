@@ -153,6 +153,21 @@ export default function ScoreEntry({
 
   const tobashiIncomplete = (hasTobi || hasTobashi) && !(hasTobi && hasTobashi);
 
+  const shouldConfirmMissingTobashi = () => {
+    if (!autoCalcUser || autoCalcScore === null) return false;
+    if (playerCount !== 3) return false;
+    if (hasTobi && hasTobashi) return false;
+
+    return players.some((p) => {
+      const score =
+        p.user_id === autoCalcUser.user_id
+          ? autoCalcScore
+          : parseInt(inputs[p.user_id], 10) || 0;
+
+      return score <= -70;
+    });
+  };
+
   const canConfirm = allFilled;
 
   /* =======================
@@ -195,7 +210,7 @@ export default function ScoreEntry({
   const handleConfirm = () => {
     if (!allFilled) return;
 
-    if (tobashiIncomplete) {
+    if (tobashiIncomplete || shouldConfirmMissingTobashi()) {
       setShowTobashiConfirm(true);
       return;
     }
@@ -254,7 +269,9 @@ export default function ScoreEntry({
             <p className="text-sm font-medium">
               {hasTobi && !hasTobashi
                 ? "飛んだ人が選択されていますが、飛ばした人が選択されていません。"
-                : "飛ばした人が選択されていますが、飛んだ人が選択されていません。"}
+                : hasTobashi && !hasTobi
+                  ? "飛ばした人が選択されていますが、飛んだ人が選択されていません。"
+                  : "3人麻雀で -70 以下の人がいますが、飛んだ人・飛ばした人が選択されていません。"}
               このまま確定しますか？
             </p>
 
